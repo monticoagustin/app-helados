@@ -34,8 +34,23 @@
   `/api/web-gateway/web/restaurants-bus/stores/filters/`. Falta capturar el cuerpo del
   pedido paginado (el visor de red del navegador integrado no lo mostró).
 
+## Fase 1 – PedidosYa a demanda (rama `fase-1-pedidosya`)
+Decisión: el usuario quiere PedidosYa automático. Sin consultas periódicas ni alertas
+por ahora: se consulta solo al apretar "Ver promos".
+- Hecho:
+  - Config desde `.env`, modelos comunes e interfaz `Connector`.
+  - `BrowserSession`: Chrome real con ventana visible, captura JSON, detecta desafíos
+    anti-bot (no los saltea), pausas aleatorias, reintentos con backoff, caché de 20 min.
+  - Conector PedidosYa con parser heurístico (todavía no vimos el JSON real) y guardado
+    de crudos en `data/raw/pedidosya/`.
+  - Normalizador de tamaños y precio por kg (con tests).
+  - Pantalla FastAPI con botones "Ver promos" y "Actualizar ahora".
+  - 34 tests (incluye navegador real contra servidor local).
+- Pendiente de validar en la compu del usuario: si PedidosYa deja pasar el scraper
+  liviano o lo bloquea. Si pasa, ajustar el parser con los JSON crudos reales.
+
 ## En curso
-- Esperando OK sobre el plan de fase 1.
+- Validación de la fase 1 en la compu del usuario.
 
 ## Falta
 - Fase 1: primer conector de punta a punta (scraping → normalización → ranking → alerta Telegram).
@@ -55,4 +70,6 @@
   ficha; el resto muchas veces no aparece. Fuera de alcance por ahora.
 
 ## Próximos pasos
-- Definir con qué conector arranca la fase 1 (propuesta: Rappi).
+- Usuario corre `python scripts/probar_pedidosya.py` y pasa el resultado + `data/raw/pedidosya/`.
+- Ajustar parser a la estructura real de PedidosYa.
+- Sumar conector de Rappi (ya relevado, viable) para comparar entre apps.

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>App Helados · Promos</title>
+  <style>
+    :root { --bg:#fffaf5; --ink:#2b2118; --muted:#7a6a5c; --line:#ecdfd2; --accent:#d9480f; --ok:#2b8a3e; --warn:#c92a2a; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+    h1 { margin:0 0 4px; font-size: 28px; }
+    .sub { color:var(--muted); margin:0 0 24px; }
+    form { display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 24px; }
+    button { font:inherit; font-weight:600; border:0; border-radius:10px; padding:12px 20px; cursor:pointer; }
+    .primary { background:var(--accent); color:#fff; }
+    .secondary { background:#fff; color:var(--ink); border:1px solid var(--line); }
+    button[disabled] { opacity:.6; cursor:wait; }
+    .status { display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 20px; }
+    .pill { background:#fff; border:1px solid var(--line); border-radius:999px; padding:6px 12px; font-size:14px; }
+    .pill b.ok { color:var(--ok); } .pill b.blocked, .pill b.error { color:var(--warn); } .pill b.disabled { color:var(--muted); }
+    .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:12px; }
+    .head { display:flex; justify-content:space-between; gap:12px; align-items:baseline; flex-wrap:wrap; }
+    .name { font-weight:700; font-size:18px; }
+    .meta { color:var(--muted); font-size:14px; }
+    .tag { display:inline-block; background:#fff0e6; color:var(--accent); border-radius:6px; padding:2px 8px; margin:6px 6px 0 0; font-size:13px; font-weight:600; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; font-size:14px; }
+    th, td { text-align:left; padding:6px 4px; border-top:1px solid var(--line); }
+    th { color:var(--muted); font-weight:500; }
+    td.num, th.num { text-align:right; font-variant-numeric: tabular-nums; }
+    .strike { color:var(--muted); text-decoration: line-through; }
+    .empty { color:var(--muted); padding: 24px 0; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Promos de heladerías</h1>
+  <p class="sub">Buscando cerca de <b>{{ location.address }}</b></p>
+
+  <form method="post" action="/promos" onsubmit="this.querySelectorAll('button').forEach(b => b.disabled = true); this.querySelector('.primary').textContent = 'Buscando… (puede tardar un minuto)';">
+    <button class="primary" type="submit" name="force" value="">Ver promos</button>
+    <button class="secondary" type="submit" name="force" value="1">Actualizar ahora (sin caché)</button>
+  </form>
+
+  {% if results %}
+  <div class="status">
+    {% for r in results %}
+    <span class="pill">{{ r.platform }}: <b class="{{ r.status.value }}">{{ r.status.value }}</b>{% if r.message %} · {{ r.message }}{% endif %} · {{ r.captured_at | hora_local }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% for row in rows %}
+  {% set s = row.store %}
+  <div class="card">
+    <div class="head">
+      <div>
+        <div class="name">{% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.name }}</a>{% else %}{{ s.name }}{% endif %}</div>
+        <div class="meta">
+          {{ s.platform }}
+          {% if s.rating %} · ⭐ {{ s.rating }}{% endif %}
+          {% if s.eta %} · {{ s.eta }}{% endif %}
+          {% if s.delivery_fee is not none %} · envío ${{ "{:,.0f}".format(s.delivery_fee).replace(",", ".") }}{% endif %}
+          {% if s.address %} · {{ s.address }}{% endif %}
+        </div>
+      </div>
+      <div class="meta">
+        {% if row.best_discount %}hasta <b>{{ row.best_discount|round|int }}% off</b>{% endif %}
+        {% if row.best_per_kg %} · desde <b>${{ "{:,.0f}".format(row.best_per_kg).replace(",", ".") }}/kg</b>{% endif %}
+      </div>
+    </div>
+    {% for p in s.promos %}<span class="tag">{{ p }}</span>{% endfor %}
+    {% set sized = s.products | selectattr("size_kg") | list %}
+    {% if sized %}
+    <table>
+      <tr><th>Producto</th><th class="num">Precio</th><th class="num">Desc.</th><th class="num">$/kg</th></tr>
+      {% for p in sized | sort(attribute="size_kg", reverse=true) %}
+      <tr>
+        <td>{{ p.name }}</td>
+        <td class="num">{% if p.original_price and p.original_price > p.price %}<span class="strike">${{ "{:,.0f}".format(p.original_price).replace(",", ".") }}</span> {% endif %}${{ "{:,.0f}".format(p.price).replace(",", ".") }}</td>
+        <td class="num">{% if p.discount_pct %}{{ p.discount_pct|round|int }}%{% endif %}</td>
+        <td class="num">{% if p.price_per_kg %}${{ "{:,.0f}".format(p.price_per_kg).replace(",", ".") }}{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="empty">{% if ran %}No encontramos heladerías en esta búsqueda.{% else %}Apretá "Ver promos" para buscar.{% endif %}</p>
+  {% endfor %}
+</main>
+</body>
+</html>
