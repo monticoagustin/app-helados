@@ -1,0 +1,48 @@
+{
+  "_comentario": "DATOS DE EJEMPLO inventados para tests. La forma real de PedidosYa todavía no la vimos.",
+  "data": {
+    "swimlanes": [
+      {
+        "title": "Heladerías",
+        "items": [
+          {
+            "id": 101,
+            "name": "Heladería Ejemplo Centro",
+            "rating": 4.6,
+            "deliveryTimeText": "20-35 min",
+            "shippingAmount": 990,
+            "address": "Córdoba 1200, Rosario",
+            "categories": [{"name": "Helados"}, {"name": "Postres"}],
+            "discounts": [{"text": "25% OFF en todo"}, {"text": "Envío gratis"}],
+            "link": "/restaurantes/rosario/heladeria-ejemplo-centro-menu"
+          },
+          {
+            "id": 202,
+            "name": "Pizzería Ejemplo",
+            "rating": 4.1,
+            "deliveryTimeText": "30-45 min",
+            "shippingAmount": 1290,
+            "categories": [{"name": "Pizzas"}]
+          }
+        ]
+      }
+    ]
+  },
+  "menu": {
+    "id": 101,
+    "name": "Heladería Ejemplo Centro",
+    "rating": 4.6,
+    "shippingAmount": 990,
+    "sections": [
+      {
+        "name": "Helados",
+        "products": [
+          {"id": 1, "name": "Helado 1 kg", "price": 18000, "originalPrice": 24000},
+          {"id": 2, "name": "Helado 1/2 kg", "price": "$11.250", "originalPrice": "$15.000"},
+          {"id": 3, "name": "Helado 1/4 kg", "price": 6000},
+          {"id": 4, "name": "Cucurucho", "price": 1200}
+        ]
+      }
+    ]
+  }
+}
