@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Helados · descuentos en Rosario</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Descuentos en heladerías</h1>
+      <p class="sub">Rosario · PedidosYa y Rappi</p>
+    </div>
+    <span id="ext-badge" class="ext-badge off">Extensión: buscando…</span>
+  </header>
+
+  <section id="install" class="install" hidden>
+    <h2>Instalá la extensión (una sola vez)</h2>
+    <p>La búsqueda corre en tu Chrome, con tu conexión: así PedidosYa y Rappi muestran lo de Rosario y,
+      si piden verificación, la resolvés vos con un click.</p>
+    <ol>
+      <li><a href="helados-extension.zip" download>Descargá la extensión</a> y descomprimí el .zip en una carpeta que no vayas a borrar.</li>
+      <li>Abrí <code>chrome://extensions</code> y activá <b>Modo de desarrollador</b> (arriba a la derecha).</li>
+      <li>Tocá <b>Cargar descomprimida</b> y elegí la carpeta.</li>
+      <li>Volvé a esta página y recargala.</li>
+    </ol>
+  </section>
+
+  <section class="actions">
+    <button id="fetch" class="primary" disabled>Traer descuentos</button>
+    <button id="force" class="link" disabled>Actualizar sin caché</button>
+  </section>
+
+  <section id="progress" class="progress" hidden></section>
+  <section id="status" class="status"></section>
+
+  <section class="filters" id="filters" hidden>
+    <label>Plataforma
+      <select id="f-platform">
+        <option value="">Todas</option>
+        <option value="pedidosya">PedidosYa</option>
+        <option value="rappi">Rappi</option>
+      </select>
+    </label>
+    <label>Ordenar por
+      <select id="f-sort">
+        <option value="discount">Mayor descuento</option>
+        <option value="perkg">Menor precio por kg</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" id="f-open" checked> Solo abiertas</label>
+    <label class="check"><input type="checkbox" id="f-deals" checked> Solo con descuento</label>
+  </section>
+
+  <section id="list" class="list"></section>
+
+  <footer>
+    <p>Los descuentos con bancos o billeteras se muestran pero no cuentan para el ranking.
+      Uso personal. <a href="#" id="diag">Descargar diagnóstico de PedidosYa</a></p>
+  </footer>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>
