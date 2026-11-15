@@ -131,10 +131,17 @@ export function isIceCreamStore(name, categories = [], extra = "") {
   return ICE_CREAM_KEYWORDS.some((k) => hay.includes(k));
 }
 
-/** Completa un producto con tamaño, % y precio por kg. */
+const NOT_BULK = /\b(palito|palitos|bombon|bombones|paleta|paletas|alfajor|torta|postre|cucurucho|cono|almendrado|escoces|casata|tentacion|helado de agua|unidades|\d+\s*u)\b/;
+
+/** ¿Es helado por peso (cuarto, medio, kilo)? Los packs de palitos o bombones no cuentan para $/kg. */
+export function isBulkIceCream(name) {
+  return !NOT_BULK.test(clean(name));
+}
+
+/** Completa un producto con tamaño, % y precio por kg (solo helado por peso). */
 export function normalizeProduct({ name, description = "", price, originalPrice }) {
   const original = originalPrice && originalPrice >= price ? originalPrice : price;
-  const sizeKg = parseSizeKg(`${name} ${description}`);
+  const sizeKg = isBulkIceCream(name) ? parseSizeKg(`${name} ${description}`) : null;
   return {
     name,
     price,

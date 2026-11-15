@@ -32,6 +32,15 @@ test("normalizeProduct con datos reales de Rappi (Frais Helados)", () => {
   assert.equal(sinDesc.pricePerKg, null);
 });
 
+test("packs de palitos/bombones no calculan $/kg (caso real de Grido)", () => {
+  const pack = normalizeProduct({ name: "Palito Bombon - Dulce de Leche x 10u", description: "10 x 51g", price: 9000, originalPrice: 9000 });
+  assert.equal(pack.pricePerKg, null);
+  assert.equal(normalizeProduct({ name: "Caja de Bombón Escocés (6 Unidades)", price: 9000 }).pricePerKg, null);
+  assert.equal(normalizeProduct({ name: "1 Kg de helado", price: 12900, originalPrice: 21500 }).pricePerKg, 12900);
+  assert.equal(normalizeProduct({ name: "Medio", price: 10800, originalPrice: 13500 }).sizeKg, 0.5);
+  assert.equal(normalizeProduct({ name: "Kilo de helado", price: 16800 }).sizeKg, 1);
+});
+
 test("parsePromo: porcentajes", () => {
   const p = parsePromo("Hasta 30% Off");
   assert.equal(p.kind, "percent");
