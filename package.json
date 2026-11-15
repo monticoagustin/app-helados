@@ -1,0 +1,9 @@
+{
+  "name": "app-helados",
+  "private": true,
+  "type": "module",
+  "description": "Comparador de descuentos en heladerías (Rosario). Página estática + extensión de Chrome.",
+  "scripts": {
+    "test": "node --test"
+  }
+}
