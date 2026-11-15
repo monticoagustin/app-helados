@@ -1,32 +1,71 @@
 # App Helados
 
-Comparador de descuentos en heladerías de las apps de delivery (PedidosYa, Rappi,
-Mercado Libre y Uber Eats). Junta los datos, normaliza las promos a un % efectivo y a
-precio por kg, arma rankings y manda alertas por Telegram.
+Comparador de descuentos en heladerías de **Rosario** en **PedidosYa** y **Rappi**.
+Uso personal. Moneda: ARS.
 
-Ubicación por defecto: **Rosario, Santa Fe**. Moneda: ARS. Uso personal.
+- Página: **https://teskel.online/helados/**
+- Estado y próximos pasos: [PROGRESS.md](PROGRESS.md)
 
-> Proyecto en construcción. Ver [PROGRESS.md](PROGRESS.md) para el estado actual.
+## Cómo funciona
+
+```
+teskel.online/helados  ──(botón "Traer descuentos")──►  extensión en tu Chrome
+                                                         ├─ Rappi: lee las páginas de la categoría Helados y de cada local
+                                                         └─ PedidosYa: abre una pestaña, lee lo que carga la web
+                                                              └─ si pide verificación, la pestaña se muestra y la resolvés vos
+       ◄────────── lista de heladerías con % de descuento efectivo y precio por kg
+```
+
+La búsqueda corre en tu navegador, con tu conexión (IP argentina). La página es estática
+(no tiene servidor): se publica en el Space "teskel" de Spacefast.
+
+## Instalar la extensión (una vez)
+
+1. En https://teskel.online/helados/ tocá **Descargá la extensión** y descomprimí el .zip
+   en una carpeta que no vayas a borrar.
+2. Abrí `chrome://extensions`, activá **Modo de desarrollador**.
+3. **Cargar descomprimida** → elegí la carpeta.
+4. Recargá la página. Arriba a la derecha tiene que decir "Extensión conectada".
+
+Para actualizarla: descargá el .zip nuevo, reemplazá la carpeta y tocá ↻ en `chrome://extensions`.
 
 ## Estructura
 
 ```
-connectors/   un módulo por plataforma (misma interfaz, activables desde .env)
-normalizer/   convierte cualquier promo a % efectivo y precio por kg
-matching/     identifica la misma heladería en distintas plataformas
-alerts/       reglas y evaluación
-notifiers/    telegram, email
-scheduler/    jobs periódicos
-api/          FastAPI
-web/          templates HTMX
-tests/        pytest
+web/                 página (index.html, app.js, styles.css) → se publica en teskel.online/helados/
+extension/           extensión de Chrome (Manifest V3)
+  background.js        corre las búsquedas, caché de 20 min, ritmo lento con pausas
+  bridge.js            puente entre la página y la extensión
+  pya-capture.js       guarda el JSON que recibe PedidosYa (solo durante una búsqueda)
+  lib/normalize.js     tamaños, $/kg y promos → % efectivo (2x1, 2da al 50%, etc.)
+  lib/rappi.js         parser de Rappi (estructura real relevada)
+  lib/pedidosya.js     parser de PedidosYa (heurístico hasta ver datos reales)
+tests/               tests con node:test
+scripts/e2e_extension.py   prueba de punta a punta con servidores simulados
 ```
 
-## Configuración
+## Tests
 
 ```bash
-cp .env.example .env
-# editá .env con tu dirección y tus tokens
+node --test                          # normalizador y parsers
+python scripts/e2e_extension.py      # extensión + página (requiere playwright y Chrome)
 ```
 
-Instalación, uso y cómo sumar una plataforma nueva se completan a medida que avanzan las fases.
+## Publicación (GitHub → Spacefast)
+
+Cada push a `main` corre los tests y la Action `.github/workflows/publicar-en-teskel.yml`
+copia `web/` y `helados-extension.zip` a la carpeta `helados/` del Space teskel. Necesita el
+secreto `SPACEFAST_TOKEN` en el repo. **Merge a main = publicar.**
+
+## Sumar una plataforma
+
+1. Parser en `extension/lib/<plataforma>.js` que devuelva heladerías con el formato de
+   `summarizeStore` (ver `normalize.js`), con tests en `tests/`.
+2. Función `fetch<Plataforma>` en `background.js` y agregarla a la lista de plataformas.
+3. Permiso de host en `extension/manifest.json` y nombre en `PLATFORM_NAMES` de `web/app.js`.
+
+## Reglas
+
+- No se saltean captchas ni verificaciones: si aparecen, las resuelve la persona.
+- Sin cuentas de usuario ni credenciales.
+- Ritmo lento (pausas aleatorias), caché para no repetir pedidos, backoff si algo falla.
