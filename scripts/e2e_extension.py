@@ -40,6 +40,10 @@ CHALLENGE = "<html><head><title>Just a moment...</title></head><body>Nuestros si
 PYA_LIST = """<html><head><title>PedidosYa! Resultados</title></head><body><div style="height:5000px">lista</div>
 <script>const x = new XMLHttpRequest(); x.open('POST', '/pya/v4/shoplist/vendors?size=30&page=1'); x.setRequestHeader('Content-Type','application/json'); x.send('{}');</script></body></html>"""
 PYA_ADDRESS = """<html><head><title>PedidosYa</title></head><body><h1>Ingresá tu dirección</h1><input placeholder="Calle y número"><div style="height:3000px"></div></body></html>"""
+# Caso real (diagnóstico 2026-11-16): con la dirección ya cargada, la portada muestra "Enviar a <dirección>"
+# y pide /home-page/.../lazy_load?lat=..&lng=.. — la URL de la página no trae la ubicación.
+PYA_HOME_WITH_ADDRESS = """<html><head><title>PedidosYa</title></head><body><div>Enviar a</div><div>1 de Mayo 910</div><div>Restaurantes</div>
+<script>fetch('/pya/home-page/v44/home/lazy_load?country_id=3&area_id=0&lat=-32.949493&lng=-60.630245&broker_version=v1').then(r=>r.json());</script></body></html>"""
 PYA_RESULTS_NO_CAT = """<html><head><title>PedidosYa! Resultados</title></head><body>Todos los restaurantes</body></html>"""
 VENDORS = open(os.path.join(ROOT, "tests", "fixtures", "pedidosya_vendors_real.json")).read()
 # Menú: la página pide /v2/niles/partners/{id}/menus. Tento carga bien; Esther está bloqueado (PerimeterX real).
@@ -61,6 +65,7 @@ class Mock(http.server.BaseHTTPRequestHandler):
         if u.startswith("/rappi/restaurantes/"): return self.out(200,"text/html",STORE[int(u.rsplit("/",1)[1])])
         if u.startswith("/pya/"):
             if state["challenge"]: return self.out(403,"text/html",CHALLENGE)
+            if u.startswith("/pya/home-page/"): return self.out(200,"application/json",'{"children":[]}')
             if u.startswith("/pya/v2/niles/partners/"):
                 pid = u.split("/partners/")[1].split("/")[0]
                 return self.out(200,"application/json",MENU_OK) if pid == "393747" else self.out(403,"application/json",PX_BLOCK)
@@ -68,7 +73,7 @@ class Mock(http.server.BaseHTTPRequestHandler):
             if u.startswith("/pya/restaurantes/rosario/esther"): return self.out(200,"text/html",MENU_PAGE % "59418")
             if u.startswith("/pya/restaurantes?") and "lat=" in u:
                 return self.out(200,"text/html",PYA_LIST if "category=25" in u else PYA_RESULTS_NO_CAT)
-            return self.out(200,"text/html",PYA_ADDRESS)
+            return self.out(200,"text/html",PYA_HOME_WITH_ADDRESS if state["address"] else PYA_ADDRESS)
         self.out(404,"text/plain","no")
     def do_POST(self):
         u = self.path; state["calls"].append("POST " + u)
@@ -97,9 +102,8 @@ with sync_playwright() as p:
             state["challenge"] = False; tabs[0].reload(); solved = True   # "la persona resuelve"
         if "dirección" in prog and not address_done:
             print("PROGRESO:", prog.replace("\n"," | "))
-            # "la persona carga la dirección": PedidosYa la lleva a resultados con lat/lng en la URL
-            tabs[0].goto(f"{MOCK}/pya/restaurantes?origin=home&lat=-32.949493&lng=-60.630245&areaId=19204&areaName=Centro&address=1%20de%20Mayo%20910")
-            address_done = True
+            # "la persona carga la dirección" y queda en la portada (como en el caso real)
+            state["address"] = True; tabs[0].reload(); address_done = True
         if page.inner_text("#fetch") == "Traer descuentos" and i > 0: break
     print("STATUS:", page.inner_text("#status").replace("\n"," | "))
     print("LIST:\n" + page.inner_text("#list")[:1200])
