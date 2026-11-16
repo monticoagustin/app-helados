@@ -1,13 +1,18 @@
 // Service worker de la extensión: corre las búsquedas cuando la página lo pide.
 import { mergeStore, parseCategoryPage, parseStorePage, RAPPI_BASE, StructureChanged } from "./lib/rappi.js";
-import { HELADOS_CATEGORY_ID, isChallengePage, parseCaptured, PEDIDOSYA_BASE } from "./lib/pedidosya.js";
+import {
+  HELADOS_CATEGORY_ID, isBotBlock, isChallengePage, menuPartnerId, parseCaptured, parseMenu, PEDIDOSYA_BASE,
+} from "./lib/pedidosya.js";
+import { summarizeStore } from "./lib/normalize.js";
 
 const PAGE_URL = "https://teskel.online/helados/";
 const CACHE_MINUTES = 20;
 const RAPPI_MAX_DETAILS = 30;      // fichas a abrir (solo heladerías abiertas)
 const CHALLENGE_WAIT_MS = 4 * 60 * 1000;
 const HELP_WAIT_MS = 3 * 60 * 1000;   // tiempo para que la persona cargue la dirección en PedidosYa
-const STUCK_MS = 12 * 60 * 1000;      // si una búsqueda lleva más que esto, la damos por muerta
+const STUCK_MS = 15 * 60 * 1000;
+const PYA_MAX_MENUS = 8;            // menús de PedidosYa a leer por búsqueda (los más cercanos y abiertos)
+const MENU_BLOCK_WAIT_MS = 60 * 1000;      // si una búsqueda lleva más que esto, la damos por muerta
 const DEFAULT_CITY = { slug: "rosario", name: "Rosario" };
 const PLATFORMS = ["rappi", "pedidosya"];
 
@@ -351,12 +356,26 @@ async function fetchPedidosYa(city, progress) {
           + "Descargá el diagnóstico y pasámelo.",
       });
     }
+
+    // Precios: entramos al menú de las heladerías abiertas más cercanas, de a una.
+    const listed = acc.stores;
+    const { menus, blocked: menusBlocked } = await readMenus(tabId, acc, listed, progress);
+    const stores = listed.map((s) => {
+      const products = menus.has(s.id) ? parseMenu(menus.get(s.id)) : [];
+      return products.length ? summarizeStore({ ...s, products }) : s;
+    });
+    const withPrices = stores.filter((s) => s.products?.length).length;
+    const menuNote = menusBlocked
+      ? ` · PedidosYa bloqueó los menús: precios de ${withPrices}`
+      : menus.size && !withPrices ? " · no reconocí los precios de los menús (descargá el diagnóstico)"
+        : ` · precios de ${withPrices}`;
+
     const where = loc?.address ? ` cerca de ${loc.address}` : "";
     return result("pedidosya", "ok", {
-      stores: acc.stores,
+      stores,
       city: loc?.areaName || city.name,
       address: loc?.address || null,
-      message: `${acc.stores.length} ${acc.stores.length === 1 ? "heladería" : "heladerías"}${where}`,
+      message: `${stores.length} ${stores.length === 1 ? "heladería" : "heladerías"}${where}${menuNote}`,
     });
   } catch (e) {
     if (e instanceof Cancelled) return result("pedidosya", "error", { message: "Cancelada" });
@@ -371,6 +390,54 @@ async function fetchPedidosYa(city, progress) {
     await chrome.scripting.unregisterContentScripts({ ids: ["pya-capture"] }).catch(() => {});
     if (tabId != null) chrome.tabs.remove(tabId).catch(() => {});
   }
+}
+
+/** Respuesta del menú de un local en la pestaña: el JSON, "blocked" (PerimeterX) o null si no llegó. */
+async function menuResponse(tabId, partnerId, acc) {
+  const data = await inTab(tabId, readCaptured).catch(() => null);
+  if (!data) return null;
+  const hits = data.captured.filter((c) => menuPartnerId(c.url) === partnerId);
+  for (const c of hits) acc.captured.set(`${c.url}#${c.status}#${JSON.stringify(c.body).length}`, c); // para el diagnóstico
+  const ok = hits.find((c) => c.status < 400 && !isBotBlock(c.body));
+  if (ok) return ok.body;
+  return hits.some((c) => c.status >= 400 || isBotBlock(c.body)) ? "blocked" : null;
+}
+
+/** Abre el menú de hasta PYA_MAX_MENUS heladerías abiertas (las más cercanas), con pausas.
+ *  Si PedidosYa bloquea, muestra la pestaña por si hay un desafío; si sigue bloqueado, no insiste. */
+async function readMenus(tabId, acc, stores, progress) {
+  const menus = new Map();
+  const targets = stores
+    .filter((s) => s.open !== false && s.url)
+    .sort((a, b) => (a.distanceKm ?? 99) - (b.distanceKm ?? 99))
+    .slice(0, PYA_MAX_MENUS);
+  for (const [i, s] of targets.entries()) {
+    progress(`Leyendo menú ${i + 1}/${targets.length}: ${s.name}`);
+    await sleep(1500 + Math.random() * 2000);
+    await chrome.tabs.update(tabId, { url: s.url });
+    await waitLoaded(tabId);
+    await sleep(2500);
+    if (!(await waitForHuman(tabId, progress))) return { menus, blocked: true };
+    let res = null;
+    for (let t = 0; t < 4 && !res; t++) { res = await menuResponse(tabId, s.id, acc); if (!res) await sleep(1000); }
+    if (res === "blocked") {
+      const tab = await chrome.tabs.update(tabId, { active: true });
+      await chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
+      progress("PedidosYa frenó la lectura del menú. Si en la pestaña ves un desafío (por ejemplo "
+        + "\"mantené presionado\"), resolvelo. Si no aparece nada, sigo sin precios en 1 minuto.");
+      const start = Date.now();
+      while (Date.now() - start < MENU_BLOCK_WAIT_MS) {
+        await sleep(3000);
+        checkCancel();
+        res = await menuResponse(tabId, s.id, acc);
+        if (res && res !== "blocked") break;
+      }
+      if (!res || res === "blocked") return { menus, blocked: true };
+      progress("¡Listo! Sigo con los menús…");
+    }
+    if (res) menus.set(s.id, res);
+  }
+  return { menus, blocked: false };
 }
 
 async function saveRaw(raw) {

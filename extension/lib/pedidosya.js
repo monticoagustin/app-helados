@@ -14,8 +14,9 @@ const ADDRESS_KEYS = ["address", "street", "addressLine", "formattedAddress"];
 const CATEGORY_KEYS = ["categories", "cuisines", "foodCategories", "mainCategory", "tags"];
 const PROMO_KEYS = ["discounts", "promotions", "campaigns", "badges", "promotionText", "discountText", "tags"];
 const URL_KEYS = ["link", "url", "permalink", "slug"];
-const PRICE_KEYS = ["price", "finalPrice", "discountedPrice", "priceAfterDiscount"];
-const ORIGINAL_KEYS = ["originalPrice", "realPrice", "priceBeforeDiscount", "basePrice", "listPrice"];
+const PRICE_KEYS = ["price", "finalPrice", "discountedPrice", "priceAfterDiscount", "unitPrice", "amount"];
+const ORIGINAL_KEYS = ["originalPrice", "realPrice", "priceBeforeDiscount", "beforePrice", "previousPrice", "oldPrice",
+  "strikethroughPrice", "basePrice", "listPrice", "regularPrice"];
 const PRODUCT_LIST_KEYS = ["products", "items", "menuItems", "sections", "categories", "corridors"];
 const STORE_SIGNALS = [...RATING_KEYS, ...ETA_KEYS, ...FEE_KEYS];
 
@@ -216,7 +217,65 @@ export function parseCaptured(payloads) {
     .map(summarizeStore);
 }
 
+// ---------------------------------------------------------------- menús
+// GET /v2/niles/partners/{id}/menus. El formato todavía no lo vimos (PedidosYa lo bloqueó en el
+// navegador integrado), así que se lee de forma heurística: secciones con productos (nombre + precio).
+
+/** Id del local a partir de la URL del menú (/v2/niles/partners/59418/menus → "59418"). */
+export function menuPartnerId(url) {
+  const m = String(url).match(/\/partners\/(\d+)\/menus/);
+  return m ? m[1] : null;
+}
+
+/** ¿La respuesta es un bloqueo de PerimeterX (y no un menú)? */
+export function isBotBlock(body) {
+  return isObj(body) && (typeof body.blockScript === "string" || (typeof body.appId === "string" && /^PX/.test(body.appId)));
+}
+
+function priceOf(p) {
+  const v = first(p, PRICE_KEYS);
+  if (isObj(v)) {
+    return {
+      price: toNumber(first(v, ["finalPrice", "discountedPrice", "value", "amount", "price"])),
+      original: toNumber(first(v, ["originalPrice", "beforePrice", "previousPrice", "oldPrice", "original", "before", "regular"])),
+    };
+  }
+  return { price: toNumber(v), original: toNumber(first(p, ORIGINAL_KEYS)) };
+}
+
+/** Productos de un menú, con la sección a la que pertenecen (sirve para saber si es helado). */
+export function parseMenu(body) {
+  const out = [];
+  const seen = new Set();
+  const visit = (node, section) => {
+    if (Array.isArray(node)) { for (const v of node) visit(v, section); return; }
+    if (!isObj(node)) return;
+    const hasList = ["products", "items", "menuItems"].some((k) => Array.isArray(node[k]));
+    const name = first(node, NAME_KEYS);
+    const here = hasList && typeof name === "string" ? name : section;
+    if (!hasList && typeof name === "string") {
+      const { price, original } = priceOf(node);
+      if (price != null && price > 0 && !seen.has(`${name}|${price}`)) {
+        seen.add(`${name}|${price}`);
+        out.push(normalizeProduct({
+          name: name.trim(),
+          description: typeof node.description === "string" ? node.description : "",
+          section: here || "",
+          price,
+          originalPrice: original,
+        }));
+        return;
+      }
+    }
+    for (const v of Object.values(node)) visit(v, here);
+  };
+  visit(body, "");
+  return out;
+}
+
 const CHALLENGE_MARKERS = [
+  "press & hold", "press and hold", "mantené presionado", "mantén presionado", "presiona y mantén",
+  "access to this page has been denied", "px-captcha", "human verification", "verify you are a human",
   "just a moment", "trafico inusual", "tráfico inusual", "comprobación de seguridad",
   "comprobacion de seguridad", "attention required", "verify you are human", "checking your browser",
 ];

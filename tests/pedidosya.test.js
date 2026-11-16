@@ -81,3 +81,40 @@ test("formato real: varias páginas se juntan sin duplicar", () => {
   const stores = parseCaptured([REAL, { vendors: REAL.vendors.slice(0, 1) }]);
   assert.equal(stores.length, 3);
 });
+
+// ---- menús (/v2/niles/partners/{id}/menus). Formato todavía no visto: dos formas plausibles.
+import { isBotBlock, menuPartnerId, parseMenu } from "../extension/lib/pedidosya.js";
+
+test("menuPartnerId saca el id del local de la URL del menú", () => {
+  assert.equal(menuPartnerId("https://www.pedidosya.com.ar/v2/niles/partners/59418/menus?occasion=DELIVERY"), "59418");
+  assert.equal(menuPartnerId("https://www.pedidosya.com.ar/v4/shoplist/vendors"), null);
+});
+
+test("isBotBlock reconoce la respuesta real de PerimeterX", () => {
+  // respuesta REAL (recortada) que dio /menus en el navegador integrado
+  assert.ok(isBotBlock({ appId: "PXeT15wiaE", jsClientSrc: "/eT15wiaE/init.js", blockScript: "/eT15wiaE/captcha/captcha.js?a=c" }));
+  assert.ok(!isBotBlock({ sections: [] }));
+});
+
+test("parseMenu: precio como objeto con original, solo cuenta helados", () => {
+  const products = parseMenu({ data: { sections: [
+    { name: "Helados", products: [
+      { id: 1, name: "1 Kg", description: "Hasta 4 sabores", price: { finalPrice: 18000, originalPrice: 24000 } },
+      { id: 2, name: "1/4 Kg", price: 6500 },
+    ] },
+    { name: "Bebidas", products: [{ id: 3, name: "Agua mineral 500", price: { finalPrice: 900, originalPrice: 1800 } }] },
+  ] } });
+  const kilo = products.find((p) => p.name === "1 Kg");
+  assert.deepEqual([kilo.price, kilo.originalPrice, kilo.discountPct, kilo.sizeKg, kilo.isIceCream], [18000, 24000, 25, 1, true]);
+  assert.equal(products.find((p) => p.name === "1/4 Kg").pricePerKg, 26000);
+  assert.equal(products.find((p) => p.name.startsWith("Agua")).isIceCream, false);
+});
+
+test("parseMenu: precios planos con beforePrice", () => {
+  const products = parseMenu({ menus: [{ sections: [{ name: "Potes", items: [
+    { name: "Medio kilo", price: 11250, beforePrice: 15000 },
+  ] }] }] });
+  assert.equal(products.length, 1);
+  assert.equal(products[0].discountPct, 25);
+  assert.equal(products[0].sizeKg, 0.5);
+});

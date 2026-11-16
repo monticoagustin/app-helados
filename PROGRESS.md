@@ -56,7 +56,11 @@
   dirección, la persona la carga en la pestaña y la búsqueda sigue sola. Extensión v0.4.0.
 
 ## Falta / próximos pasos
-- [ ] Menús de PedidosYa (precios y descuentos por producto): ver el formato real con el usuario.
+- [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),
+      pero el formato de `/v2/niles/partners/{id}/menus` todavía no lo vimos: en el navegador integrado
+      PedidosYa lo bloqueó con **PerimeterX** (403 con `blockScript`); en el Chrome del usuario el menú
+      carga. Parser heurístico + diagnóstico → ajustar con la primera captura real. Si PerimeterX
+      bloquea en la búsqueda, se muestra la pestaña por si hay desafío y, si no, se sigue sin precios.
 - [x] Secreto `SPACEFAST_TOKEN` cargado y publicación funcionando.
 - [ ] Usuario: instalar la extensión y hacer la primera búsqueda real.
 - [ ] Ajustar el parser de PedidosYa con el diagnóstico real (botón "Descargar diagnóstico").

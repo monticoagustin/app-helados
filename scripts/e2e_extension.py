@@ -17,7 +17,8 @@ for f, subs in {
   "lib/rappi.js": [('"https://www.rappi.com.ar"', f'"{MOCK}/rappi"')],
   "lib/pedidosya.js": [('"https://www.pedidosya.com.ar"', f'"{MOCK}/pya"')],
   "background.js": [('"https://www.pedidosya.com.ar/*"', f'"{MOCK}/pya/*"'),
-                    ('u.hostname.endsWith("pedidosya.com.ar")', 'u.pathname.startsWith("/pya/")')],
+                    ('u.hostname.endsWith("pedidosya.com.ar")', 'u.pathname.startsWith("/pya/")'),
+                    ('const MENU_BLOCK_WAIT_MS = 60 * 1000;', 'const MENU_BLOCK_WAIT_MS = 4 * 1000;')],
 }.items():
     p = os.path.join(EXT, f); s = open(p).read()
     for a, b in subs: assert a in s, (f, a); s = s.replace(a, b)
@@ -41,6 +42,14 @@ PYA_LIST = """<html><head><title>PedidosYa! Resultados</title></head><body><div 
 PYA_ADDRESS = """<html><head><title>PedidosYa</title></head><body><h1>Ingresá tu dirección</h1><input placeholder="Calle y número"><div style="height:3000px"></div></body></html>"""
 PYA_RESULTS_NO_CAT = """<html><head><title>PedidosYa! Resultados</title></head><body>Todos los restaurantes</body></html>"""
 VENDORS = open(os.path.join(ROOT, "tests", "fixtures", "pedidosya_vendors_real.json")).read()
+# Menú: la página pide /v2/niles/partners/{id}/menus. Tento carga bien; Esther está bloqueado (PerimeterX real).
+MENU_PAGE = """<html><head><title>Menú</title></head><body><div id="m">Cargando menú…</div>
+<script>fetch('/pya/v2/niles/partners/%s/menus?occasion=DELIVERY').then(r=>r.json()).then(()=>{});</script></body></html>"""
+MENU_OK = json.dumps({"sections":[{"name":"Helados","products":[
+  {"id":1,"name":"1 Kg de helado","price":{"finalPrice":17000,"originalPrice":20000}},
+  {"id":2,"name":"1/4 Kg","price":6000},
+  {"id":3,"name":"Agua mineral 500","price":{"finalPrice":500,"originalPrice":1000}}]}]})
+PX_BLOCK = json.dumps({"appId":"PXeT15wiaE","jsClientSrc":"/eT15wiaE/init.js","blockScript":"/eT15wiaE/captcha/captcha.js?a=c"})
 state = {"challenge": True, "address": False, "calls": []}
 class Mock(http.server.BaseHTTPRequestHandler):
     def log_message(self,*a): pass
@@ -52,6 +61,11 @@ class Mock(http.server.BaseHTTPRequestHandler):
         if u.startswith("/rappi/restaurantes/"): return self.out(200,"text/html",STORE[int(u.rsplit("/",1)[1])])
         if u.startswith("/pya/"):
             if state["challenge"]: return self.out(403,"text/html",CHALLENGE)
+            if u.startswith("/pya/v2/niles/partners/"):
+                pid = u.split("/partners/")[1].split("/")[0]
+                return self.out(200,"application/json",MENU_OK) if pid == "393747" else self.out(403,"application/json",PX_BLOCK)
+            if u.startswith("/pya/restaurantes/rosario/tento"): return self.out(200,"text/html",MENU_PAGE % "393747")
+            if u.startswith("/pya/restaurantes/rosario/esther"): return self.out(200,"text/html",MENU_PAGE % "59418")
             if u.startswith("/pya/restaurantes?") and "lat=" in u:
                 return self.out(200,"text/html",PYA_LIST if "category=25" in u else PYA_RESULTS_NO_CAT)
             return self.out(200,"text/html",PYA_ADDRESS)
@@ -135,6 +149,11 @@ with sync_playwright() as p:
     print("SEGUNDA BÚSQUEDA PYA:", directo[:2])
     assert directo and "category=25" in directo[0] and "lat=-32.949493" in directo[0]
     assert "Esther Helados Centro" in page.inner_text("#list")
+    st = page.inner_text("#status")
+    print("MENÚS:", [l for l in st.split("\n") if "PedidosYa" in l])
+    assert "bloqueó los menús: precios de 1" in st, st
+    tento = page.inner_text("#list").split("Tento Helados")[1][:200]
+    assert "15% off" in tento and "17.000" in tento, tento  # 1 kg 17000 (antes 20000), sin contar el agua
     # cancelar una búsqueda trabada en la verificación
     state["challenge"] = True
     page.click("#force"); page.wait_for_timeout(5000)
