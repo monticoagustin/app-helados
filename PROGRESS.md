@@ -71,6 +71,15 @@
 - **Página:** solo heladerías con descuento en helado; se muestran los productos en descuento con
   "queda a" y "antes" (sin $/kg). Filtro para incluir o no descuentos de PedidosYa Plus. v0.6.0.
 
+## Hecho (rama `fase-1-diseno-cuartito`, 2026-11-16)
+- **Marca: Cuartito.** Logo: el pote de telgopor visto de arriba, con tres gustos y el cuarto vacío
+  punteado (lo que te ahorrás). Lienzo de exploración: https://claude.ai/artifact/HLiFUSYpsEeDgKa6wcNJZ5
+- **Paleta:** telgopor #F3F5F0, granizado #2A1712, frutilla #D61F4B (solo descuentos), sambayón
+  #FFCE4A, rosa #F7A8B8, chocolate #6B3A2A. **Tipografía:** Rosario (Omnibus-Type), alojada en
+  `web/fonts/` (OFL), con números alineados y fracciones reales (¼, ½).
+- **Interfaz:** portada con la mejor rebaja como precio tachado grande; resultados en un solo ticket
+  de heladería (bordes en zigzag, puntitos entre producto y precio). Celular revisado. Extensión v0.7.0.
+
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),
       pero el formato de `/v2/niles/partners/{id}/menus` todavía no lo vimos: en el navegador integrado

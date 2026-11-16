@@ -118,8 +118,9 @@ with sync_playwright() as p:
     n = len(state["calls"]); page.click("#fetch"); page.wait_for_timeout(3000)
     cache_new = len(state["calls"]) - n
     print("pedidos nuevos con caché:", cache_new)
+    page.wait_for_function("() => { const t = document.getElementById('status').innerText; return t.includes('Rappi:') && t.includes('PedidosYa:'); }", timeout=15000)
     status = page.inner_text("#status")
-    assert "Rappi: ok" in status and "PedidosYa: ok" in status, status
+    assert not page.query_selector("#status .error"), status
     assert solved, "no apareció el aviso de verificación"
     assert address_done, "no apareció el pedido de dirección"
     # ciudad que Rappi no tiene: el mock devuelve Rosario → tiene que avisar
@@ -162,7 +163,7 @@ with sync_playwright() as p:
     lista = page.inner_text("#list")
     assert "No pudimos ver qué productos" in lista.split("Esther Helados Centro")[1][:400], "Esther debería avisar que no hay detalle"
     tento = page.inner_text("#list").split("Tento Helados")[1][:200]
-    assert "15% off" in tento and "17.000" in tento and "20.000" in tento, tento  # 1 kg queda a 17000 (antes 20000)
+    assert "−15%" in tento and "17.000" in tento and "20.000" in tento, tento  # 1 kg queda a 17000 (antes 20000)
     assert "Agua" not in tento and "/kg" not in page.inner_text("#list")
     # la búsqueda no debe dejar ventanas de PedidosYa abiertas ni haberlas mostrado (no hubo nada que resolver)
     assert not [pg for pg in ctx.pages if "/pya/" in pg.url]

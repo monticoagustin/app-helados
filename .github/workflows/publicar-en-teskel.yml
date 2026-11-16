@@ -43,12 +43,13 @@ jobs:
         working-directory: app-src
         run: |
           set -e
-          for f in web/index.html web/app.js web/styles.css extension/manifest.json extension/background.js; do
+          for f in web/index.html web/app.js web/styles.css web/favicon.svg web/fonts/OFL.txt extension/manifest.json extension/background.js; do
             [ -f "$f" ] || { echo "::error::Falta $f"; exit 1; }
           done
           python3 -c "import json; json.load(open('extension/manifest.json'))"
           mkdir -p ../salida
-          cp web/index.html web/app.js web/styles.css ../salida/
+          cp web/index.html web/app.js web/styles.css web/favicon.svg ../salida/
+          mkdir -p ../salida/fonts && cp web/fonts/*.woff2 web/fonts/OFL.txt ../salida/fonts/
           (cd extension && zip -qr ../../salida/helados-extension.zip . -x '*.DS_Store')
           ls -la ../salida
           echo "OK: listo para publicar"
@@ -85,7 +86,8 @@ jobs:
         run: |
           mkdir -p "teskel/${CARPETA_DESTINO}"
           rsync -a --delete \
-            --include 'index.html' --include 'app.js' --include 'styles.css' --include 'helados-extension.zip' \
+            --include 'index.html' --include 'app.js' --include 'styles.css' --include 'favicon.svg' --include 'helados-extension.zip' \
+            --include 'fonts/' --include 'fonts/*.woff2' --include 'fonts/OFL.txt' \
             --exclude '*' \
             salida/ "teskel/${CARPETA_DESTINO}/"
 

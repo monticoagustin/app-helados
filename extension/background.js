@@ -414,8 +414,8 @@ async function fetchPedidosYa(city, progress) {
     const stores = all.filter((s) => s.bestDiscountPct);
     const withDetail = stores.filter((s) => s.deals?.length).length;
     const menuNote = menusBlocked
-      ? ` · PedidosYa no dejó ver el detalle de algunas (${withDetail} con detalle)`
-      : menus.size && !all.some((s) => s.products?.length) ? " · no reconocí los productos de los menús (descargá el diagnóstico)"
+      ? `. PedidosYa no dejó ver el detalle de algunas (${withDetail} con detalle)`
+      : menus.size && !all.some((s) => s.products?.length) ? ". No reconocí los productos de los menús (descargá el diagnóstico)"
         : "";
 
     const where = loc?.address ? ` cerca de ${loc.address}` : "";
