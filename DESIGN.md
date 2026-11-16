@@ -3,7 +3,7 @@
 Un comprobante de mostrador de heladería: papel blanco con bordes dentados sobre fondo crema,
 datos en monoespaciada como una impresora térmica, titulares gruesos y sombras duras de cartel.
 El rojo frutilla es **solo** para rebajas (precio nuevo, %, sello, tachado).
-La versión navegable vive en el artifact de Design System "cuartito"; los valores reales están en
+La versión navegable vive en el Design System "cuartito" (https://claude.ai/artifact/RnPeLyxLWnT9SVhNoBXjrc); los valores reales están en
 `web/styles.css` (`:root`).
 
 ## Color
