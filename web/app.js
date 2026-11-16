@@ -2,7 +2,17 @@
 // (la extensión inyecta un "puente" en esta página).
 const $ = (id) => document.getElementById(id);
 const PLATFORM_NAMES = { pedidosya: "PedidosYa", rappi: "Rappi" };
-const results = {};          // platform -> resultado
+// Ciudades donde Rappi tiene la categoría Helados (relevadas 2026-11-16). PedidosYa usa la
+// dirección que tengas cargada en PedidosYa.
+const CITIES = [
+  ["rosario", "Rosario"], ["buenos-aires", "Buenos Aires"], ["cordoba", "Córdoba"], ["mendoza", "Mendoza"],
+  ["la-plata", "La Plata"], ["mar-del-plata", "Mar del Plata"], ["san-miguel-de-tucuman", "San Miguel de Tucumán"],
+  ["salta", "Salta"], ["neuquen", "Neuquén"], ["parana", "Paraná"], ["bahia-blanca", "Bahía Blanca"],
+  ["san-juan", "San Juan"], ["resistencia", "Resistencia"], ["san-luis", "San Luis"], ["rio-cuarto", "Río Cuarto"],
+  ["san-rafael", "San Rafael"], ["santiago-del-estero", "Santiago del Estero"],
+];
+let results = {};            // platform -> resultado (de la ciudad elegida)
+let city = loadCity();
 const progress = {};         // platform -> último mensaje
 let extVersion = null;
 let busy = false;
@@ -18,6 +28,7 @@ window.addEventListener("message", (e) => {
       if (!extVersion) { extVersion = msg.version; onExtension(); }
       break;
     case "CACHED":
+      if (msg.city !== city.slug) break;
       for (const r of msg.results) results[r.platform] = r;
       render();
       break;
@@ -27,6 +38,7 @@ window.addEventListener("message", (e) => {
       renderProgress();
       break;
     case "RESULT":
+      if (msg.result.citySlug && msg.result.citySlug !== city.slug) break;
       results[msg.result.platform] = msg.result;
       delete progress[msg.result.platform];
       saveLocal();
@@ -57,7 +69,7 @@ function onExtension() {
   $("install").hidden = true;
   $("fetch").disabled = false;
   $("force").disabled = false;
-  send("GET_CACHED");
+  send("GET_CACHED", { city });
 }
 
 function fetchDeals(force) {
@@ -66,12 +78,13 @@ function fetchDeals(force) {
   for (const k of Object.keys(progress)) delete progress[k];
   progress._ = "Arrancando… (tarda 1–2 minutos; podés dejar esta pestaña abierta)";
   renderProgress();
-  send("FETCH", { force, platforms: ["pedidosya", "rappi"] });
+  send("FETCH", { force, city, platforms: ["pedidosya", "rappi"] });
 }
 
 function setBusy(value) {
   busy = value;
   $("fetch").disabled = value || !extVersion;
+  $("city").disabled = value;
   $("force").disabled = value || !extVersion;
   $("fetch").textContent = value ? "Buscando…" : "Traer descuentos";
   if (!value) { delete progress._; renderProgress(); }
@@ -79,10 +92,25 @@ function setBusy(value) {
 
 // ------------------------------------------------------------ guardado local
 function saveLocal() {
-  try { localStorage.setItem("helados:results", JSON.stringify(results)); } catch { /* sin espacio o bloqueado */ }
+  try { localStorage.setItem(`helados:results:${city.slug}`, JSON.stringify(results)); } catch { /* sin espacio o bloqueado */ }
 }
 function loadLocal() {
-  try { Object.assign(results, JSON.parse(localStorage.getItem("helados:results") || "{}")); } catch { /* nada */ }
+  try { results = JSON.parse(localStorage.getItem(`helados:results:${city.slug}`) || "{}"); } catch { results = {}; }
+}
+function loadCity() {
+  let slug = "rosario";
+  try { slug = localStorage.getItem("helados:city") || slug; } catch { /* nada */ }
+  const found = CITIES.find(([s]) => s === slug) || CITIES[0];
+  return { slug: found[0], name: found[1] };
+}
+function setCity(slug) {
+  const found = CITIES.find(([s]) => s === slug) || CITIES[0];
+  city = { slug: found[0], name: found[1] };
+  try { localStorage.setItem("helados:city", city.slug); } catch { /* nada */ }
+  $("city-name").textContent = city.name;
+  loadLocal();
+  render();
+  if (extVersion) send("GET_CACHED", { city });
 }
 
 // ------------------------------------------------------------ render
@@ -92,7 +120,7 @@ const hora = (iso) => new Date(iso).toLocaleString("es-AR", { day: "2-digit", mo
 
 function renderProgress() {
   const lines = Object.entries(progress).map(([k, m]) => {
-    const alert = /verificaci[oó]n/i.test(m) && !/pasada/i.test(m);
+    const alert = /verificaci[oó]n|direcci[oó]n/i.test(m) && !/pasada|listo/i.test(m);
     const label = PLATFORM_NAMES[k] ? `<b>${PLATFORM_NAMES[k]}:</b> ` : "";
     return `<div class="${alert ? "alert" : ""}">${label}${esc(m)}</div>`;
   });
@@ -167,6 +195,10 @@ function downloadRaw(raw) {
 }
 
 // ------------------------------------------------------------ arranque
+$("city").innerHTML = CITIES.map(([s, n]) => `<option value="${s}">${n}</option>`).join("");
+$("city").value = city.slug;
+$("city-name").textContent = city.name;
+$("city").addEventListener("change", (e) => setCity(e.target.value));
 $("fetch").addEventListener("click", () => fetchDeals(false));
 $("force").addEventListener("click", () => fetchDeals(true));
 for (const id of ["f-platform", "f-sort", "f-open", "f-deals"]) $(id).addEventListener("change", render);

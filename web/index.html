@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Helados · descuentos en Rosario</title>
+  <title>Helados · descuentos en heladerías</title>
   <meta name="robots" content="noindex">
   <script>if (/\/helados$/.test(location.pathname)) location.replace(location.pathname + "/" + location.search);</script>
   <link rel="stylesheet" href="styles.css">
@@ -13,7 +13,7 @@
   <header>
     <div>
       <h1>Descuentos en heladerías</h1>
-      <p class="sub">Rosario · PedidosYa y Rappi</p>
+      <p class="sub"><span id="city-name">Rosario</span> · PedidosYa y Rappi</p>
     </div>
     <span id="ext-badge" class="ext-badge off">Extensión: buscando…</span>
   </header>
@@ -31,6 +31,9 @@
   </section>
 
   <section class="actions">
+    <label class="city">Ciudad
+      <select id="city"></select>
+    </label>
     <button id="fetch" class="primary" disabled>Traer descuentos</button>
     <button id="force" class="link" disabled>Actualizar sin caché</button>
   </section>

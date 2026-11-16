@@ -6,7 +6,16 @@ const PAGE_URL = "https://teskel.online/helados/";
 const CACHE_MINUTES = 20;
 const RAPPI_MAX_DETAILS = 30;      // fichas a abrir (solo heladerías abiertas)
 const CHALLENGE_WAIT_MS = 4 * 60 * 1000;
-const CITY = "rosario";
+const HELP_WAIT_MS = 4 * 60 * 1000;   // tiempo para que la persona cargue la dirección en PedidosYa
+const DEFAULT_CITY = { slug: "rosario", name: "Rosario" };
+const PLATFORMS = ["rappi", "pedidosya"];
+
+/** Ciudad pedida por la página, validada (slug tipo "buenos-aires"). */
+function cityFrom(msg) {
+  const slug = String(msg?.city?.slug || "").toLowerCase();
+  return /^[a-z]+(-[a-z]+)*$/.test(slug) ? { slug, name: String(msg.city.name || slug) } : DEFAULT_CITY;
+}
+const cacheKey = (platform, city) => `result:${platform}:${city.slug}`;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const pause = () => sleep(700 + Math.random() * 900); // ritmo de persona, no de bot
@@ -24,9 +33,10 @@ function post(port, msg) {
 }
 
 async function handle(msg, port) {
+  const city = cityFrom(msg);
   if (msg.type === "GET_CACHED") {
-    const results = await Promise.all(["rappi", "pedidosya"].map(readCache));
-    return post(port, { type: "CACHED", results: results.filter(Boolean) });
+    const results = await Promise.all(PLATFORMS.map((p) => readCache(p, city)));
+    return post(port, { type: "CACHED", city: city.slug, results: results.filter(Boolean) });
   }
   if (msg.type === "GET_RAW") {
     const { ["raw:pedidosya"]: raw } = await chrome.storage.local.get("raw:pedidosya");
@@ -38,14 +48,15 @@ async function handle(msg, port) {
   running = true;
   const heartbeat = setInterval(() => post(port, { type: "HEARTBEAT" }), 15000); // mantiene vivo el worker
   const pageTabId = port.sender?.tab?.id;
-  const platforms = msg.platforms?.length ? msg.platforms : ["rappi", "pedidosya"];
+  const platforms = (msg.platforms?.length ? msg.platforms : PLATFORMS).filter((p) => PLATFORMS.includes(p));
   try {
     await Promise.all(platforms.map(async (platform) => {
       const progress = (message) => post(port, { type: "PROGRESS", platform, message });
-      let result = !msg.force && (await readCache(platform, CACHE_MINUTES));
+      let result = !msg.force && (await readCache(platform, city, CACHE_MINUTES));
       if (!result) {
-        result = platform === "rappi" ? await fetchRappi(progress) : await fetchPedidosYa(progress);
-        await chrome.storage.local.set({ [`result:${platform}`]: result });
+        result = platform === "rappi" ? await fetchRappi(city, progress) : await fetchPedidosYa(city, progress);
+        result.citySlug = city.slug;
+        await chrome.storage.local.set({ [cacheKey(platform, city)]: result });
       }
       post(port, { type: "RESULT", result });
     }));
@@ -57,8 +68,9 @@ async function handle(msg, port) {
   }
 }
 
-async function readCache(platform, maxMinutes = Infinity) {
-  const { [`result:${platform}`]: r } = await chrome.storage.local.get(`result:${platform}`);
+async function readCache(platform, city, maxMinutes = Infinity) {
+  const key = cacheKey(platform, city);
+  const { [key]: r } = await chrome.storage.local.get(key);
   if (!r) return null;
   const ageMin = (Date.now() - Date.parse(r.capturedAt)) / 60000;
   return ageMin <= maxMinutes ? { ...r, fromCache: true } : null;
@@ -83,11 +95,18 @@ async function fetchText(url, tries = 3) {
   }
 }
 
-async function fetchRappi(progress) {
+async function fetchRappi(city, progress) {
   try {
-    progress("Buscando heladerías…");
-    const { location, stores } = parseCategoryPage(await fetchText(`${RAPPI_BASE}/restaurantes/category/helados`));
-    const city = location?.city || "?";
+    progress(`Buscando heladerías en ${city.name}…`);
+    const html = await fetchText(`${RAPPI_BASE}/${city.slug}/restaurantes/category/helados`);
+    const { location, stores } = parseCategoryPage(html);
+    // Si la ciudad no existe en Rappi, devuelve la de la cookie sin avisar: lo detectamos.
+    if (location?.url && location.url !== city.slug) {
+      return result("rappi", "error", {
+        message: `Rappi no tiene ${city.name} (me mostró ${location.city}).`,
+      });
+    }
+    const cityName = location?.city || city.name;
     const open = stores.filter((s) => s.open).slice(0, RAPPI_MAX_DETAILS);
     const details = new Map();
     let fails = 0;
@@ -106,8 +125,8 @@ async function fetchRappi(progress) {
     const note = fails ? ` (${fails} fichas sin leer)` : "";
     return result("rappi", "ok", {
       stores: merged,
-      city,
-      message: `${merged.length} heladerías en ${city}, ${open.length} abiertas${note}`,
+      city: cityName,
+      message: `${merged.length} heladerías en ${cityName}, ${open.length} abiertas${note}`,
     });
   } catch (e) {
     if (e.blocked) return result("rappi", "blocked", { message: `Rappi bloqueó la consulta (${e.message})` });
@@ -204,47 +223,83 @@ async function waitForHuman(tabId, progress) {
   return false;
 }
 
-async function fetchPedidosYa(progress) {
+/** Junta lo capturado en la pestaña (las respuestas se pierden si la página navega, así que acumulamos). */
+async function collect(tabId, acc) {
+  const data = await inTab(tabId, readCaptured).catch(() => null);
+  if (!data) return acc;
+  for (const c of data.captured) acc.captured.set(`${c.url}#${JSON.stringify(c.body).length}`, c);
+  if (data.embedded.length) acc.embedded = data.embedded;
+  acc.stores = parseCaptured([...[...acc.captured.values()].map((c) => c.body), ...acc.embedded]);
+  return acc;
+}
+
+async function fetchPedidosYa(city, progress) {
   let tabId = null;
+  const acc = { captured: new Map(), embedded: [], stores: [] };
+  let clicked = null;
+  let neededHelp = false;
   try {
     await registerCapture();
     progress("Abriendo PedidosYa…");
-    const tab = await chrome.tabs.create({ url: `${PEDIDOSYA_BASE}/restaurantes/${CITY}`, active: false });
+    const tab = await chrome.tabs.create({ url: `${PEDIDOSYA_BASE}/restaurantes/${city.slug}`, active: false });
     tabId = tab.id;
     await waitLoaded(tabId);
     await sleep(2500);
 
-    if (!(await waitForHuman(tabId, progress))) {
-      return result("pedidosya", "blocked", { message: "No se pasó la verificación de PedidosYa a tiempo." });
-    }
+    const blocked = () => result("pedidosya", "blocked", { message: "No se pasó la verificación de PedidosYa a tiempo." });
+    if (!(await waitForHuman(tabId, progress))) return blocked();
 
     progress("Buscando heladerías…");
-    const clicked = await inTab(tabId, clickText, [["Helados", "Heladerías", "Heladerias", "Helado"]]);
+    clicked = await inTab(tabId, clickText, [["Helados", "Heladerías", "Heladerias", "Helado"]]);
     await sleep(3000);
-    if (!(await waitForHuman(tabId, progress))) {
-      return result("pedidosya", "blocked", { message: "No se pasó la verificación de PedidosYa a tiempo." });
-    }
-    await inTab(tabId, scrollDown, [4]);
+    if (!(await waitForHuman(tabId, progress))) return blocked();
+    await inTab(tabId, scrollDown, [4]).catch(() => {});
     await sleep(1500);
+    await collect(tabId, acc);
 
-    const { captured, embedded } = await inTab(tabId, readCaptured);
-    const state = await inTab(tabId, pageState);
-    const payloads = [...captured.map((c) => c.body), ...embedded];
-    await saveRaw({ url: state.url, title: state.title, clicked, captured, embedded });
+    if (!acc.stores.length) {
+      // PedidosYa suele pedir una dirección antes de mostrar locales. La carga la persona.
+      neededHelp = true;
+      const t = await chrome.tabs.update(tabId, { active: true });
+      await chrome.windows.update(t.windowId, { focused: true }).catch(() => {});
+      progress(`PedidosYa necesita tu dirección: cargá una dirección en ${city.name} en la pestaña que se abrió `
+        + "(y si querés, tocá Helados). La búsqueda sigue sola cuando aparezcan locales.");
+      const start = Date.now();
+      while (!acc.stores.length && Date.now() - start < HELP_WAIT_MS) {
+        await sleep(3000);
+        const state = await inTab(tabId, pageState).catch(() => null);
+        if (state && isChallengePage(state.title, state.text)) {
+          if (!(await waitForHuman(tabId, progress))) return blocked();
+          continue;
+        }
+        await collect(tabId, acc);
+      }
+      if (acc.stores.length) {
+        progress("¡Listo! Leyendo heladerías…");
+        await sleep(2500);
+        await inTab(tabId, clickText, [["Helados", "Heladerías", "Heladerias"]]).catch(() => null);
+        await sleep(2500);
+        await inTab(tabId, scrollDown, [4]).catch(() => {});
+        await collect(tabId, acc);
+      }
+    }
 
-    const stores = parseCaptured(payloads);
-    if (!stores.length) {
-      const needsAddress = /direcci[oó]n|ingres[aá] tu ubicaci[oó]n/i.test(state.text);
+    const state = await inTab(tabId, pageState).catch(() => ({}));
+    await saveRaw({ url: state.url, title: state.title, clicked, neededHelp,
+      captured: [...acc.captured.values()], embedded: acc.embedded });
+
+    if (!acc.stores.length) {
       return result("pedidosya", "error", {
-        message: needsAddress
-          ? "PedidosYa pide una dirección: abrilo una vez, cargá tu dirección en Rosario y volvé a buscar."
-          : `Leí ${captured.length} respuestas pero no reconocí heladerías. Descargá el diagnóstico y pasámelo.`,
+        message: neededHelp
+          ? `No aparecieron heladerías en PedidosYa (${acc.captured.size} respuestas leídas). `
+            + "Si cargaste la dirección, descargá el diagnóstico y pasámelo."
+          : `Leí ${acc.captured.size} respuestas pero no reconocí heladerías. Descargá el diagnóstico y pasámelo.`,
       });
     }
     return result("pedidosya", "ok", {
-      stores,
-      city: "Rosario",
-      message: `${stores.length} heladerías${clicked ? "" : " (no encontré el filtro Helados; filtré por nombre)"}`,
+      stores: acc.stores,
+      city: city.name,
+      message: `${acc.stores.length} ${acc.stores.length === 1 ? "heladería" : "heladerías"}${clicked ? "" : " (filtradas por nombre)"}`,
     });
   } catch (e) {
     const msg = /error page|ERR_/i.test(e.message) ? "No pude abrir PedidosYa (¿hay internet?)" : `Error: ${e.message}`;

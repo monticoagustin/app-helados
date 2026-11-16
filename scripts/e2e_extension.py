@@ -24,7 +24,7 @@ for f, subs in {
 m = json.load(open(f"{EXT}/manifest.json")); m["host_permissions"].append("http://127.0.0.1/*"); json.dump(m, open(f"{EXT}/manifest.json","w"))
 
 nd = lambda pp: '<html><head><title>Rappi</title></head><body><script id="__NEXT_DATA__" type="application/json">%s</script></body></html>' % json.dumps({"props":{"pageProps":pp}})
-CAT = nd({"location":{"city":"Rosario"},"fallback":{"k":[
+CAT = nd({"location":{"city":"Rosario","url":"rosario"},"fallback":{"k":[
   {"id":1,"status":"OPEN","name":"Grido","etaString":"20 min","rating":4.4,"promotionText":"Envío Gratis: mín $14mil","deliveryCost":0,"hasFreeShipping":True,"categories":[257]},
   {"id":2,"status":"OPEN","name":"Monk's","etaString":"12 min","rating":4.5,"promotionText":"Hasta 33% Off","deliveryCost":500,"categories":[257]},
   {"id":3,"status":"CLOSED","name":"Freddo","etaString":"","rating":4.7,"promotionText":"Hasta 30% Off","deliveryCost":0,"categories":[257]}]}})
@@ -34,20 +34,23 @@ STORE = {1: nd({"fallback":{"r":{"id":1,"name":"Grido","status":"OPEN","address"
             {"id":21,"name":"Kilo","price":20000,"realPrice":25000},{"id":22,"name":"Medio","price":10800,"realPrice":13500}]}]}}})}
 CHALLENGE = "<html><head><title>Just a moment...</title></head><body>Nuestros sistemas han detectado tráfico inusual</body></html>"
 PYA_PAGE = """<html><head><title>Restaurantes en Rosario</title></head><body><a href="#" onclick="fetch('/pya/api/feed').then(r=>r.json());return false;">Helados</a><div style="height:5000px"></div></body></html>"""
+PYA_ADDRESS = """<html><head><title>PedidosYa</title></head><body><h1>Ingresá tu dirección</h1><input placeholder="Calle y número"><div style="height:3000px"></div></body></html>"""
 FEED = json.dumps({"data":{"items":[
   {"id":501,"name":"Heladería Rosarina","rating":4.6,"deliveryTimeText":"25-40 min","shippingAmount":0,"discounts":[{"text":"2x1 en 1/4"}],"link":"/restaurantes/rosario/heladeria-rosarina-menu","categories":[{"name":"Helados"}]},
   {"id":502,"name":"Burger X","rating":4.0,"deliveryTimeText":"30 min","shippingAmount":900}]}})
-state = {"challenge": True, "calls": []}
+state = {"challenge": True, "address": False, "calls": []}
 class Mock(http.server.BaseHTTPRequestHandler):
     def log_message(self,*a): pass
     def out(self, code, ctype, body):
         self.send_response(code); self.send_header("Content-Type", ctype); self.end_headers(); self.wfile.write(body.encode())
     def do_GET(self):
         u = self.path; state["calls"].append(u)
-        if u.startswith("/rappi/restaurantes/category/helados"): return self.out(200,"text/html",CAT)
+        if u.endswith("/restaurantes/category/helados") and u.startswith("/rappi/"): return self.out(200,"text/html",CAT)  # cualquier ciudad → Rosario, como Rappi
         if u.startswith("/rappi/restaurantes/"): return self.out(200,"text/html",STORE[int(u.rsplit("/",1)[1])])
         if u == "/pya/api/feed": return self.out(200,"application/json",FEED)
-        if u.startswith("/pya/"): return self.out(403,"text/html",CHALLENGE) if state["challenge"] else self.out(200,"text/html",PYA_PAGE)
+        if u.startswith("/pya/"):
+            if state["challenge"]: return self.out(403,"text/html",CHALLENGE)
+            return self.out(200,"text/html",PYA_PAGE if state["address"] else PYA_ADDRESS)
         self.out(404,"text/plain","no")
 class Web(http.server.SimpleHTTPRequestHandler):
     def __init__(self,*a,**k): super().__init__(*a, directory=WEB, **k)
@@ -62,15 +65,18 @@ with sync_playwright() as p:
     page = ctx.new_page()
     page.goto("http://127.0.0.1:8769/index.html"); page.wait_for_timeout(2000)
     page.click("#fetch")
-    solved = False
-    for i in range(60):
+    solved = address_done = False
+    for i in range(90):
         page.wait_for_timeout(2000)
         prog = page.inner_text("#progress") if not page.is_hidden("#progress") else ""
+        tabs = [pg for pg in ctx.pages if "/pya/" in pg.url]
         if "verificación" in prog and not solved:
             print("PROGRESO:", prog.replace("\n"," | "))
-            tabs = [pg for pg in ctx.pages if "/pya/" in pg.url]
-            print("pestaña PedidosYa visible:", [t.url for t in tabs])
             state["challenge"] = False; tabs[0].reload(); solved = True   # "la persona resuelve"
+        if "dirección" in prog and not address_done:
+            print("PROGRESO:", prog.replace("\n"," | "))
+            state["address"] = True; tabs[0].reload(); address_done = True   # "la persona carga la dirección"
+            tabs[0].wait_for_timeout(1500); tabs[0].click("text=Helados")
         if page.inner_text("#fetch") == "Traer descuentos" and i > 0: break
     print("STATUS:", page.inner_text("#status").replace("\n"," | "))
     print("LIST:\n" + page.inner_text("#list")[:1200])
@@ -80,10 +86,24 @@ with sync_playwright() as p:
     page.screenshot(path="/tmp/e2e.png", full_page=True)
     # segundo click: debe usar caché (no nuevos pedidos)
     n = len(state["calls"]); page.click("#fetch"); page.wait_for_timeout(3000)
-    print("pedidos nuevos con caché:", len(state["calls"]) - n)
+    cache_new = len(state["calls"]) - n
+    print("pedidos nuevos con caché:", cache_new)
     status = page.inner_text("#status")
     assert "Rappi: ok" in status and "PedidosYa: ok" in status, status
     assert solved, "no apareció el aviso de verificación"
-    assert len(state["calls"]) == n, "el segundo click no usó la caché"
+    assert address_done, "no apareció el pedido de dirección"
+    # ciudad que Rappi no tiene: el mock devuelve Rosario → tiene que avisar
+    page.select_option("#city", "cordoba"); page.wait_for_timeout(500)
+    assert "Córdoba" in page.inner_text("#city-name")
+    assert "Grido" not in page.inner_text("#list"), "mezcló resultados de otra ciudad"
+    page.evaluate("window.postMessage({app:'helados', type:'FETCH', force:true, city:{slug:'cordoba',name:'Córdoba'}, platforms:['rappi']}, location.origin)")
+    for i in range(20):
+        page.wait_for_timeout(1000)
+        if "Rappi no tiene" in page.inner_text("#status"): break
+    print("CÓRDOBA:", page.inner_text("#status"))
+    assert "Rappi no tiene Córdoba" in page.inner_text("#status")
+    page.select_option("#city", "rosario"); page.wait_for_timeout(800)
+    assert "Grido" in page.inner_text("#list"), "al volver a Rosario no mostró lo guardado"
+    assert cache_new == 0, "el segundo click no usó la caché"
     print("E2E OK")
     ctx.close()

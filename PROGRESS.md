@@ -1,6 +1,6 @@
 # PROGRESS
 
-Última actualización: 2026-11-15
+Última actualización: 2026-11-16
 
 ## Decisiones
 - 2026-11-15: la app vive en **teskel.online/helados** (Spacefast, flujo GitHub → Spacefast).
@@ -26,13 +26,20 @@
   verificación resuelta "por una persona").
 - Workflow de publicación a `teskel/helados/`.
 
+## Hecho (rama `fase-1-ciudad-y-direccion`, 2026-11-16)
+- Publicado en https://teskel.online/helados/ (PR #2 mergeado). Rappi probado por el usuario: OK.
+- Selector de ciudad (17 ciudades con Helados en Rappi, relevadas). Rappi usa
+  `/{ciudad}/restaurantes/category/helados`; si la ciudad no existe, Rappi devuelve otra sin avisar
+  → la extensión lo detecta y lo informa. Resultados y caché separados por ciudad.
+- PedidosYa: si no aparecen locales (pide dirección), muestra la pestaña para que la persona cargue
+  la dirección y sigue sola. Acumula lo capturado aunque la página navegue.
+
 ## Falta / próximos pasos
-- [ ] Usuario: crear API key en Spacefast y cargar el secreto `SPACEFAST_TOKEN` en GitHub.
-- [ ] Mergear a main (= publicar) cuando el usuario lo pida.
+- [x] Secreto `SPACEFAST_TOKEN` cargado y publicación funcionando.
 - [ ] Usuario: instalar la extensión y hacer la primera búsqueda real.
 - [ ] Ajustar el parser de PedidosYa con el diagnóstico real (botón "Descargar diagnóstico").
 - [ ] Fichas de PedidosYa (precios por producto); hoy solo promos del listado.
-- [ ] Dirección exacta (hoy: Rosario por IP/cookies de cada plataforma).
+- [ ] Dirección exacta dentro de la ciudad (Rappi: ciudad elegida; PedidosYa: la dirección cargada en PedidosYa).
 - [ ] Más adelante: historial, matching entre plataformas, alertas por Telegram.
 - [ ] Limpiar carpetas vacías del esqueleto inicial (alerts/, notifiers/, etc.) si no se usan.
 

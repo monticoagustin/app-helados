@@ -19,7 +19,9 @@ code { background: var(--accent-soft); padding: 1px 6px; border-radius: 4px; }
 .install { background: var(--card); border: 2px dashed var(--accent); border-radius: 14px; padding: 16px 20px; margin-bottom: 20px; }
 .install ol { margin: 8px 0 0; padding-left: 20px; line-height: 1.7; }
 
-.actions { display: flex; gap: 14px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.actions { display: flex; gap: 14px; align-items: end; margin-bottom: 16px; flex-wrap: wrap; }
+.city { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
+.city select { font-size: 15px; padding: 10px 10px; }
 button { font: inherit; cursor: pointer; }
 .primary { background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 12px 22px; font-weight: 650; }
 .primary[disabled] { opacity: .55; cursor: not-allowed; }
