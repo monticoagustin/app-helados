@@ -6,7 +6,8 @@ const PAGE_URL = "https://teskel.online/helados/";
 const CACHE_MINUTES = 20;
 const RAPPI_MAX_DETAILS = 30;      // fichas a abrir (solo heladerías abiertas)
 const CHALLENGE_WAIT_MS = 4 * 60 * 1000;
-const HELP_WAIT_MS = 4 * 60 * 1000;   // tiempo para que la persona cargue la dirección en PedidosYa
+const HELP_WAIT_MS = 3 * 60 * 1000;   // tiempo para que la persona cargue la dirección en PedidosYa
+const STUCK_MS = 12 * 60 * 1000;      // si una búsqueda lleva más que esto, la damos por muerta
 const DEFAULT_CITY = { slug: "rosario", name: "Rosario" };
 const PLATFORMS = ["rappi", "pedidosya"];
 
@@ -19,14 +20,24 @@ const cacheKey = (platform, city) => `result:${platform}:${city.slug}`;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const pause = () => sleep(700 + Math.random() * 900); // ritmo de persona, no de bot
-let running = false;
+let running = null;            // { since } mientras hay una búsqueda
+let cancelRequested = false;
+const ports = new Set();       // todas las páginas abiertas reciben el progreso
+
+class Cancelled extends Error {}
+function checkCancel() { if (cancelRequested) throw new Cancelled("Búsqueda cancelada"); }
+const isRunning = () => running && Date.now() - running.since < STUCK_MS;
 
 chrome.action.onClicked.addListener(() => chrome.tabs.create({ url: PAGE_URL }));
 
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== "helados") return;
+  ports.add(port);
+  port.onDisconnect.addListener(() => ports.delete(port));
   port.onMessage.addListener((msg) => handle(msg, port).catch((e) => post(port, { type: "ERROR", message: String(e) })));
 });
+
+const broadcast = (msg) => { for (const p of ports) post(p, msg); };
 
 function post(port, msg) {
   try { port.postMessage(msg); } catch { /* la página se cerró */ }
@@ -42,29 +53,42 @@ async function handle(msg, port) {
     const { ["raw:pedidosya"]: raw } = await chrome.storage.local.get("raw:pedidosya");
     return post(port, { type: "RAW", platform: "pedidosya", raw: raw || null });
   }
+  if (msg.type === "STATUS") return post(port, { type: "STATUS", running: Boolean(isRunning()) });
+  if (msg.type === "CANCEL") {
+    if (isRunning()) { cancelRequested = true; broadcast({ type: "PROGRESS", platform: "_", message: "Cancelando…" }); }
+    return;
+  }
+  if (msg.type === "OPEN_PYA") {
+    // Pestaña normal de PedidosYa para que la persona cargue su dirección (sin capturar nada).
+    const tab = await chrome.tabs.create({ url: `${PEDIDOSYA_BASE}/`, active: true });
+    await chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
+    return;
+  }
   if (msg.type !== "FETCH") return;
-  if (running) return post(port, { type: "BUSY" });
+  if (isRunning()) return post(port, { type: "BUSY" });
 
-  running = true;
-  const heartbeat = setInterval(() => post(port, { type: "HEARTBEAT" }), 15000); // mantiene vivo el worker
+  running = { since: Date.now() };
+  cancelRequested = false;
+  const heartbeat = setInterval(() => broadcast({ type: "HEARTBEAT" }), 15000); // mantiene vivo el worker
   const pageTabId = port.sender?.tab?.id;
   const platforms = (msg.platforms?.length ? msg.platforms : PLATFORMS).filter((p) => PLATFORMS.includes(p));
   try {
     await Promise.all(platforms.map(async (platform) => {
-      const progress = (message) => post(port, { type: "PROGRESS", platform, message });
+      const progress = (message) => { checkCancel(); broadcast({ type: "PROGRESS", platform, message }); };
       let result = !msg.force && (await readCache(platform, city, CACHE_MINUTES));
       if (!result) {
         result = platform === "rappi" ? await fetchRappi(city, progress) : await fetchPedidosYa(city, progress);
         result.citySlug = city.slug;
-        await chrome.storage.local.set({ [cacheKey(platform, city)]: result });
+        if (!cancelRequested) await chrome.storage.local.set({ [cacheKey(platform, city)]: result });
       }
-      post(port, { type: "RESULT", result });
+      broadcast({ type: "RESULT", result });
     }));
   } finally {
     clearInterval(heartbeat);
-    running = false;
+    running = null;
+    cancelRequested = false;
     if (pageTabId) chrome.tabs.update(pageTabId, { active: true }).catch(() => {});
-    post(port, { type: "DONE" });
+    broadcast({ type: "DONE" });
   }
 }
 
@@ -116,7 +140,7 @@ async function fetchRappi(city, progress) {
       try {
         details.set(s.id, parseStorePage(await fetchText(s.url)));
       } catch (e) {
-        if (e.blocked) throw e;
+        if (e.blocked || e instanceof Cancelled) throw e;
         fails++;
         console.warn("Rappi: no pude leer", s.name, e);
       }
@@ -129,6 +153,7 @@ async function fetchRappi(city, progress) {
       message: `${merged.length} heladerías en ${cityName}, ${open.length} abiertas${note}`,
     });
   } catch (e) {
+    if (e instanceof Cancelled) return result("rappi", "error", { message: "Cancelada" });
     if (e.blocked) return result("rappi", "blocked", { message: `Rappi bloqueó la consulta (${e.message})` });
     const msg = e instanceof StructureChanged ? `Rappi cambió su estructura: ${e.message}`
       : /failed to fetch|network/i.test(e.message) ? "No pude conectarme con Rappi (¿hay internet?)"
@@ -212,6 +237,7 @@ async function waitForHuman(tabId, progress) {
   const start = Date.now();
   while (Date.now() - start < CHALLENGE_WAIT_MS) {
     await sleep(2000);
+    checkCancel();
     await waitLoaded(tabId, 10000);
     state = await inTab(tabId, pageState).catch(() => null);
     if (state && !isChallengePage(state.title, state.text)) {
@@ -262,11 +288,18 @@ async function fetchPedidosYa(city, progress) {
       neededHelp = true;
       const t = await chrome.tabs.update(tabId, { active: true });
       await chrome.windows.update(t.windowId, { focused: true }).catch(() => {});
-      progress(`PedidosYa necesita tu dirección: cargá una dirección en ${city.name} en la pestaña que se abrió `
-        + "(y si querés, tocá Helados). La búsqueda sigue sola cuando aparezcan locales.");
+      const helpMsg = (left) => `PedidosYa no muestra heladerías todavía: en la pestaña que se abrió cargá una dirección `
+        + `en ${city.name} y entrá a Helados. Sigo sola cuando aparezcan (espero ${left}).`;
+      progress(helpMsg("3 min"));
       const start = Date.now();
+      let lastNotice = Date.now();
       while (!acc.stores.length && Date.now() - start < HELP_WAIT_MS) {
         await sleep(3000);
+        checkCancel();
+        if (Date.now() - lastNotice > 30000) {
+          lastNotice = Date.now();
+          progress(helpMsg(`${Math.ceil((HELP_WAIT_MS - (Date.now() - start)) / 60000)} min más`));
+        }
         const state = await inTab(tabId, pageState).catch(() => null);
         if (state && isChallengePage(state.title, state.text)) {
           if (!(await waitForHuman(tabId, progress))) return blocked();
@@ -284,10 +317,6 @@ async function fetchPedidosYa(city, progress) {
       }
     }
 
-    const state = await inTab(tabId, pageState).catch(() => ({}));
-    await saveRaw({ url: state.url, title: state.title, clicked, neededHelp,
-      captured: [...acc.captured.values()], embedded: acc.embedded });
-
     if (!acc.stores.length) {
       return result("pedidosya", "error", {
         message: neededHelp
@@ -302,9 +331,15 @@ async function fetchPedidosYa(city, progress) {
       message: `${acc.stores.length} ${acc.stores.length === 1 ? "heladería" : "heladerías"}${clicked ? "" : " (filtradas por nombre)"}`,
     });
   } catch (e) {
+    if (e instanceof Cancelled) return result("pedidosya", "error", { message: "Cancelada" });
     const msg = /error page|ERR_/i.test(e.message) ? "No pude abrir PedidosYa (¿hay internet?)" : `Error: ${e.message}`;
     return result("pedidosya", "error", { message: msg });
   } finally {
+    // El diagnóstico se guarda siempre (también si falla o se cancela), para poder ajustar el parser.
+    const state = tabId != null ? await inTab(tabId, pageState).catch(() => ({})) : {};
+    if (tabId != null) await collect(tabId, acc).catch(() => {});
+    await saveRaw({ url: state.url, title: state.title, text: state.text, clicked, neededHelp,
+      captured: [...acc.captured.values()], embedded: acc.embedded }).catch(() => {});
     await chrome.scripting.unregisterContentScripts({ ids: ["pya-capture"] }).catch(() => {});
     if (tabId != null) chrome.tabs.remove(tabId).catch(() => {});
   }

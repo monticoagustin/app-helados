@@ -30,12 +30,25 @@
     </ol>
   </section>
 
+  <section id="pya-setup" class="setup" hidden>
+    <div>
+      <b>Antes de buscar en PedidosYa:</b> cargá tu dirección una vez. Se abre PedidosYa en una pestaña:
+      poné tu dirección (y resolvé la verificación si aparece). Queda guardada en tu Chrome.
+    </div>
+    <div class="setup-actions">
+      <button id="open-pya" class="secondary">Abrir PedidosYa para cargar la dirección</button>
+      <button id="pya-done" class="link">Ya la cargué</button>
+    </div>
+  </section>
+
   <section class="actions">
     <label class="city">Ciudad
       <select id="city"></select>
     </label>
     <button id="fetch" class="primary" disabled>Traer descuentos</button>
     <button id="force" class="link" disabled>Actualizar sin caché</button>
+    <button id="cancel" class="secondary" hidden>Cancelar búsqueda</button>
+    <button id="show-pya-setup" class="link" hidden>Cambiar dirección de PedidosYa</button>
   </section>
 
   <section id="progress" class="progress" hidden></section>

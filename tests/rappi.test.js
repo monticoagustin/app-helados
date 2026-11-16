@@ -69,7 +69,7 @@ test("mergeStore combina listado + ficha y calcula resúmenes", () => {
   const { stores } = parseCategoryPage(CATEGORY_HTML);
   const frais = mergeStore(stores[1], parseStorePage(STORE_HTML));
   assert.equal(frais.address, "Paraguay 1850");
-  assert.equal(frais.bestDiscountPct, 30); // "Hasta 30% Off" del listado > 25% de productos
+  assert.equal(frais.bestDiscountPct, 25); // el dato real de productos manda sobre el "Hasta 30% Off"
   assert.equal(frais.bestPricePerKg, 17625);
   assert.equal(frais.products.length, 5);
 

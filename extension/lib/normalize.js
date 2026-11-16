@@ -138,10 +138,21 @@ export function isBulkIceCream(name) {
   return !NOT_BULK.test(clean(name));
 }
 
+const ICE_CREAM_WORDS = /\b(helad\w*|gelat\w*|sorbet\w*|palitos?|bombon\w*|paletas?|sundae|frapp\w*|batidos?|milkshake|almendrado|escoces\w*|casata|tentacion|cucuruchos?|cuchuruchos?|conos?|kilos?|kg|cuartos?|medio|1\/4|1\/2|potes?|copas?|affogato|granizad\w*)\b/;
+const NOT_ICE_CREAM = /\b(agua|aguas|gaseosas?|coca|cola|sprite|fanta|pepsi|7up|cervezas?|vinos?|jugos?|soda|cafe|te|infusion\w*|alfajor\w*|galletit\w*|budin\w*|medialunas?|facturas?|sandwich\w*|tostados?|bolsas?|envases?|vasos?|cucharas?|cucharitas?|servilletas?|propina|chocolatada|yogur\w*)\b/;
+
+/** ¿Es un producto de helado? Excluye bebidas, alfajores, panificados y accesorios. */
+export function isIceCreamProduct(name, description = "", section = "") {
+  const n = clean(name);
+  if (NOT_ICE_CREAM.test(n) && !/helad/.test(n)) return false;
+  return ICE_CREAM_WORDS.test(clean(`${name} ${description} ${section}`));
+}
+
 /** Completa un producto con tamaño, % y precio por kg (solo helado por peso). */
-export function normalizeProduct({ name, description = "", price, originalPrice }) {
+export function normalizeProduct({ name, description = "", section = "", price, originalPrice }) {
   const original = originalPrice && originalPrice >= price ? originalPrice : price;
-  const sizeKg = isBulkIceCream(name) ? parseSizeKg(`${name} ${description}`) : null;
+  const isIceCream = isIceCreamProduct(name, description, section);
+  const sizeKg = isIceCream && isBulkIceCream(name) ? parseSizeKg(`${name} ${description}`) : null;
   return {
     name,
     price,
@@ -149,19 +160,27 @@ export function normalizeProduct({ name, description = "", price, originalPrice 
     discountPct: discountPct(price, original),
     sizeKg,
     pricePerKg: pricePerKg(price, sizeKg),
+    isIceCream,
   };
 }
 
-/** Agrega a la heladería sus resúmenes: mejor % efectivo, mejor $/kg, envío gratis. */
+/** Agrega a la heladería sus resúmenes: mejor % efectivo, mejor $/kg, envío gratis.
+ *  Solo cuentan los productos de helado (no bebidas, alfajores, etc.). */
 export function summarizeStore(store) {
   const promos = (store.promos || []).filter(Boolean).map(parsePromo);
-  const productPcts = (store.products || []).map((p) => p.discountPct || 0);
-  // Promos "solo con medio de pago" se muestran pero no cuentan para el ranking general.
-  const promoPcts = promos.filter((p) => p.pct && !p.payment).map((p) => p.pct);
+  const all = store.products || [];
+  const products = all.filter((p) => p.isIceCream !== false);
+  const productPcts = products.map((p) => p.discountPct || 0);
+  // No cuentan para el ranking: promos con medio de pago, y los "Hasta X% off" cuando ya
+  // tenemos los productos (ese "hasta" puede venir de una gaseosa; mejor el dato real).
+  const promoPcts = promos
+    .filter((p) => p.pct && !p.payment && !(p.upTo && all.length))
+    .map((p) => p.pct);
   const best = Math.max(0, ...productPcts, ...promoPcts);
-  const perKg = (store.products || []).map((p) => p.pricePerKg).filter(Boolean);
+  const perKg = products.map((p) => p.pricePerKg).filter(Boolean);
   return {
     ...store,
+    products,
     promosParsed: promos,
     bestDiscountPct: best > 0 ? best : null,
     bestPricePerKg: perKg.length ? Math.min(...perKg) : null,

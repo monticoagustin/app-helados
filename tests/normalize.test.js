@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  discountPct, isIceCreamStore, normalizeProduct, parsePromo, parseSizeKg, pricePerKg, summarizeStore,
+  discountPct, isIceCreamProduct, isIceCreamStore, normalizeProduct, parsePromo, parseSizeKg, pricePerKg, summarizeStore,
 } from "../extension/lib/normalize.js";
 
 test("parseSizeKg entiende los tamaños habituales", () => {
@@ -25,7 +25,7 @@ test("precio por kg y % de descuento", () => {
 test("normalizeProduct con datos reales de Rappi (Frais Helados)", () => {
   const p = normalizeProduct({ name: "Helado 1/2Kg", description: "4 sabores", price: 10875, originalPrice: 14500 });
   assert.deepEqual(p, {
-    name: "Helado 1/2Kg", price: 10875, originalPrice: 14500, discountPct: 25, sizeKg: 0.5, pricePerKg: 21750,
+    name: "Helado 1/2Kg", price: 10875, originalPrice: 14500, discountPct: 25, sizeKg: 0.5, pricePerKg: 21750, isIceCream: true,
   });
   const sinDesc = normalizeProduct({ name: "Cucurucho", price: 1000, originalPrice: 1000 });
   assert.equal(sinDesc.discountPct, null);
@@ -81,6 +81,34 @@ test("isIceCreamStore", () => {
   assert.ok(!isIceCreamStore("McDonald's", ["Hamburguesas"]));
 });
 
+test("isIceCreamProduct: solo helados (caso real: 'Agua mineral 500' en una heladería)", () => {
+  const si = [
+    ["Helado 1Kg", "", "Helado"], ["Cuarto", "", "Helados"], ["Palito Bombon - Dulce de Leche", "", ""],
+    ["Paleta de Limon", "", ""], ["Cucurucho", "", ""], ["Alfajor helado", "", ""], ["Sundae de chocolate", "", ""],
+    ["Kilo", "", ""], ["Promo 2 kilos", "", ""], ["Bombón Escocés", "", ""],
+  ];
+  const no = [
+    ["Agua mineral 500", "", "Bebidas"], ["Agua sin gas 500ml", "", ""], ["Coca Cola 1.5L", "", "Bebidas"],
+    ["Alfajor Cookie", "", "Helados"], ["Café con leche", "", ""], ["Cerveza Quilmes", "", ""],
+    ["Medialunas x 6", "", ""], ["Tarta de manzana", "", "Postres"],
+  ];
+  for (const [n, d, sec] of si) assert.ok(isIceCreamProduct(n, d, sec), `debería ser helado: ${n}`);
+  for (const [n, d, sec] of no) assert.ok(!isIceCreamProduct(n, d, sec), `no es helado: ${n}`);
+});
+
+test("summarizeStore ignora descuentos de productos que no son helado", () => {
+  const s = summarizeStore({
+    name: "Heladería",
+    promos: [],
+    products: [
+      normalizeProduct({ name: "Agua mineral 500", section: "Bebidas", price: 500, originalPrice: 1000 }),
+      normalizeProduct({ name: "Helado 1 kg", section: "Helados", price: 18000, originalPrice: 20000 }),
+    ],
+  });
+  assert.equal(s.bestDiscountPct, 10);
+  assert.deepEqual(s.products.map((p) => p.name), ["Helado 1 kg"]);
+});
+
 test("summarizeStore elige el mejor descuento sin contar promos de banco", () => {
   const s = summarizeStore({
     name: "X",
@@ -90,8 +118,11 @@ test("summarizeStore elige el mejor descuento sin contar promos de banco", () =>
       normalizeProduct({ name: "1/4 kg", price: 6000 }),
     ],
   });
-  assert.equal(s.bestDiscountPct, 30);
+  // "Hasta 30% Off" no cuenta porque ya tenemos los productos reales (25%)
+  assert.equal(s.bestDiscountPct, 25);
   assert.equal(s.bestPricePerKg, 18000);
+  const sinProductos = summarizeStore({ name: "X", promos: ["Hasta 30% Off"], products: [] });
+  assert.equal(sinProductos.bestDiscountPct, 30);
   assert.equal(s.promosParsed[1].payment, "modo");
 
   const nada = summarizeStore({ name: "Y", promos: ["Envío Gratis: Aplican TyC"], products: [] });
