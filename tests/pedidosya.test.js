@@ -47,3 +47,37 @@ test("detecta la página de verificación", () => {
   assert.ok(isChallengePage("", "Nuestros sistemas han detectado tráfico inusual"));
   assert.ok(!isChallengePage("Heladerías en Rosario - PedidosYa", "Grido, Freddo..."));
 });
+
+// ---- formato REAL de /v4/shoplist/vendors
+import { readFileSync } from "node:fs";
+const REAL = JSON.parse(readFileSync(new URL("./fixtures/pedidosya_vendors_real.json", import.meta.url), "utf8"));
+
+test("formato real: lee los locales de /v4/shoplist/vendors", () => {
+  const stores = parseCaptured([REAL]);
+  assert.deepEqual(stores.map((s) => s.name), ["Esther Helados Centro", "Tento Helados San Juan 608", "Heladería Inventada"]);
+  const esther = stores[0];
+  assert.equal(esther.id, "59418");
+  assert.equal(esther.rating, 4.6);
+  assert.equal(esther.reviews, 89);
+  assert.equal(esther.eta, "15-30 min");
+  assert.equal(esther.deliveryFee, 0);
+  assert.equal(esther.freeShipping, true);
+  assert.equal(esther.open, true);
+  assert.equal(esther.distanceKm, 2.24);
+  assert.equal(esther.url, "https://www.pedidosya.com.ar/restaurantes/rosario/esther-helados-centro-menu");
+  assert.deepEqual(esther.promos, ["Envío gratis (con PedidosYa Plus)"]);
+  assert.equal(esther.bestDiscountPct, null); // el envío gratis no es descuento en helado
+});
+
+test("formato real: descuentos en % y locales cerrados", () => {
+  const inv = parseCaptured([REAL]).find((s) => s.id === "1");
+  assert.equal(inv.open, false);
+  assert.equal(inv.deliveryFee, 900);
+  assert.ok(inv.promos.includes("30% off en kilos"));
+  assert.equal(inv.bestDiscountPct, 30);
+});
+
+test("formato real: varias páginas se juntan sin duplicar", () => {
+  const stores = parseCaptured([REAL, { vendors: REAL.vendors.slice(0, 1) }]);
+  assert.equal(stores.length, 3);
+});

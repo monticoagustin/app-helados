@@ -126,25 +126,93 @@ const richness = (s) => s.products.length * 10 + s.promos.length
 
 function merge(a, b) {
   const [base, other] = richness(b) > richness(a) ? [b, a] : [a, b];
-  for (const k of ["address", "rating", "eta", "deliveryFee", "url", "open"]) if (base[k] == null) base[k] = other[k];
+  for (const k of ["address", "rating", "eta", "deliveryFee", "url", "open", "location", "categoryIds"]) if (base[k] == null) base[k] = other[k];
   base.promos = [...new Set([...base.promos, ...other.promos])];
   base.categories = [...new Set([...base.categories, ...other.categories])];
   if (!base.products.length) base.products = other.products;
   return base;
 }
 
+// ---------------------------------------------------------------- formato real (2026-11-16)
+// POST /v4/shoplist/vendors?size=30&page=N → { vendors: [ { id, name, url, rating:{score,surveyCount},
+//   delivery:{ bucket:{label}, price:{ deliveryFeeTotal, deliveryFeeTotalWithDiscount } },
+//   state:{status}, location:{latitude,longitude}, mainFoodCategories:[{id,name}],
+//   discounts:[{ type, amount, calculationType, discountTag, conditions }], discountSummary:{totalAmount,type} } ] }
+export const HELADOS_CATEGORY_ID = 25;
+
+const isVendor = (v) => isObj(v) && v.id != null && typeof v.name === "string"
+  && (isObj(v.delivery) || isObj(v.state) || isObj(v.rating));
+
+function discountTexts(v) {
+  const out = [];
+  for (const d of Array.isArray(v.discounts) ? v.discounts : []) {
+    if (!isObj(d)) continue;
+    const plus = isObj(d.conditions) && "SUBSCRIPTION" in d.conditions ? " (con PedidosYa Plus)" : "";
+    const pct = d.calculationType === "PERCENTAGE" ? Number(d.amount) : null;
+    if (d.type === "DELIVERY_FEE" || d.target === "DELIVERY_FEE") {
+      out.push(pct === 100 ? `Envío gratis${plus}` : pct ? `Envío ${pct}% off${plus}` : `Envío con descuento${plus}`);
+    } else if (d.discountTag) {
+      out.push(`${d.discountTag}${plus}`);
+    } else if (pct) {
+      out.push(`${pct}% off${plus}`);
+    } else if (d.amount) {
+      out.push(`$${Math.round(d.amount).toLocaleString("es-AR")} off${plus}`);
+    }
+  }
+  const sum = isObj(v.discountSummary) ? v.discountSummary : null;
+  if (sum && Number(sum.totalAmount) > 0 && sum.type === "PERCENTAGE") out.push(`Hasta ${Number(sum.totalAmount)}% off`);
+  return [...new Set(out)];
+}
+
+export function parseVendor(v) {
+  const price = isObj(v.delivery?.price) ? v.delivery.price : {};
+  const fee = toNumber(price.deliveryFeeTotalWithDiscount ?? price.deliveryFeeTotal);
+  return {
+    platform: "pedidosya",
+    id: String(v.id),
+    name: v.name.trim(),
+    address: null,
+    rating: toNumber(v.rating?.score) ? Math.round(toNumber(v.rating.score) * 10) / 10 : null,
+    reviews: toNumber(v.rating?.surveyCount),
+    eta: v.delivery?.bucket?.label || v.distance?.delivery?.valueLabel || null,
+    deliveryFee: fee,
+    freeShipping: fee === 0,
+    open: v.state?.status ? v.state.status === "OPEN" : null,
+    url: typeof v.url === "string" ? (v.url.startsWith("http") ? v.url : PEDIDOSYA_BASE + v.url) : null,
+    location: v.location ? { lat: v.location.latitude, lng: v.location.longitude } : null,
+    distanceKm: toNumber(v.distance?.legacyDistance),
+    categories: (v.mainFoodCategories || []).map((c) => c?.name).filter(Boolean),
+    categoryIds: (v.mainFoodCategories || []).map((c) => c?.id).filter((x) => x != null),
+    promos: discountTexts(v),
+    products: [],
+  };
+}
+
+/** Locales con el formato real de /v4/shoplist/vendors (cualquier objeto con { vendors: [...] }). */
+export function parseVendorLists(payloads) {
+  const out = [];
+  for (const payload of payloads) {
+    for (const node of walk(payload)) {
+      if (Array.isArray(node.vendors)) out.push(...node.vendors.filter(isVendor).map(parseVendor));
+    }
+  }
+  return out;
+}
+
 /** Todas las heladerías encontradas en las respuestas capturadas. */
 export function parseCaptured(payloads) {
   const byId = new Map();
+  for (const s of parseVendorLists(payloads)) byId.set(s.id, byId.has(s.id) ? merge(byId.get(s.id), s) : s);
   for (const payload of payloads) {
     for (const node of walk(payload)) {
+      if (Array.isArray(node.vendors)) continue; // ya procesado arriba
       if (!looksLikeStore(node)) continue;
       const s = parseStore(node);
       byId.set(s.id, byId.has(s.id) ? merge(byId.get(s.id), s) : s);
     }
   }
   return [...byId.values()]
-    .filter((s) => isIceCreamStore(s.name, s.categories))
+    .filter((s) => (s.categoryIds || []).includes(HELADOS_CATEGORY_ID) || isIceCreamStore(s.name, s.categories))
     .map(summarizeStore);
 }
 

@@ -15,6 +15,7 @@ let results = {};            // platform -> resultado (de la ciudad elegida)
 let city = loadCity();
 const progress = {};         // platform -> último mensaje
 let extVersion = null;
+let pyaAddress = null;       // dirección que la extensión tiene guardada para PedidosYa
 let busy = false;
 
 // ------------------------------------------------------------ comunicación
@@ -47,6 +48,7 @@ window.addEventListener("message", (e) => {
       break;
     case "BUSY":
     case "STATUS":
+      if (msg.type === "STATUS") { pyaAddress = msg.pyaAddress; renderSetup(); }
       if (msg.type === "BUSY" || msg.running) {
         setBusy(true);
         progress._ = "Hay una búsqueda en curso (el avance aparece acá). Si quedó trabada, tocá Cancelar.";
@@ -55,6 +57,7 @@ window.addEventListener("message", (e) => {
       break;
     case "DONE":
       setBusy(false);
+      send("STATUS");
       break;
     case "RAW":
       downloadRaw(msg.raw);
@@ -79,10 +82,11 @@ function onExtension() {
 }
 
 function renderSetup() {
-  let done = false;
-  try { done = localStorage.getItem("helados:pya-address") === "1"; } catch { /* nada */ }
+  let done = Boolean(pyaAddress);
+  try { done = done || localStorage.getItem("helados:pya-address") === "1"; } catch { /* nada */ }
   $("pya-setup").hidden = !extVersion || done;
   $("show-pya-setup").hidden = !extVersion || !done;
+  $("show-pya-setup").textContent = pyaAddress ? `PedidosYa: ${pyaAddress} · cambiar` : "Cambiar dirección de PedidosYa";
 }
 function setPyaDone(value) {
   try { localStorage.setItem("helados:pya-address", value ? "1" : "0"); } catch { /* nada */ }
@@ -221,7 +225,7 @@ $("fetch").addEventListener("click", () => fetchDeals(false));
 $("cancel").addEventListener("click", () => send("CANCEL"));
 $("open-pya").addEventListener("click", () => { send("OPEN_PYA"); setPyaDone(true); });
 $("pya-done").addEventListener("click", () => setPyaDone(true));
-$("show-pya-setup").addEventListener("click", () => setPyaDone(false));
+$("show-pya-setup").addEventListener("click", () => { pyaAddress = null; setPyaDone(false); });
 $("force").addEventListener("click", () => fetchDeals(true));
 for (const id of ["f-platform", "f-sort", "f-open", "f-deals"]) $(id).addEventListener("change", render);
 $("diag").addEventListener("click", (e) => {

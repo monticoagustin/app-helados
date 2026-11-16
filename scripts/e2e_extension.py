@@ -16,7 +16,8 @@ MOCK = "http://127.0.0.1:8768"
 for f, subs in {
   "lib/rappi.js": [('"https://www.rappi.com.ar"', f'"{MOCK}/rappi"')],
   "lib/pedidosya.js": [('"https://www.pedidosya.com.ar"', f'"{MOCK}/pya"')],
-  "background.js": [('"https://www.pedidosya.com.ar/*"', f'"{MOCK}/pya/*"')],
+  "background.js": [('"https://www.pedidosya.com.ar/*"', f'"{MOCK}/pya/*"'),
+                    ('u.hostname.endsWith("pedidosya.com.ar")', 'u.pathname.startsWith("/pya/")')],
 }.items():
     p = os.path.join(EXT, f); s = open(p).read()
     for a, b in subs: assert a in s, (f, a); s = s.replace(a, b)
@@ -34,11 +35,12 @@ STORE = {1: nd({"fallback":{"r":{"id":1,"name":"Grido","status":"OPEN","address"
          2: nd({"fallback":{"r":{"id":2,"name":"Monk's","status":"OPEN","address":"Tucumán 1996","corridors":[{"products":[
             {"id":21,"name":"Kilo","price":20000,"realPrice":25000},{"id":22,"name":"Medio","price":10800,"realPrice":13500}]}]}}})}
 CHALLENGE = "<html><head><title>Just a moment...</title></head><body>Nuestros sistemas han detectado tráfico inusual</body></html>"
-PYA_PAGE = """<html><head><title>Restaurantes en Rosario</title></head><body><a href="#" onclick="fetch('/pya/api/feed').then(r=>r.json());return false;">Helados</a><div style="height:5000px"></div></body></html>"""
+# Como la web real: la lista de Helados hace POST /v4/shoplist/vendors (formato real, ver tests/fixtures)
+PYA_LIST = """<html><head><title>PedidosYa! Resultados</title></head><body><div style="height:5000px">lista</div>
+<script>const x = new XMLHttpRequest(); x.open('POST', '/pya/v4/shoplist/vendors?size=30&page=1'); x.setRequestHeader('Content-Type','application/json'); x.send('{}');</script></body></html>"""
 PYA_ADDRESS = """<html><head><title>PedidosYa</title></head><body><h1>Ingresá tu dirección</h1><input placeholder="Calle y número"><div style="height:3000px"></div></body></html>"""
-FEED = json.dumps({"data":{"items":[
-  {"id":501,"name":"Heladería Rosarina","rating":4.6,"deliveryTimeText":"25-40 min","shippingAmount":0,"discounts":[{"text":"2x1 en 1/4"}],"link":"/restaurantes/rosario/heladeria-rosarina-menu","categories":[{"name":"Helados"}]},
-  {"id":502,"name":"Burger X","rating":4.0,"deliveryTimeText":"30 min","shippingAmount":900}]}})
+PYA_RESULTS_NO_CAT = """<html><head><title>PedidosYa! Resultados</title></head><body>Todos los restaurantes</body></html>"""
+VENDORS = open(os.path.join(ROOT, "tests", "fixtures", "pedidosya_vendors_real.json")).read()
 state = {"challenge": True, "address": False, "calls": []}
 class Mock(http.server.BaseHTTPRequestHandler):
     def log_message(self,*a): pass
@@ -48,10 +50,15 @@ class Mock(http.server.BaseHTTPRequestHandler):
         u = self.path; state["calls"].append(u)
         if u.endswith("/restaurantes/category/helados") and u.startswith("/rappi/"): return self.out(200,"text/html",CAT)  # cualquier ciudad → Rosario, como Rappi
         if u.startswith("/rappi/restaurantes/"): return self.out(200,"text/html",STORE[int(u.rsplit("/",1)[1])])
-        if u == "/pya/api/feed": return self.out(200,"application/json",FEED)
         if u.startswith("/pya/"):
             if state["challenge"]: return self.out(403,"text/html",CHALLENGE)
-            return self.out(200,"text/html",PYA_PAGE if state["address"] else PYA_ADDRESS)
+            if u.startswith("/pya/restaurantes?") and "lat=" in u:
+                return self.out(200,"text/html",PYA_LIST if "category=25" in u else PYA_RESULTS_NO_CAT)
+            return self.out(200,"text/html",PYA_ADDRESS)
+        self.out(404,"text/plain","no")
+    def do_POST(self):
+        u = self.path; state["calls"].append("POST " + u)
+        if u.startswith("/pya/v4/shoplist/vendors"): return self.out(200,"application/json",VENDORS)
         self.out(404,"text/plain","no")
 class Web(http.server.SimpleHTTPRequestHandler):
     def __init__(self,*a,**k): super().__init__(*a, directory=WEB, **k)
@@ -76,8 +83,9 @@ with sync_playwright() as p:
             state["challenge"] = False; tabs[0].reload(); solved = True   # "la persona resuelve"
         if "dirección" in prog and not address_done:
             print("PROGRESO:", prog.replace("\n"," | "))
-            state["address"] = True; tabs[0].reload(); address_done = True   # "la persona carga la dirección"
-            tabs[0].wait_for_timeout(1500); tabs[0].click("text=Helados")
+            # "la persona carga la dirección": PedidosYa la lleva a resultados con lat/lng en la URL
+            tabs[0].goto(f"{MOCK}/pya/restaurantes?origin=home&lat=-32.949493&lng=-60.630245&areaId=19204&areaName=Centro&address=1%20de%20Mayo%20910")
+            address_done = True
         if page.inner_text("#fetch") == "Traer descuentos" and i > 0: break
     print("STATUS:", page.inner_text("#status").replace("\n"," | "))
     print("LIST:\n" + page.inner_text("#list")[:1200])
@@ -107,12 +115,26 @@ with sync_playwright() as p:
     lista = page.inner_text("#list")
     assert "Grido" in lista, "al volver a Rosario no mostró lo guardado"
     assert "Agua mineral" not in lista and "50% off" not in lista.split("Grido")[1][:40], "contó el descuento del agua"
-    # paso previo de PedidosYa: abre una pestaña normal
+    # paso previo de PedidosYa: "cambiar dirección" muestra el aviso y abre una pestaña normal
+    page.click("#show-pya-setup")
     assert page.is_visible("#pya-setup")
     n_tabs = len(ctx.pages); page.click("#open-pya"); page.wait_for_timeout(1500)
     assert len(ctx.pages) == n_tabs + 1 and "/pya/" in ctx.pages[-1].url, "no abrió PedidosYa para la dirección"
     ctx.pages[-1].close(); page.bring_to_front()
     assert page.is_hidden("#pya-setup")
+    # con la dirección guardada, una nueva búsqueda va directo a Helados sin pedir nada
+    page.reload(); page.wait_for_timeout(2000)
+    assert "1 de Mayo 910" in page.inner_text("#show-pya-setup"), page.inner_text("#show-pya-setup")
+    n = len(state["calls"])
+    page.click("#force")
+    for i in range(40):
+        page.wait_for_timeout(1500)
+        assert "necesita tu dirección" not in (page.inner_text("#progress") if not page.is_hidden("#progress") else ""), "volvió a pedir la dirección"
+        if page.inner_text("#fetch") == "Traer descuentos" and i > 0: break
+    directo = [c for c in state["calls"][n:] if c.startswith("/pya/")]
+    print("SEGUNDA BÚSQUEDA PYA:", directo[:2])
+    assert directo and "category=25" in directo[0] and "lat=-32.949493" in directo[0]
+    assert "Esther Helados Centro" in page.inner_text("#list")
     # cancelar una búsqueda trabada en la verificación
     state["challenge"] = True
     page.click("#force"); page.wait_for_timeout(5000)

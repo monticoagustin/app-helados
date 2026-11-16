@@ -1,6 +1,6 @@
 // Service worker de la extensión: corre las búsquedas cuando la página lo pide.
 import { mergeStore, parseCategoryPage, parseStorePage, RAPPI_BASE, StructureChanged } from "./lib/rappi.js";
-import { isChallengePage, parseCaptured, PEDIDOSYA_BASE } from "./lib/pedidosya.js";
+import { HELADOS_CATEGORY_ID, isChallengePage, parseCaptured, PEDIDOSYA_BASE } from "./lib/pedidosya.js";
 
 const PAGE_URL = "https://teskel.online/helados/";
 const CACHE_MINUTES = 20;
@@ -30,6 +30,34 @@ const isRunning = () => running && Date.now() - running.since < STUCK_MS;
 
 chrome.action.onClicked.addListener(() => chrome.tabs.create({ url: PAGE_URL }));
 
+// Cuando PedidosYa muestra resultados, la URL trae la ubicación elegida por la persona
+// (lat, lng, address, areaId...). La guardamos para ir directo la próxima vez.
+const LOCATION_PARAMS = ["lat", "lng", "areaId", "areaName", "address"];
+function locationFromUrl(url) {
+  try {
+    const u = new URL(url);
+    if (!u.hostname.endsWith("pedidosya.com.ar") || !u.searchParams.get("lat") || !u.searchParams.get("lng")) return null;
+    const loc = {};
+    for (const k of LOCATION_PARAMS) if (u.searchParams.get(k)) loc[k] = u.searchParams.get(k);
+    return loc;
+  } catch { return null; }
+}
+chrome.tabs.onUpdated.addListener((_id, info) => {
+  const loc = info.url && locationFromUrl(info.url);
+  if (loc) chrome.storage.local.set({ "pya:location": { ...loc, savedAt: new Date().toISOString() } });
+});
+async function savedPyaLocation() {
+  const { "pya:location": loc } = await chrome.storage.local.get("pya:location");
+  return loc || null;
+}
+function helados(loc) {
+  const u = new URL(`${PEDIDOSYA_BASE}/restaurantes`);
+  u.searchParams.set("bt", "RESTAURANT");
+  u.searchParams.set("category", String(HELADOS_CATEGORY_ID));
+  for (const k of LOCATION_PARAMS) if (loc[k]) u.searchParams.set(k, loc[k]);
+  return u.toString();
+}
+
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== "helados") return;
   ports.add(port);
@@ -53,7 +81,10 @@ async function handle(msg, port) {
     const { ["raw:pedidosya"]: raw } = await chrome.storage.local.get("raw:pedidosya");
     return post(port, { type: "RAW", platform: "pedidosya", raw: raw || null });
   }
-  if (msg.type === "STATUS") return post(port, { type: "STATUS", running: Boolean(isRunning()) });
+  if (msg.type === "STATUS") {
+    const loc = await savedPyaLocation();
+    return post(port, { type: "STATUS", running: Boolean(isRunning()), pyaAddress: loc?.address || null });
+  }
   if (msg.type === "CANCEL") {
     if (isRunning()) { cancelRequested = true; broadcast({ type: "PROGRESS", platform: "_", message: "Cancelando…" }); }
     return;
@@ -197,15 +228,6 @@ function readCaptured() {
   return { captured: window.__heladosCap || [], embedded };
 }
 
-function clickText(texts) {
-  const nodes = [...document.querySelectorAll("a, button, [role=button], [role=tab], li, span, p")];
-  for (const t of texts) {
-    const el = nodes.find((n) => n.textContent.trim().toLowerCase() === t.toLowerCase() && n.offsetParent !== null);
-    if (el) { (el.closest("a, button, [role=button], [role=tab]") || el).click(); return t; }
-  }
-  return null;
-}
-
 async function scrollDown(times) {
   for (let i = 0; i < times; i++) {
     window.scrollBy(0, 900 + Math.random() * 600);
@@ -262,12 +284,12 @@ async function collect(tabId, acc) {
 async function fetchPedidosYa(city, progress) {
   let tabId = null;
   const acc = { captured: new Map(), embedded: [], stores: [] };
-  let clicked = null;
   let neededHelp = false;
+  let loc = await savedPyaLocation();
   try {
     await registerCapture();
-    progress("Abriendo PedidosYa…");
-    const tab = await chrome.tabs.create({ url: `${PEDIDOSYA_BASE}/restaurantes/${city.slug}`, active: false });
+    progress(loc ? `Abriendo PedidosYa (${loc.address || "tu dirección"})…` : "Abriendo PedidosYa…");
+    const tab = await chrome.tabs.create({ url: loc ? helados(loc) : `${PEDIDOSYA_BASE}/`, active: false });
     tabId = tab.id;
     await waitLoaded(tabId);
     await sleep(2500);
@@ -275,24 +297,24 @@ async function fetchPedidosYa(city, progress) {
     const blocked = () => result("pedidosya", "blocked", { message: "No se pasó la verificación de PedidosYa a tiempo." });
     if (!(await waitForHuman(tabId, progress))) return blocked();
 
-    progress("Buscando heladerías…");
-    clicked = await inTab(tabId, clickText, [["Helados", "Heladerías", "Heladerias", "Helado"]]);
-    await sleep(3000);
-    if (!(await waitForHuman(tabId, progress))) return blocked();
-    await inTab(tabId, scrollDown, [4]).catch(() => {});
-    await sleep(1500);
-    await collect(tabId, acc);
+    if (loc) {
+      progress("Buscando heladerías…");
+      await inTab(tabId, scrollDown, [4]).catch(() => {}); // carga más páginas de la lista
+      await sleep(1500);
+      await collect(tabId, acc);
+    }
 
     if (!acc.stores.length) {
-      // PedidosYa suele pedir una dirección antes de mostrar locales. La carga la persona.
+      // Sin dirección guardada (o no aparecieron locales): la persona carga la dirección en la pestaña.
       neededHelp = true;
       const t = await chrome.tabs.update(tabId, { active: true });
       await chrome.windows.update(t.windowId, { focused: true }).catch(() => {});
-      const helpMsg = (left) => `PedidosYa no muestra heladerías todavía: en la pestaña que se abrió cargá una dirección `
-        + `en ${city.name} y entrá a Helados. Sigo sola cuando aparezcan (espero ${left}).`;
+      const helpMsg = (left) => `PedidosYa necesita tu dirección: cargala en la pestaña que se abrió. `
+        + `Sigo sola cuando aparezcan las heladerías (espero ${left}).`;
       progress(helpMsg("3 min"));
       const start = Date.now();
       let lastNotice = Date.now();
+      let wentToHelados = false;
       while (!acc.stores.length && Date.now() - start < HELP_WAIT_MS) {
         await sleep(3000);
         checkCancel();
@@ -305,30 +327,36 @@ async function fetchPedidosYa(city, progress) {
           if (!(await waitForHuman(tabId, progress))) return blocked();
           continue;
         }
-        await collect(tabId, acc);
-      }
-      if (acc.stores.length) {
-        progress("¡Listo! Leyendo heladerías…");
-        await sleep(2500);
-        await inTab(tabId, clickText, [["Helados", "Heladerías", "Heladerias"]]).catch(() => null);
-        await sleep(2500);
-        await inTab(tabId, scrollDown, [4]).catch(() => {});
+        // Apenas la URL trae la ubicación, vamos directo a la categoría Helados.
+        const newLoc = state && locationFromUrl(state.url);
+        if (newLoc && !wentToHelados) {
+          loc = newLoc;
+          await chrome.storage.local.set({ "pya:location": { ...loc, savedAt: new Date().toISOString() } });
+          if (!new URL(state.url).searchParams.get("category")) {
+            wentToHelados = true;
+            progress("Dirección cargada. Abriendo Helados…");
+            await chrome.tabs.update(tabId, { url: helados(loc) });
+            await waitLoaded(tabId);
+            await sleep(2500);
+            await inTab(tabId, scrollDown, [4]).catch(() => {});
+          }
+        }
         await collect(tabId, acc);
       }
     }
 
     if (!acc.stores.length) {
       return result("pedidosya", "error", {
-        message: neededHelp
-          ? `No aparecieron heladerías en PedidosYa (${acc.captured.size} respuestas leídas). `
-            + "Si cargaste la dirección, descargá el diagnóstico y pasámelo."
-          : `Leí ${acc.captured.size} respuestas pero no reconocí heladerías. Descargá el diagnóstico y pasámelo.`,
+        message: `No aparecieron heladerías en PedidosYa (${acc.captured.size} respuestas leídas). `
+          + "Descargá el diagnóstico y pasámelo.",
       });
     }
+    const where = loc?.address ? ` cerca de ${loc.address}` : "";
     return result("pedidosya", "ok", {
       stores: acc.stores,
-      city: city.name,
-      message: `${acc.stores.length} ${acc.stores.length === 1 ? "heladería" : "heladerías"}${clicked ? "" : " (filtradas por nombre)"}`,
+      city: loc?.areaName || city.name,
+      address: loc?.address || null,
+      message: `${acc.stores.length} ${acc.stores.length === 1 ? "heladería" : "heladerías"}${where}`,
     });
   } catch (e) {
     if (e instanceof Cancelled) return result("pedidosya", "error", { message: "Cancelada" });
@@ -338,7 +366,7 @@ async function fetchPedidosYa(city, progress) {
     // El diagnóstico se guarda siempre (también si falla o se cancela), para poder ajustar el parser.
     const state = tabId != null ? await inTab(tabId, pageState).catch(() => ({})) : {};
     if (tabId != null) await collect(tabId, acc).catch(() => {});
-    await saveRaw({ url: state.url, title: state.title, text: state.text, clicked, neededHelp,
+    await saveRaw({ url: state.url, title: state.title, text: state.text, neededHelp, location: loc,
       captured: [...acc.captured.values()], embedded: acc.embedded }).catch(() => {});
     await chrome.scripting.unregisterContentScripts({ ids: ["pya-capture"] }).catch(() => {});
     if (tabId != null) chrome.tabs.remove(tabId).catch(() => {});
