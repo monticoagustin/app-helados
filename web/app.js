@@ -46,8 +46,12 @@ window.addEventListener("message", (e) => {
       render();
       break;
     case "BUSY":
-      progress._ = "Ya hay una búsqueda en curso.";
-      renderProgress();
+    case "STATUS":
+      if (msg.type === "BUSY" || msg.running) {
+        setBusy(true);
+        progress._ = "Hay una búsqueda en curso (el avance aparece acá). Si quedó trabada, tocá Cancelar.";
+        renderProgress();
+      }
       break;
     case "DONE":
       setBusy(false);
@@ -70,6 +74,19 @@ function onExtension() {
   $("fetch").disabled = false;
   $("force").disabled = false;
   send("GET_CACHED", { city });
+  send("STATUS");
+  renderSetup();
+}
+
+function renderSetup() {
+  let done = false;
+  try { done = localStorage.getItem("helados:pya-address") === "1"; } catch { /* nada */ }
+  $("pya-setup").hidden = !extVersion || done;
+  $("show-pya-setup").hidden = !extVersion || !done;
+}
+function setPyaDone(value) {
+  try { localStorage.setItem("helados:pya-address", value ? "1" : "0"); } catch { /* nada */ }
+  renderSetup();
 }
 
 function fetchDeals(force) {
@@ -85,6 +102,7 @@ function setBusy(value) {
   busy = value;
   $("fetch").disabled = value || !extVersion;
   $("city").disabled = value;
+  $("cancel").hidden = !value;
   $("force").disabled = value || !extVersion;
   $("fetch").textContent = value ? "Buscando…" : "Traer descuentos";
   if (!value) { delete progress._; renderProgress(); }
@@ -200,6 +218,10 @@ $("city").value = city.slug;
 $("city-name").textContent = city.name;
 $("city").addEventListener("change", (e) => setCity(e.target.value));
 $("fetch").addEventListener("click", () => fetchDeals(false));
+$("cancel").addEventListener("click", () => send("CANCEL"));
+$("open-pya").addEventListener("click", () => { send("OPEN_PYA"); setPyaDone(true); });
+$("pya-done").addEventListener("click", () => setPyaDone(true));
+$("show-pya-setup").addEventListener("click", () => setPyaDone(false));
 $("force").addEventListener("click", () => fetchDeals(true));
 for (const id of ["f-platform", "f-sort", "f-open", "f-deals"]) $(id).addEventListener("change", render);
 $("diag").addEventListener("click", (e) => {

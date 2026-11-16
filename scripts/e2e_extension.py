@@ -29,7 +29,8 @@ CAT = nd({"location":{"city":"Rosario","url":"rosario"},"fallback":{"k":[
   {"id":2,"status":"OPEN","name":"Monk's","etaString":"12 min","rating":4.5,"promotionText":"Hasta 33% Off","deliveryCost":500,"categories":[257]},
   {"id":3,"status":"CLOSED","name":"Freddo","etaString":"","rating":4.7,"promotionText":"Hasta 30% Off","deliveryCost":0,"categories":[257]}]}})
 STORE = {1: nd({"fallback":{"r":{"id":1,"name":"Grido","status":"OPEN","address":"Oroño 1181","corridors":[{"products":[
-            {"id":11,"name":"1 Kg de helado","price":12900,"realPrice":21500},{"id":12,"name":"1/4 kg","price":5000,"realPrice":5000}]}]}}}),
+            {"id":11,"name":"1 Kg de helado","price":12900,"realPrice":21500},{"id":12,"name":"1/4 kg","price":5000,"realPrice":5000},
+            {"id":13,"name":"Agua mineral 500","price":500,"realPrice":1000}]}]}}}),
          2: nd({"fallback":{"r":{"id":2,"name":"Monk's","status":"OPEN","address":"Tucumán 1996","corridors":[{"products":[
             {"id":21,"name":"Kilo","price":20000,"realPrice":25000},{"id":22,"name":"Medio","price":10800,"realPrice":13500}]}]}}})}
 CHALLENGE = "<html><head><title>Just a moment...</title></head><body>Nuestros sistemas han detectado tráfico inusual</body></html>"
@@ -103,7 +104,26 @@ with sync_playwright() as p:
     print("CÓRDOBA:", page.inner_text("#status"))
     assert "Rappi no tiene Córdoba" in page.inner_text("#status")
     page.select_option("#city", "rosario"); page.wait_for_timeout(800)
-    assert "Grido" in page.inner_text("#list"), "al volver a Rosario no mostró lo guardado"
+    lista = page.inner_text("#list")
+    assert "Grido" in lista, "al volver a Rosario no mostró lo guardado"
+    assert "Agua mineral" not in lista and "50% off" not in lista.split("Grido")[1][:40], "contó el descuento del agua"
+    # paso previo de PedidosYa: abre una pestaña normal
+    assert page.is_visible("#pya-setup")
+    n_tabs = len(ctx.pages); page.click("#open-pya"); page.wait_for_timeout(1500)
+    assert len(ctx.pages) == n_tabs + 1 and "/pya/" in ctx.pages[-1].url, "no abrió PedidosYa para la dirección"
+    ctx.pages[-1].close(); page.bring_to_front()
+    assert page.is_hidden("#pya-setup")
+    # cancelar una búsqueda trabada en la verificación
+    state["challenge"] = True
+    page.click("#force"); page.wait_for_timeout(5000)
+    assert page.is_visible("#cancel")
+    page.click("#cancel")
+    for i in range(15):
+        page.wait_for_timeout(1000)
+        if page.inner_text("#fetch") == "Traer descuentos": break
+    print("CANCELADA:", page.inner_text("#status").replace("\n"," | "))
+    assert "Cancelada" in page.inner_text("#status") and page.is_hidden("#cancel")
+    assert not [pg for pg in ctx.pages if "/pya/" in pg.url], "quedó abierta la pestaña de PedidosYa"
     assert cache_new == 0, "el segundo click no usó la caché"
     print("E2E OK")
     ctx.close()

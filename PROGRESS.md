@@ -34,6 +34,15 @@
 - PedidosYa: si no aparecen locales (pide dirección), muestra la pestaña para que la persona cargue
   la dirección y sigue sola. Acumula lo capturado aunque la página navegue.
 
+## Hecho (rama `fase-1-solo-helados-y-pedidosya`, 2026-11-16)
+- Solo cuentan descuentos de **productos de helado** (excluye agua, gaseosas, alfajores, café, etc.).
+  Verificado con Rappi real. Los "Hasta X% off" del listado no rankean si ya tenemos los productos.
+- PedidosYa: paso previo "Abrir PedidosYa para cargar la dirección", botón **Cancelar**, la búsqueda
+  no queda trabada (si recargás la página la retoma), aviso con cuenta regresiva y el diagnóstico se
+  guarda siempre (también si falla o se cancela). Extensión v0.3.0.
+- Problema reportado: con la dirección cargada, PedidosYa no devolvió heladerías → falta ver el JSON
+  real (diagnóstico) para ajustar el parser.
+
 ## Falta / próximos pasos
 - [x] Secreto `SPACEFAST_TOKEN` cargado y publicación funcionando.
 - [ ] Usuario: instalar la extensión y hacer la primera búsqueda real.

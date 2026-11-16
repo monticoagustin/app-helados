@@ -60,6 +60,7 @@ export function parseStorePage(html) {
       products.push(normalizeProduct({
         name: p.name,
         description: p.description || "",
+        section: corridor.name || "",
         price: p.price,
         originalPrice: typeof p.realPrice === "number" ? p.realPrice : p.price,
       }));
