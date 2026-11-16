@@ -12,6 +12,7 @@ from playwright.sync_api import sync_playwright
 WEB = os.path.join(ROOT, "web")
 SRC = os.path.join(ROOT, "extension"); EXT = "/tmp/ext-test"
 shutil.rmtree(EXT, ignore_errors=True); shutil.copytree(SRC, EXT)
+shutil.rmtree("/tmp/prof-e2e3", ignore_errors=True)  # perfil limpio: sin caché de corridas anteriores
 MOCK = "http://127.0.0.1:8768"
 for f, subs in {
   "lib/rappi.js": [('"https://www.rappi.com.ar"', f'"{MOCK}/rappi"')],
@@ -125,7 +126,7 @@ with sync_playwright() as p:
     assert address_done, "no apareció el pedido de dirección"
     # ciudad que Rappi no tiene: el mock devuelve Rosario → tiene que avisar
     page.select_option("#city", "cordoba"); page.wait_for_timeout(500)
-    assert "Córdoba" in page.inner_text("#city-name")
+    assert "córdoba" in page.inner_text("#city-name").lower()
     assert "Grido" not in page.inner_text("#list"), "mezcló resultados de otra ciudad"
     page.evaluate("window.postMessage({app:'helados', type:'FETCH', force:true, city:{slug:'cordoba',name:'Córdoba'}, platforms:['rappi']}, location.origin)")
     for i in range(20):
