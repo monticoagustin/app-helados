@@ -52,8 +52,11 @@ La versión navegable vive en el Design System "cuartito" (https://claude.ai/art
 - **Ticket**: kicker "COMPROBANTE DE REBAJAS • CIUDAD", título "Mejor precio en mostrador",
   sello rojo rotado −2°, destacado crema con precio anterior mono tachado por una barra roja de
   4 px a −4° y precio nuevo gigante en frutilla.
-- **Renglón**: número 01., nombre, datos mono separados por " · ", % a la derecha (con "HASTA"
-  si no hay detalle), productos con líderes de puntos; caja crema con insignia si no se ven los productos.
+- **Renglón**: nombre de la heladería y una línea mono con plataforma · demora · envío. Debajo, cada
+  producto en una fila: etiqueta roja con el % a la izquierda, nombre, y a la derecha el precio final en
+  negrita con el anterior tachado chico debajo. Hasta 3 a la vista; el resto en "N descuentos más".
+- **Sin precios por producto**: grupo aparte al final, con etiqueta "HASTA −X%" en contorno rojo.
+- **Filtros**: dentro del ticket, debajo del encabezado (segmentado + chips de 44 px).
 
 ## Movimiento
 

@@ -4,6 +4,7 @@
 
 ## Decisiones
 - 2026-11-15: la app vive en **teskel.online/helados** (Spacefast, flujo GitHub → Spacefast).
+- 2026-11-16: se muda a **teskel.online/cuartito**.
   Como ahí solo se sirven archivos estáticos (sin Python, sin IP argentina), la búsqueda se hace
   con una **extensión de Chrome** en la compu del usuario. Reemplaza al prototipo en Python
   (PR #1, rama `fase-1-pedidosya`, sin mergear).
@@ -91,6 +92,16 @@
 - Se adaptó lo que en el prototipo era de mentira: el titular cambia según la mejor rebaja real, la
   insignia muestra el estado real de la extensión y no hay selector de tipografías ni factores por ciudad.
 - E2E: arranca con un perfil de Chrome limpio (antes podía tomar resultados guardados de otra corrida).
+- **Descuento más claro (pensado para celular):** cada producto lleva su % en una etiqueta roja a la
+  izquierda y el precio final a la derecha, con el anterior tachado debajo. Por heladería: nombre y una línea
+  de datos (plataforma, demora, envío); se sacaron puntaje, distancia y dirección. Hasta 3 productos a la
+  vista y el resto en "N descuentos más". Las que solo anuncian "hasta X%" van al final, en un grupo
+  aparte. Los filtros pasaron al ticket. En celular el encabezado y el panel son más compactos.
+- Análisis con la skill design-taste-frontend: contraste OK, sin desbordes a 320 px; se arreglaron
+  botones y links chicos (44 px). Las reglas de sitio de marketing (una sección por pantalla, fotos,
+  hero) no aplican a una herramienta.
+- **Nueva dirección: teskel.online/cuartito** (el workflow publica en `cuartito/`; `helados/` queda
+  con la última versión vieja). Extensión v0.8.0: el puente también corre en /cuartito.
 
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),
