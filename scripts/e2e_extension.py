@@ -162,7 +162,7 @@ with sync_playwright() as p:
     print("MENÚS:", [l for l in st.split("\n") if "PedidosYa" in l])
     assert "no dejó ver el detalle de algunas (1 con detalle)" in st, st
     lista = page.inner_text("#list")
-    assert "No pudimos ver qué productos" in lista.split("Esther Helados Centro")[1][:400], "Esther debería avisar que no hay detalle"
+    assert "Esther Helados Centro" in page.inner_text(".vague") and "No pudimos ver qué productos" in page.inner_text(".vague"), "Esther debería ir entre las que no tienen detalle"
     tento = page.inner_text("#list").split("Tento Helados")[1][:200]
     assert "−15%" in tento and "17.000" in tento and "20.000" in tento, tento  # 1 kg queda a 17000 (antes 20000)
     assert "Agua" not in tento and "/kg" not in page.inner_text("#list")

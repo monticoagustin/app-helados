@@ -1,4 +1,4 @@
-// Página de teskel.online/helados. Habla con la extensión vía window.postMessage
+// Página de teskel.online/cuartito. Habla con la extensión vía window.postMessage
 // (la extensión inyecta un "puente" en esta página).
 const $ = (id) => document.getElementById(id);
 const PLATFORM_NAMES = { pedidosya: "PedidosYa", rappi: "Rappi" };
@@ -71,7 +71,7 @@ window.addEventListener("message", (e) => {
 });
 
 function onExtension() {
-  $("ext-text").textContent = `EXTENSIÓN ${extVersion} ACTIVA`;
+  $("ext-text").innerHTML = `<span class="ext-word">EXTENSIÓN </span>${esc(extVersion)} ACTIVA`;
   $("ext-badge").className = "ext-badge on";
   $("install").hidden = true;
   $("fetch").disabled = false;
@@ -193,9 +193,11 @@ function render() {
   if (fPlat) rows = rows.filter((r) => r.s.platform === fPlat);
   if (onlyOpen) rows = rows.filter((r) => r.s.open !== false);
   rows = rows.filter((r) => r.best > 0); // solo heladerías con descuento en helado
-  rows.sort((a, b) => b.best - a.best);
+  // Primero las que tienen precios por producto (el descuento se ve), después las que solo dicen "hasta X%".
+  const sure = rows.filter((r) => r.deals.length).sort((a, b) => b.deals[0].discountPct - a.deals[0].discountPct);
+  const vague = rows.filter((r) => !r.deals.length).sort((a, b) => b.best - a.best);
 
-  renderHero(rows, all.length > 0);
+  renderHero(sure, vague, all.length > 0);
   $("total").textContent = withDiscount ? `HELADERÍAS VISIBLES: ${rows.length} DE ${withDiscount}` : "";
   if (!rows.length) {
     $("list").innerHTML = `<p class="empty">${all.length
@@ -203,7 +205,12 @@ function render() {
       : "Todavía no buscaste. Tocá “Traer descuentos” y en uno o dos minutos aparecen acá."}</p>`;
     return;
   }
-  $("list").innerHTML = rows.map(shop).join("");
+  $("list").innerHTML = sure.map(shop).join("")
+    + (vague.length ? `<section class="vague">
+        <h3 class="vague-title">Con descuento, sin precios por producto</h3>
+        <p class="vague-note">No pudimos ver qué productos tienen el descuento: tocá el nombre para verlos en la app.</p>
+        <ul class="vague-list">${vague.map(vagueRow).join("")}</ul>
+      </section>` : "");
 }
 
 /** "Edición Rosario • hace 3 min": cuándo se trajeron los datos que estás viendo. */
@@ -216,46 +223,40 @@ function renderSync() {
 }
 
 /** Titular, bajada y destacado del ticket: la rebaja más grande con producto. */
-function renderHero(rows, searched) {
+function renderHero(sure, vague, searched) {
   const hero = $("hero");
-  const best = rows[0]?.best || 0;
+  const best = sure[0]?.deals[0].discountPct || 0;
   $("headline").textContent = best >= 50 ? "Helado a mitad de precio. Sin abrir diez apps."
     : best > 0 ? `Helado hasta ${Math.round(best)}% más barato. Sin abrir diez apps.`
     : "El helado más barato de hoy. Sin abrir diez apps.";
   $("stamp").hidden = !best;
   $("stamp").textContent = `−${Math.round(best)}% HOY`;
 
-  const top = rows.find((r) => r.deals.length) || null;
+  const top = sure[0] || null;
   const key = top ? `${top.s.platform}:${top.s.id}:${top.deals[0].price}` : null;
   if (!top) {
     hero.innerHTML = "";
-    $("lede").innerHTML = rows.length
-      ? `Hay ${rows.length} ${rows.length === 1 ? "heladería" : "heladerías"} con descuento en ${esc(city.name)}, pero no pudimos ver a qué productos se aplica. Están en el ticket.`
+    $("lede").hidden = false;
+    $("lede").innerHTML = vague.length
+      ? `Hay ${vague.length} ${vague.length === 1 ? "heladería" : "heladerías"} con descuento en ${esc(city.name)}, pero no pudimos ver a qué productos se aplica.`
       : searched
         ? "Con estos filtros no quedó ninguna heladería con descuento."
         : "Elegí tu ciudad y tocá <b>Traer descuentos</b>: buscamos en Rappi y PedidosYa desde tu Chrome y en uno o dos minutos aparecen en el ticket.";
     lastTop = null;
     return;
   }
+  // Con resultados, el destacado del ticket ya cuenta la mejor rebaja: la bajada sobra.
+  $("lede").hidden = true;
   const d = top.deals[0];
-  const others = rows.length - 1;
   const plat = PLATFORM_NAMES[top.s.platform];
-  $("lede").innerHTML = `<b>${esc(top.s.name)}</b> tiene ${esc(lower(tame(d.name)))} a <b>${money(d.price)}</b> en ${plat}${d.plusOnly ? ", con PedidosYa Plus" : ""}. `
-    + `Es la rebaja más grande de hoy en ${esc(city.name)}.`
-    + (others > 0 ? ` Abajo tenés ${others} ${others === 1 ? "heladería más" : "heladerías más"} con descuento.` : "");
   hero.innerHTML = `<div class="feature">
-      <div class="feature-top">
-        <p class="feature-who" style="margin:0">${esc(top.s.name)} <span>tiene ${esc(lower(tame(d.name)))} en ${plat}:</span></p>
-        ${top.s.eta ? `<span class="pill">${esc(top.s.eta)}</span>` : ""}
-      </div>
+      <p class="feature-who">${esc(top.s.name)} <span>en ${plat}${d.plusOnly ? ", con PedidosYa Plus" : ""}</span></p>
+      <p class="feature-what">${esc(tame(d.name))}</p>
       <p class="feature-prices">
-        <span class="feature-before"><span class="sr">Antes </span>${money(d.originalPrice)}</span>
         <span class="feature-now"><span class="sr">ahora </span>${money(d.price)}</span>
+        <span class="feature-before"><span class="sr">antes </span>${money(d.originalPrice)}</span>
       </p>
-      <div class="feature-foot">
-        <span>TE AHORRÁS ${money(d.originalPrice - d.price)}${d.plusOnly ? " CON PEDIDOSYA PLUS" : ""}</span>
-        ${top.s.address ? `<span>${esc(top.s.address)}</span>` : ""}
-      </div>
+      <p class="feature-foot">TE AHORRÁS ${money(d.originalPrice - d.price)} (−${Math.round(d.discountPct)}%)</p>
     </div>`;
   if (key !== lastTop) {
     hero.classList.remove("is-new"); void hero.offsetWidth; hero.classList.add("is-new");
@@ -265,56 +266,52 @@ function renderHero(rows, searched) {
 }
 
 const lower = (t) => String(t).charAt(0).toLowerCase() + String(t).slice(1);
+const SHOW_DEALS = 3;
 
-function shop({ s, deals, promos, best, hasDetail }, i) {
-  // El envío va en la línea de datos (con sus condiciones), no repetido como etiqueta.
+/** Plataforma, demora y envío: lo que decide el pedido. El resto (puntaje, distancia) sobra acá. */
+function metaLine(s, promos) {
   const fs = promos.find((p) => p.freeShipping);
-  promos = promos.filter((p) => p !== fs);
   const fee = (s.freeShipping || fs)
-    ? `envío gratis${fs && isPlusPromo(fs.text) ? " con PedidosYa Plus" : ""}${fs?.minAmount ? ` desde ${money(fs.minAmount)}` : ""}`
+    ? `envío gratis${fs && isPlusPromo(fs.text) ? " con Plus" : ""}${fs?.minAmount ? ` desde ${money(fs.minAmount)}` : ""}`
     : s.deliveryFee != null ? `envío ${money(s.deliveryFee)}` : null;
-  const meta = [
-    `en <b>${esc(PLATFORM_NAMES[s.platform] || s.platform)}</b>`,
-    ...[s.eta, fee,
-      s.distanceKm ? `a ${String(s.distanceKm).replace(".", ",")} km` : null,
-      s.rating ? `★ ${String(s.rating).replace(".", ",")}` : null,
-      s.address].filter(Boolean).map(esc),
-  ].join(" · ");
-  const lines = deals.map((p) => `<li class="line">
-      <span class="line-name">${esc(tame(p.name))}${p.plusOnly ? '<span class="plus-tag">Plus</span>' : ""}</span>
-      <span class="line-dots" aria-hidden="true"></span>
-      <span class="line-prices">
-        <span class="line-before"><span class="sr">antes </span>${money(p.originalPrice)}</span>
-        <span class="line-now"><span class="sr">ahora </span>${money(p.price)}</span>
-        <span class="line-off">−${Math.round(p.discountPct)}%</span>
-      </span>
-    </li>`).join("");
-  const badges = promos.map((p) => {
-    const cls = isPlusPromo(p.text) ? "plus" : p.payment ? "pay" : "";
-    return `<li class="badge ${cls}">${esc(p.text)}</li>`;
-  }).join("");
-  const name = s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>` : esc(s.name);
-  const upTo = !hasDetail && promos.some((p) => p.upTo);
-  const plat = PLATFORM_NAMES[s.platform] || s.platform;
-  const body = lines
-    ? `<ul class="lines">${lines}</ul>${badges ? `<ul class="badges">${badges}</ul>` : ""}`
-    : !hasDetail
-      ? `<div class="nodetail"><p>No pudimos ver qué productos tienen el descuento: miralos en ${esc(plat)}.</p>${badges ? `<ul class="badges">${badges}</ul>` : ""}</div>`
-      : badges ? `<ul class="badges">${badges}</ul>` : "";
+  return [`<b>${esc(PLATFORM_NAMES[s.platform] || s.platform)}</b>`, ...[s.eta, fee].filter(Boolean).map(esc)].join(" · ");
+}
+const storeName = (s) => (s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>` : esc(s.name));
+
+function shop({ s, deals, promos }) {
+  const extra = promos.filter((p) => !p.freeShipping && !p.upTo);
+  const line = (p) => `<li class="deal">
+      <span class="deal-off">−${Math.round(p.discountPct)}%</span>
+      <span class="deal-name">${esc(tame(p.name))}${p.plusOnly ? '<span class="plus-tag">Plus</span>' : ""}</span>
+      <span class="deal-price"><b><span class="sr">ahora </span>${money(p.price)}</b><s><span class="sr">antes </span>${money(p.originalPrice)}</s></span>
+    </li>`;
+  const first = deals.slice(0, SHOW_DEALS).map(line).join("");
+  const rest = deals.slice(SHOW_DEALS);
+  const more = rest.length
+    ? `<details class="more"><summary>${rest.length} ${rest.length === 1 ? "descuento más" : "descuentos más"}</summary><ul class="deals">${rest.map(line).join("")}</ul></details>` : "";
   return `<article class="shop ${s.open === false ? "closed" : ""}">
     <header class="shop-head">
-      <div>
-        <div class="shop-title">
-          <span class="shop-num">${String(i + 1).padStart(2, "0")}.</span>
-          <h3 class="shop-name">${name}</h3>
-          ${s.open === false ? '<span class="closed-tag">Cerrada ahora</span>' : ""}
-        </div>
-        <p class="shop-meta">${meta}</p>
-      </div>
-      <p class="shop-pct" style="margin:0">${upTo ? "<small>hasta</small>" : ""}<span>−${Math.round(best)}%</span></p>
+      <h3 class="shop-name">${storeName(s)}</h3>
+      ${s.open === false ? '<span class="closed-tag">Cerrada ahora</span>' : ""}
     </header>
-    ${body}
+    <p class="shop-meta">${metaLine(s, promos)}</p>
+    <ul class="deals">${first}</ul>${more}
+    ${extra.length ? `<p class="shop-extra">También: ${extra.map((p) => esc(p.text)).join(" · ")}</p>` : ""}
   </article>`;
+}
+
+/** Heladería que anuncia "hasta X%" sin que veamos los productos: una línea corta, al final. */
+function vagueRow({ s, promos, best }) {
+  const main = promos.find((p) => p.pct && !p.payment) || promos[0];
+  const upTo = promos.some((p) => p.upTo);
+  const plus = main && isPlusPromo(main.text);
+  return `<li class="vague-row ${s.open === false ? "closed" : ""}">
+      <span class="deal-off ${upTo ? "is-upto" : ""}">${upTo ? "<small>hasta</small>" : ""}−${Math.round(best)}%</span>
+      <span class="vague-body">
+        <span class="vague-name">${storeName(s)}${plus ? '<span class="plus-tag">Plus</span>' : ""}</span>
+        <span class="shop-meta">${metaLine(s, promos)}</span>
+      </span>
+    </li>`;
 }
 
 function downloadRaw(raw) {
@@ -348,7 +345,7 @@ setInterval(renderSync, 60000);
 send("PING");
 setTimeout(() => {
   if (extVersion) return;
-  $("ext-text").textContent = "EXTENSIÓN NO DETECTADA";
+  $("ext-text").innerHTML = `<span class="ext-word">EXTENSIÓN </span>NO DETECTADA`;
   $("ext-badge").className = "ext-badge off";
   $("install").hidden = false;
 }, 1200);
