@@ -1,4 +1,4 @@
-// Puente entre la página (teskel.online/helados) y la extensión.
+// Puente entre la página (teskel.online/cuartito) y la extensión.
 // La página manda window.postMessage({ app: "helados", type, ... }) y recibe
 // mensajes { app: "helados-ext", type, ... }.
 (() => {

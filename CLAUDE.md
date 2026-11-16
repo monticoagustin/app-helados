@@ -9,9 +9,9 @@
 
 ## Publicación (flujo GitHub → Spacefast, configurado 2026-11-15)
 
-- Destino: carpeta `helados/` del Space teskel (`spc_02ae51f4db5a45b3a6c013388fe16504`) →
-  https://teskel.online/helados/
+- Destino: carpeta `cuartito/` del Space teskel (`spc_02ae51f4db5a45b3a6c013388fe16504`) →
+  https://teskel.online/cuartito/ (desde 2026-11-16; antes `helados/`, que quedó con la última versión vieja)
 - Action: `.github/workflows/publicar-en-teskel.yml` (copia `web/*` + `helados-extension.zip`).
 - Secreto requerido: `SPACEFAST_TOKEN` (API key de Spacefast con escritura sobre teskel).
 - Trabajar en ramas. **Merge a main = publicar**: solo cuando el usuario lo pida.
-- No editar a mano `helados/` en el Space.
+- No editar a mano `cuartito/` ni `helados/` en el Space.

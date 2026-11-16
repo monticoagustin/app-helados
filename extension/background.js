@@ -5,7 +5,7 @@ import {
 } from "./lib/pedidosya.js";
 import { summarizeStore } from "./lib/normalize.js";
 
-const PAGE_URL = "https://teskel.online/helados/";
+const PAGE_URL = "https://teskel.online/cuartito/";
 const CACHE_MINUTES = 20;
 const RAPPI_MAX_DETAILS = 30;      // fichas a abrir (solo heladerías abiertas)
 const CHALLENGE_WAIT_MS = 4 * 60 * 1000;

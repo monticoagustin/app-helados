@@ -1,7 +1,7 @@
-name: Publicar en teskel.online/helados
+name: Publicar en teskel.online/cuartito
 
 # En cada push a main: corre los tests y copia la página (y el .zip de la
-# extensión) a la carpeta helados/ del repo del Space "teskel" en Spacefast.
+# extensión) a la carpeta cuartito/ del repo del Space "teskel" en Spacefast.
 # Spacefast publica teskel solo.
 
 on:
@@ -11,12 +11,12 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: publicar-en-teskel-helados
+  group: publicar-en-teskel-cuartito
   cancel-in-progress: false
 
 env:
   TESKEL_SPACE_ID: spc_02ae51f4db5a45b3a6c013388fe16504
-  CARPETA_DESTINO: helados
+  CARPETA_DESTINO: cuartito
 
 jobs:
   tests:
@@ -82,7 +82,7 @@ jobs:
       - name: Clonar teskel
         run: git clone --quiet --depth 1 --branch main "$TESKEL_REMOTE" teskel
 
-      - name: Copiar a teskel/helados
+      - name: Copiar a teskel/cuartito
         run: |
           mkdir -p "teskel/${CARPETA_DESTINO}"
           rsync -a --delete \
@@ -102,7 +102,7 @@ jobs:
           fi
           git -c user.name="app-helados (GitHub Actions)" \
               -c user.email="actions@users.noreply.github.com" \
-              commit -q -m "helados: sincronizar desde monticoagustin/app-helados@${GITHUB_SHA::7}" \
+              commit -q -m "cuartito: sincronizar desde monticoagustin/app-helados@${GITHUB_SHA::7}" \
                         -m "${MENSAJE_ORIGEN:-Ejecución manual}"
           git push --quiet origin HEAD:main
           echo "Publicado: https://teskel.online/${CARPETA_DESTINO}/"

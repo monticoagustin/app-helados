@@ -3,13 +3,13 @@
 Comparador de descuentos en heladerías de **Rosario** en **PedidosYa** y **Rappi**.
 Uso personal. Moneda: ARS.
 
-- Página: **https://teskel.online/helados/**
+- Página: **https://teskel.online/cuartito/**
 - Estado y próximos pasos: [PROGRESS.md](PROGRESS.md)
 
 ## Cómo funciona
 
 ```
-teskel.online/helados  ──(botón "Traer descuentos")──►  extensión en tu Chrome
+teskel.online/cuartito  ──(botón "Traer descuentos")──►  extensión en tu Chrome
                                                          ├─ Rappi: lee las páginas de la categoría Helados y de cada local
                                                          └─ PedidosYa: abre una pestaña, lee lo que carga la web
                                                               └─ si pide verificación, la pestaña se muestra y la resolvés vos
@@ -21,7 +21,7 @@ La búsqueda corre en tu navegador, con tu conexión (IP argentina). La página 
 
 ## Instalar la extensión (una vez)
 
-1. En https://teskel.online/helados/ tocá **Descargá la extensión** y descomprimí el .zip
+1. En https://teskel.online/cuartito/ tocá **Descargá la extensión** y descomprimí el .zip
    en una carpeta que no vayas a borrar.
 2. Abrí `chrome://extensions`, activá **Modo de desarrollador**.
 3. **Cargar descomprimida** → elegí la carpeta.
@@ -32,7 +32,7 @@ Para actualizarla: descargá el .zip nuevo, reemplazá la carpeta y tocá ↻ en
 ## Estructura
 
 ```
-web/                 página (index.html, app.js, styles.css) → se publica en teskel.online/helados/
+web/                 página (index.html, app.js, styles.css) → se publica en teskel.online/cuartito/
 extension/           extensión de Chrome (Manifest V3)
   background.js        corre las búsquedas, caché de 20 min, ritmo lento con pausas
   bridge.js            puente entre la página y la extensión
