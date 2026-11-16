@@ -51,6 +51,27 @@ chrome.tabs.onUpdated.addListener((_id, info) => {
   const loc = info.url && locationFromUrl(info.url);
   if (loc) chrome.storage.local.set({ "pya:location": { ...loc, savedAt: new Date().toISOString() } });
 });
+/** Ubicación a partir de las llamadas internas de PedidosYa (la portada pide
+ *  /home-page/.../lazy_load?lat=..&lng=.. con la dirección que la persona ya tiene cargada). */
+function locationFromCaptured(acc, pageText = "") {
+  for (const c of acc.captured.values()) {
+    try {
+      const u = new URL(c.url);
+      if (!u.hostname.endsWith("pedidosya.com.ar")) continue;
+      const lat = u.searchParams.get("lat");
+      const lng = u.searchParams.get("lng");
+      if (!lat || !lng || Number(lat) === 0 || Number(lng) === 0) continue;
+      const loc = { lat, lng };
+      const areaId = u.searchParams.get("area_id") || u.searchParams.get("areaId");
+      if (areaId && areaId !== "0") loc.areaId = areaId;
+      const address = String(pageText).match(/Enviar a\s*\n+\s*([^\n]{3,80})/);
+      if (address) loc.address = address[1].trim();
+      return loc;
+    } catch { /* URL rara */ }
+  }
+  return null;
+}
+
 async function savedPyaLocation() {
   const { "pya:location": loc } = await chrome.storage.local.get("pya:location");
   return loc || null;
@@ -302,6 +323,22 @@ async function fetchPedidosYa(city, progress) {
     const blocked = () => result("pedidosya", "blocked", { message: "No se pasó la verificación de PedidosYa a tiempo." });
     if (!(await waitForHuman(tabId, progress))) return blocked();
 
+    if (!loc) {
+      // Si la persona ya tiene una dirección cargada en PedidosYa, la portada la usa en sus llamadas.
+      await sleep(2000);
+      await collect(tabId, acc);
+      const state = await inTab(tabId, pageState).catch(() => ({}));
+      loc = locationFromCaptured(acc, state.text);
+      if (loc) {
+        await chrome.storage.local.set({ "pya:location": { ...loc, savedAt: new Date().toISOString() } });
+        progress(`Usando tu dirección de PedidosYa${loc.address ? ` (${loc.address})` : ""}…`);
+        await chrome.tabs.update(tabId, { url: helados(loc) });
+        await waitLoaded(tabId);
+        await sleep(2500);
+        if (!(await waitForHuman(tabId, progress))) return blocked();
+      }
+    }
+
     if (loc) {
       progress("Buscando heladerías…");
       await inTab(tabId, scrollDown, [4]).catch(() => {}); // carga más páginas de la lista
@@ -332,8 +369,9 @@ async function fetchPedidosYa(city, progress) {
           if (!(await waitForHuman(tabId, progress))) return blocked();
           continue;
         }
-        // Apenas la URL trae la ubicación, vamos directo a la categoría Helados.
-        const newLoc = state && locationFromUrl(state.url);
+        // Apenas sabemos la ubicación (por la URL o por las llamadas de la portada), vamos a Helados.
+        await collect(tabId, acc);
+        const newLoc = state && (locationFromUrl(state.url) || locationFromCaptured(acc, state.text));
         if (newLoc && !wentToHelados) {
           loc = newLoc;
           await chrome.storage.local.set({ "pya:location": { ...loc, savedAt: new Date().toISOString() } });

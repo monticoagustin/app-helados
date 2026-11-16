@@ -55,6 +55,12 @@
 - La extensión guarda la dirección de PedidosYa (desde la URL) y va directo a Helados. Si no hay
   dirección, la persona la carga en la pestaña y la búsqueda sigue sola. Extensión v0.4.0.
 
+## Hecho (rama `fase-1-pedidosya-ubicacion`, 2026-11-16)
+- Diagnóstico real del usuario: con la dirección ya cargada, la pestaña quedaba en la portada (la URL no
+  trae lat/lng) y la búsqueda esperaba ayuda sin llegar a Helados. Ahora la ubicación se toma también de
+  las llamadas internas de la portada (`/home-page/v44/home/lazy_load?lat=..&lng=..`) y la dirección del
+  texto "Enviar a …". Extensión v0.5.1.
+
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),
       pero el formato de `/v2/niles/partners/{id}/menus` todavía no lo vimos: en el navegador integrado
