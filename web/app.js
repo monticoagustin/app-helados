@@ -150,6 +150,23 @@ function renderProgress() {
   $("progress").hidden = !lines.length;
 }
 
+const isPlusPromo = (t) => /pedidosya plus/i.test(t);
+
+/** Descuentos que cuentan según los filtros (sin Plus si se destilda). */
+function view(s, withPlus) {
+  const deals = (s.deals || (s.products || []).filter((p) => p.discountPct))
+    .filter((p) => withPlus || !p.plusOnly)
+    .sort((a, b) => b.discountPct - a.discountPct);
+  // Si tenemos el detalle de productos, manda el mejor producto y se ocultan los "Hasta X%" del local.
+  const hasDetail = (s.products || []).length > 0;
+  const promos = (s.promosParsed || [])
+    .filter((p) => withPlus || !isPlusPromo(p.text))
+    .filter((p) => !(hasDetail && p.upTo));
+  const promoPct = Math.max(0, ...promos.filter((p) => p.pct && !p.payment && !(p.upTo && hasDetail)).map((p) => p.pct));
+  const best = Math.max(0, deals[0]?.discountPct || 0, promoPct);
+  return { deals, promos, best, hasDetail };
+}
+
 function render() {
   const all = Object.values(results);
   $("status").innerHTML = all.map((r) => `<span class="pill">${PLATFORM_NAMES[r.platform] || r.platform}:
@@ -157,54 +174,46 @@ function render() {
 
   const fPlat = $("f-platform").value;
   const onlyOpen = $("f-open").checked;
-  const onlyDeals = $("f-deals").checked;
-  const sort = $("f-sort").value;
+  const withPlus = $("f-plus").checked;
 
-  let stores = all.flatMap((r) => r.stores || []);
-  $("filters").hidden = !stores.length;
-  if (fPlat) stores = stores.filter((s) => s.platform === fPlat);
-  if (onlyOpen) stores = stores.filter((s) => s.open !== false);
-  if (onlyDeals) stores = stores.filter((s) => s.bestDiscountPct || s.freeShipping);
-  stores.sort(sort === "perkg"
-    ? (a, b) => (a.bestPricePerKg ?? Infinity) - (b.bestPricePerKg ?? Infinity)
-    : (a, b) => (b.bestDiscountPct ?? 0) - (a.bestDiscountPct ?? 0) || (a.bestPricePerKg ?? Infinity) - (b.bestPricePerKg ?? Infinity));
+  let rows = all.flatMap((r) => r.stores || []).map((s) => ({ s, ...view(s, withPlus) }));
+  $("filters").hidden = !rows.length;
+  if (fPlat) rows = rows.filter((r) => r.s.platform === fPlat);
+  if (onlyOpen) rows = rows.filter((r) => r.s.open !== false);
+  rows = rows.filter((r) => r.best > 0); // solo heladerías con descuento en helado
+  rows.sort((a, b) => b.best - a.best);
 
-  if (!stores.length) {
-    $("list").innerHTML = `<p class="empty">${all.length ? "No hay heladerías con estos filtros." : "Apretá “Traer descuentos” para buscar."}</p>`;
+  if (!rows.length) {
+    $("list").innerHTML = `<p class="empty">${all.length ? "No hay heladerías con descuento con estos filtros." : "Apretá “Traer descuentos” para buscar."}</p>`;
     return;
   }
-  $("list").innerHTML = stores.map(card).join("");
+  $("list").innerHTML = rows.map(card).join("");
 }
 
-function card(s) {
+function card({ s, deals, promos, best, hasDetail }) {
   const fee = s.freeShipping ? "envío gratis" : s.deliveryFee != null ? `envío ${money(s.deliveryFee)}` : "";
   const meta = [
     s.open === false ? "cerrada" : null,
     s.rating ? `⭐ ${s.rating}` : null,
-    s.eta, fee, s.address,
+    s.eta, fee, s.distanceKm ? `${s.distanceKm} km` : null, s.address,
   ].filter(Boolean).map(esc).join(" · ");
-  const tags = (s.promosParsed || []).map((p) =>
-    `<span class="tag ${p.payment ? "pay" : ""}">${esc(p.text)}</span>`).join("");
-  const sized = (s.products || []).filter((p) => p.sizeKg).sort((a, b) => b.sizeKg - a.sizeKg);
-  const deals = (s.products || []).filter((p) => p.discountPct && !p.sizeKg);
-  const rows = [...sized, ...deals].map((p) => `<tr>
-      <td>${esc(p.name)}</td>
-      <td class="num">${p.discountPct ? `<span class="strike">${money(p.originalPrice)}</span>` : ""}${money(p.price)}</td>
-      <td class="num">${p.discountPct ? Math.round(p.discountPct) + "%" : ""}</td>
-      <td class="num">${p.pricePerKg ? money(p.pricePerKg) : ""}</td></tr>`).join("");
+  const tags = promos.map((p) => `<span class="tag ${p.payment || isPlusPromo(p.text) ? "pay" : ""}">${esc(p.text)}</span>`).join("");
+  const rows = deals.map((p) => `<tr>
+      <td>${esc(p.name)}${p.plusOnly ? ' <span class="tag pay">Plus</span>' : ""}</td>
+      <td class="num"><b>${money(p.price)}</b></td>
+      <td class="num"><span class="strike">${money(p.originalPrice)}</span></td>
+      <td class="num off">−${Math.round(p.discountPct)}%</td></tr>`).join("");
   const name = s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>` : esc(s.name);
+  const noDetail = !rows && !hasDetail
+    ? `<p class="nodetail">No pudimos ver qué productos tienen el descuento: miralos en ${PLATFORM_NAMES[s.platform] || s.platform}.</p>` : "";
   return `<article class="card ${s.open === false ? "closed" : ""}">
     <div>
       <div class="name">${name}<span class="plat ${esc(s.platform)}">${PLATFORM_NAMES[s.platform] || esc(s.platform)}</span></div>
       <div class="meta">${meta}</div>
     </div>
-    <div class="big">
-      ${s.bestDiscountPct ? `<div class="pct">${Math.round(s.bestDiscountPct)}% off</div>` : ""}
-      ${s.bestPricePerKg ? `<div class="kg">kg desde <b>${money(s.bestPricePerKg)}</b></div>` : ""}
-    </div>
+    <div class="big"><div class="pct">${hasDetail || !promos.some((p) => p.upTo) ? "" : "hasta "}${Math.round(best)}% off</div></div>
     ${tags ? `<div class="tags">${tags}</div>` : ""}
-    ${rows ? `<details><summary>Ver precios</summary><table>
-      <tr><th>Producto</th><th class="num">Precio</th><th class="num">Desc.</th><th class="num">$/kg</th></tr>${rows}</table></details>` : ""}
+    ${rows ? `<table class="deals"><tr><th>Producto en descuento</th><th class="num">Queda a</th><th class="num">Antes</th><th class="num"></th></tr>${rows}</table>` : noDetail}
   </article>`;
 }
 
@@ -227,7 +236,7 @@ $("open-pya").addEventListener("click", () => { send("OPEN_PYA"); setPyaDone(tru
 $("pya-done").addEventListener("click", () => setPyaDone(true));
 $("show-pya-setup").addEventListener("click", () => { pyaAddress = null; setPyaDone(false); });
 $("force").addEventListener("click", () => fetchDeals(true));
-for (const id of ["f-platform", "f-sort", "f-open", "f-deals"]) $(id).addEventListener("change", render);
+for (const id of ["f-platform", "f-open", "f-plus"]) $(id).addEventListener("change", render);
 $("diag").addEventListener("click", (e) => {
   e.preventDefault();
   if (extVersion) send("GET_RAW"); else alert("Necesitás la extensión instalada.");

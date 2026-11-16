@@ -61,6 +61,16 @@
   las llamadas internas de la portada (`/home-page/v44/home/lazy_load?lat=..&lng=..`) y la dirección del
   texto "Enviar a …". Extensión v0.5.1.
 
+## Hecho (rama `fase-1-solo-descuentos-segundo-plano`, 2026-11-16)
+- Con el diagnóstico real: formato del menú de PedidosYa confirmado
+  (`price: { finalPrice, originalPrice, discount: { percentage, isPlus, type } }`). Fixtures reales.
+- Se leen los menús de las heladerías **con descuento** (las de mayor % primero, hasta 20), no las
+  más cercanas. Descuentos `SUBSIDIZED_PRODUCT_PLUS` / `isPlus` marcados como "PedidosYa Plus".
+- **Segundo plano:** los menús se piden directo (sin abrir páginas); si PedidosYa no lo permite,
+  se abren en una **ventana minimizada**, que solo se muestra si hay que resolver algo.
+- **Página:** solo heladerías con descuento en helado; se muestran los productos en descuento con
+  "queda a" y "antes" (sin $/kg). Filtro para incluir o no descuentos de PedidosYa Plus. v0.6.0.
+
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),
       pero el formato de `/v2/niles/partners/{id}/menus` todavía no lo vimos: en el navegador integrado

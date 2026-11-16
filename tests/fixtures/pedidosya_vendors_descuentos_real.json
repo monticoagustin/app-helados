@@ -1,0 +1,155 @@
+{
+ "_comentario": "Recorte REAL de /v4/shoplist/vendors: Renato (SUBSIDIZED_PRODUCT 50%) y Cantabria (SUBSIDIZED_PRODUCT_PLUS 36%).",
+ "vendors": [
+  {
+   "id": 430308,
+   "name": "Renato Gelateria - Italia",
+   "delivery": {
+    "bucket": {
+     "label": "10-30 min",
+     "lower": 10,
+     "upper": 30
+    },
+    "price": {
+     "deliveryFeeTotal": 1679,
+     "deliveryFeeTotalMiddleEnd": 1679,
+     "deliveryFeeTotalWithDiscount": 0,
+     "fleetUtilisationLevel": "NORMAL"
+    }
+   },
+   "rating": {
+    "hasReviewLabel": false,
+    "score": 4.78,
+    "surveyCount": 371
+   },
+   "state": {
+    "occasion": "DELIVERY",
+    "offerState": "DELIVERY_ONLINE",
+    "otherStates": {
+     "PICKUP": {
+      "status": "OPEN",
+      "until": "2026-11-16T23:55:00-03:00"
+     }
+    },
+    "status": "OPEN",
+    "template": {
+     "state": "OPEN"
+    },
+    "time": "23:55",
+    "until": "2026-11-16T23:55:00-03:00"
+   },
+   "discounts": [
+    {
+     "amount": 100,
+     "calculationType": "PERCENTAGE",
+     "discountTag": "",
+     "initiativeProject": "LOYALTY",
+     "isLoyalty": true,
+     "target": "DELIVERY_FEE",
+     "type": "DELIVERY_FEE"
+    },
+    {
+     "amount": 50,
+     "calculationType": "PERCENTAGE",
+     "type": "SUBSIDIZED_PRODUCT"
+    }
+   ],
+   "mainFoodCategories": [
+    {
+     "id": 25,
+     "name": "Helados"
+    }
+   ],
+   "discountSummary": {
+    "isSponsoredDeal": false,
+    "scenario": [
+     "SUBSIDIZED_PRODUCT"
+    ],
+    "totalAmount": 50,
+    "type": "PERCENTAGE"
+   },
+   "url": "/restaurantes/rosario/renato-gelateria---italia-menu",
+   "location": {
+    "latitude": -32.9542762,
+    "longitude": -60.6503956
+   }
+  },
+  {
+   "id": 609145,
+   "name": "Heladeria Cantabria - Rosario",
+   "delivery": {
+    "bucket": {
+     "label": "20-40 min",
+     "lower": 20,
+     "upper": 40
+    },
+    "price": {
+     "deliveryFeeTotal": 2169,
+     "deliveryFeeTotalMiddleEnd": 2169,
+     "deliveryFeeTotalWithDiscount": 0,
+     "fleetUtilisationLevel": "NORMAL"
+    }
+   },
+   "rating": {
+    "hasReviewLabel": false,
+    "score": 4.71,
+    "surveyCount": 354
+   },
+   "state": {
+    "occasion": "DELIVERY",
+    "offerState": "DELIVERY_ONLINE",
+    "otherStates": {
+     "PICKUP": {
+      "status": "OPEN",
+      "until": "2026-11-16T23:45:00-03:00"
+     }
+    },
+    "status": "OPEN",
+    "template": {
+     "state": "OPEN"
+    },
+    "time": "23:45",
+    "until": "2026-11-16T23:45:00-03:00"
+   },
+   "discounts": [
+    {
+     "amount": 100,
+     "calculationType": "PERCENTAGE",
+     "discountTag": "",
+     "initiativeProject": "LOYALTY",
+     "isLoyalty": true,
+     "target": "DELIVERY_FEE",
+     "type": "DELIVERY_FEE"
+    },
+    {
+     "amount": 36,
+     "calculationType": "PERCENTAGE",
+     "type": "SUBSIDIZED_PRODUCT_PLUS"
+    }
+   ],
+   "mainFoodCategories": [
+    {
+     "id": 25,
+     "name": "Helados"
+    },
+    {
+     "id": 37,
+     "name": "Postres"
+    }
+   ],
+   "discountSummary": {
+    "isSponsoredDeal": false,
+    "scenario": [
+     "SUBSIDIZED_PRODUCT_PLUS"
+    ],
+    "totalAmount": 36,
+    "type": "PERCENTAGE"
+   },
+   "url": "/restaurantes/rosario/heladeria-cantabria-rosario-91c8955a-3c12-4e30-b4f4-77f302f39101-menu",
+   "location": {
+    "latitude": -32.9458498,
+    "longitude": -60.6571411
+   }
+  }
+ ]
+}

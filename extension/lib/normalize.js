@@ -177,10 +177,13 @@ export function summarizeStore(store) {
     .filter((p) => p.pct && !p.payment && !(p.upTo && all.length))
     .map((p) => p.pct);
   const best = Math.max(0, ...productPcts, ...promoPcts);
+  // Productos de helado con descuento, de mayor a menor %: es lo que se muestra.
+  const deals = products.filter((p) => p.discountPct).sort((a, b) => b.discountPct - a.discountPct);
   const perKg = products.map((p) => p.pricePerKg).filter(Boolean);
   return {
     ...store,
     products,
+    deals,
     promosParsed: promos,
     bestDiscountPct: best > 0 ? best : null,
     bestPricePerKg: perKg.length ? Math.min(...perKg) : null,
