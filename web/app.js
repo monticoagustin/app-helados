@@ -71,7 +71,7 @@ window.addEventListener("message", (e) => {
 });
 
 function onExtension() {
-  $("ext-badge").textContent = `Extensión conectada (versión ${extVersion})`;
+  $("ext-text").textContent = `EXTENSIÓN ${extVersion} ACTIVA`;
   $("ext-badge").className = "ext-badge on";
   $("install").hidden = true;
   $("fetch").disabled = false;
@@ -139,7 +139,9 @@ const money = (n) => (n == null ? "" : "$" + Math.round(n).toLocaleString("es-AR
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const hora = (iso) => new Date(iso).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
 /** "PALETA AMERICANA CON OREO" → "Paleta americana con oreo": los nombres en mayúsculas gritan. */
-const tame = (t) => (/[a-záéíóúñ]/.test(t) ? t : t.charAt(0) + t.slice(1).toLowerCase());
+const tame = (t) => frac(/[a-záéíóúñ]/.test(t) ? t : t.charAt(0) + t.slice(1).toLowerCase());
+/** "1/4 de helado" → "¼ de helado", como en la pizarra de la heladería. */
+const frac = (t) => String(t).replace(/(^|[^\d/])([13])\/([24])(?![\d/])/g, (m, a, n, d) => a + ({ "1/4": "¼", "1/2": "½", "3/4": "¾" }[`${n}/${d}`] || `${n}/${d}`));
 
 function renderProgress() {
   const lines = Object.entries(progress).map(([k, m]) => {
@@ -175,48 +177,86 @@ function render() {
   const all = Object.values(results);
   $("status").innerHTML = all.map((r) => {
     const cls = r.status === "ok" ? "" : "error";
-    return `<p class="${cls}" style="margin:0"><b>${PLATFORM_NAMES[r.platform] || esc(r.platform)}:</b> ${esc(r.message)}. `
+    return `<p class="${cls}"><b>${PLATFORM_NAMES[r.platform] || esc(r.platform)}:</b> ${esc(String(r.message).replace(/\.+$/, ""))}. `
       + `Actualizado el ${hora(r.capturedAt)}${r.fromCache ? ", guardado de antes" : ""}.</p>`;
   }).join("");
+  $("city-name").textContent = city.name;
+  $("city-upper").textContent = city.name.toLocaleUpperCase("es-AR");
+  renderSync();
 
   const fPlat = platformFilter();
   const onlyOpen = $("f-open").checked;
   const withPlus = $("f-plus").checked;
 
   let rows = all.flatMap((r) => r.stores || []).map((s) => ({ s, ...view(s, withPlus) }));
-  $("filters").hidden = !rows.length;
+  const withDiscount = rows.filter((r) => r.best > 0).length;
   if (fPlat) rows = rows.filter((r) => r.s.platform === fPlat);
   if (onlyOpen) rows = rows.filter((r) => r.s.open !== false);
   rows = rows.filter((r) => r.best > 0); // solo heladerías con descuento en helado
   rows.sort((a, b) => b.best - a.best);
 
-  renderHero(rows);
+  renderHero(rows, all.length > 0);
+  $("total").textContent = withDiscount ? `HELADERÍAS VISIBLES: ${rows.length} DE ${withDiscount}` : "";
   if (!rows.length) {
     $("list").innerHTML = `<p class="empty">${all.length
-      ? "No hay heladerías con descuento con estos filtros. Probá con todas las plataformas o incluyendo las cerradas."
+      ? "No quedaron heladerías con esos filtros. Probá con “Todas” o desmarcando “Solo abiertas”."
       : "Todavía no buscaste. Tocá “Traer descuentos” y en uno o dos minutos aparecen acá."}</p>`;
     return;
   }
   $("list").innerHTML = rows.map(shop).join("");
 }
 
-/** Portada: la mejor rebaja con producto, contada como el cartel de la vidriera. */
-function renderHero(rows) {
+/** "Edición Rosario • hace 3 min": cuándo se trajeron los datos que estás viendo. */
+function renderSync() {
+  const times = Object.values(results).map((r) => Date.parse(r.capturedAt)).filter(Boolean);
+  if (!times.length) { $("last-sync").textContent = "sin buscar todavía"; return; }
+  const min = Math.round((Date.now() - Math.max(...times)) / 60000);
+  $("last-sync").textContent = min < 1 ? "recién" : min < 60 ? `hace ${min} min`
+    : min < 24 * 60 ? `hace ${Math.round(min / 60)} h` : `del ${hora(new Date(Math.max(...times)).toISOString()).split(",")[0]}`;
+}
+
+/** Titular, bajada y destacado del ticket: la rebaja más grande con producto. */
+function renderHero(rows, searched) {
   const hero = $("hero");
+  const best = rows[0]?.best || 0;
+  $("headline").textContent = best >= 50 ? "Helado a mitad de precio. Sin abrir diez apps."
+    : best > 0 ? `Helado hasta ${Math.round(best)}% más barato. Sin abrir diez apps.`
+    : "El helado más barato de hoy. Sin abrir diez apps.";
+  $("stamp").hidden = !best;
+  $("stamp").textContent = `−${Math.round(best)}% HOY`;
+
   const top = rows.find((r) => r.deals.length) || null;
   const key = top ? `${top.s.platform}:${top.s.id}:${top.deals[0].price}` : null;
   if (!top) {
-    hero.classList.remove("is-new");
-    hero.innerHTML = `<h1 class="hero-ask">¿Dónde está más barato el helado hoy en <span id="city-name">${esc(city.name)}</span>?</h1>`;
+    hero.innerHTML = "";
+    $("lede").innerHTML = rows.length
+      ? `Hay ${rows.length} ${rows.length === 1 ? "heladería" : "heladerías"} con descuento en ${esc(city.name)}, pero no pudimos ver a qué productos se aplica. Están en el ticket.`
+      : searched
+        ? "Con estos filtros no quedó ninguna heladería con descuento."
+        : "Elegí tu ciudad y tocá <b>Traer descuentos</b>: buscamos en Rappi y PedidosYa desde tu Chrome y en uno o dos minutos aparecen en el ticket.";
+    lastTop = null;
     return;
   }
   const d = top.deals[0];
   const others = rows.length - 1;
-  hero.innerHTML = `
-    <p class="hero-where"><b>${esc(top.s.name)}</b> tiene ${esc(lower(tame(d.name)))} en ${PLATFORM_NAMES[top.s.platform]}${d.plusOnly ? ", con PedidosYa Plus" : ""}:</p>
-    <h1 class="hero-price"><span class="hero-before"><span class="sr">Antes </span>${money(d.originalPrice)}</span><span class="hero-now"><span class="sr">ahora </span>${money(d.price)}</span></h1>
-    <p class="hero-note">Es la rebaja más grande de hoy en <span id="city-name">${esc(city.name)}</span>, ${Math.round(d.discountPct)}% menos.
-      ${others > 0 ? `Abajo hay ${others} ${others === 1 ? "heladería más" : "heladerías más"} con descuento.` : ""}</p>`;
+  const plat = PLATFORM_NAMES[top.s.platform];
+  $("lede").innerHTML = `<b>${esc(top.s.name)}</b> tiene ${esc(lower(tame(d.name)))} a <b>${money(d.price)}</b> en ${plat}${d.plusOnly ? ", con PedidosYa Plus" : ""}. `
+    + `Es la rebaja más grande de hoy en ${esc(city.name)}.`
+    + (others > 0 ? ` Abajo tenés ${others} ${others === 1 ? "heladería más" : "heladerías más"} con descuento.` : "");
+  hero.innerHTML = `<div class="feature">
+      <div class="feature-top">
+        <p class="feature-who" style="margin:0">${esc(top.s.name)} <span>tiene ${esc(lower(tame(d.name)))} en ${plat}:</span></p>
+        ${top.s.eta ? `<span class="pill">${esc(top.s.eta)}</span>` : ""}
+      </div>
+      <p class="feature-prices">
+        <span class="feature-before"><span class="sr">Antes </span>${money(d.originalPrice)}</span>
+        <span class="feature-now"><span class="sr">ahora </span>${money(d.price)}</span>
+      </p>
+      <div class="feature-foot">
+        <span>TE AHORRÁS ${money(d.originalPrice - d.price)}${d.plusOnly ? " CON PEDIDOSYA PLUS" : ""}</span>
+        ${top.s.address ? `<span>${esc(top.s.address)}</span>` : ""}
+      </div>
+    </div>`;
   if (key !== lastTop) {
     hero.classList.remove("is-new"); void hero.offsetWidth; hero.classList.add("is-new");
     const t = $("ticket"); t.classList.remove("is-printing"); void t.offsetWidth; t.classList.add("is-printing");
@@ -226,7 +266,7 @@ function renderHero(rows) {
 
 const lower = (t) => String(t).charAt(0).toLowerCase() + String(t).slice(1);
 
-function shop({ s, deals, promos, best, hasDetail }) {
+function shop({ s, deals, promos, best, hasDetail }, i) {
   // El envío va en la línea de datos (con sus condiciones), no repetido como etiqueta.
   const fs = promos.find((p) => p.freeShipping);
   promos = promos.filter((p) => p !== fs);
@@ -234,33 +274,46 @@ function shop({ s, deals, promos, best, hasDetail }) {
     ? `envío gratis${fs && isPlusPromo(fs.text) ? " con PedidosYa Plus" : ""}${fs?.minAmount ? ` desde ${money(fs.minAmount)}` : ""}`
     : s.deliveryFee != null ? `envío ${money(s.deliveryFee)}` : null;
   const meta = [
-    `en ${PLATFORM_NAMES[s.platform] || s.platform}`,
-    s.open === false ? "cerrada ahora" : null,
-    s.eta, fee,
-    s.distanceKm ? `a ${String(s.distanceKm).replace(".", ",")} km` : null,
-    s.rating ? `puntaje ${String(s.rating).replace(".", ",")}` : null,
-    s.address,
-  ].filter(Boolean).map(esc).join(", ");
+    `en <b>${esc(PLATFORM_NAMES[s.platform] || s.platform)}</b>`,
+    ...[s.eta, fee,
+      s.distanceKm ? `a ${String(s.distanceKm).replace(".", ",")} km` : null,
+      s.rating ? `★ ${String(s.rating).replace(".", ",")}` : null,
+      s.address].filter(Boolean).map(esc),
+  ].join(" · ");
   const lines = deals.map((p) => `<li class="line">
-      <span class="line-name">${esc(tame(p.name))}${p.plusOnly ? '<span class="plus">Plus</span>' : ""}</span>
+      <span class="line-name">${esc(tame(p.name))}${p.plusOnly ? '<span class="plus-tag">Plus</span>' : ""}</span>
       <span class="line-dots" aria-hidden="true"></span>
-      <span class="line-before"><span class="sr">antes </span>${money(p.originalPrice)}</span>
-      <span class="line-now"><span class="sr">ahora </span>${money(p.price)}</span>
-      <span class="line-off">−${Math.round(p.discountPct)}%</span>
+      <span class="line-prices">
+        <span class="line-before"><span class="sr">antes </span>${money(p.originalPrice)}</span>
+        <span class="line-now"><span class="sr">ahora </span>${money(p.price)}</span>
+        <span class="line-off">−${Math.round(p.discountPct)}%</span>
+      </span>
     </li>`).join("");
-  const tags = promos.map((p) => `<li class="${p.payment || isPlusPromo(p.text) ? "pay" : ""}">${esc(p.text)}</li>`).join("");
+  const badges = promos.map((p) => {
+    const cls = isPlusPromo(p.text) ? "plus" : p.payment ? "pay" : "";
+    return `<li class="badge ${cls}">${esc(p.text)}</li>`;
+  }).join("");
   const name = s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>` : esc(s.name);
   const upTo = !hasDetail && promos.some((p) => p.upTo);
-  const noDetail = !lines && !hasDetail
-    ? `<p class="nodetail">No pudimos ver qué productos tienen el descuento: miralos en ${PLATFORM_NAMES[s.platform] || s.platform}.</p>` : "";
+  const plat = PLATFORM_NAMES[s.platform] || s.platform;
+  const body = lines
+    ? `<ul class="lines">${lines}</ul>${badges ? `<ul class="badges">${badges}</ul>` : ""}`
+    : !hasDetail
+      ? `<div class="nodetail"><p>No pudimos ver qué productos tienen el descuento: miralos en ${esc(plat)}.</p>${badges ? `<ul class="badges">${badges}</ul>` : ""}</div>`
+      : badges ? `<ul class="badges">${badges}</ul>` : "";
   return `<article class="shop ${s.open === false ? "closed" : ""}">
     <header class="shop-head">
-      <h2 class="shop-name">${name}</h2>
-      <span class="shop-pct">${upTo ? "<small>hasta</small>" : ""}−${Math.round(best)}%</span>
+      <div>
+        <div class="shop-title">
+          <span class="shop-num">${String(i + 1).padStart(2, "0")}.</span>
+          <h3 class="shop-name">${name}</h3>
+          ${s.open === false ? '<span class="closed-tag">Cerrada ahora</span>' : ""}
+        </div>
+        <p class="shop-meta">${meta}</p>
+      </div>
+      <p class="shop-pct" style="margin:0">${upTo ? "<small>hasta</small>" : ""}<span>−${Math.round(best)}%</span></p>
     </header>
-    <p class="shop-meta">${meta}</p>
-    ${lines ? `<ul class="lines">${lines}</ul>` : noDetail}
-    ${tags ? `<ul class="promos">${tags}</ul>` : ""}
+    ${body}
   </article>`;
 }
 
@@ -291,9 +344,11 @@ $("diag").addEventListener("click", (e) => {
 
 loadLocal();
 render();
+setInterval(renderSync, 60000);
 send("PING");
 setTimeout(() => {
   if (extVersion) return;
-  $("ext-badge").textContent = "Extensión no detectada";
+  $("ext-text").textContent = "EXTENSIÓN NO DETECTADA";
+  $("ext-badge").className = "ext-badge off";
   $("install").hidden = false;
 }, 1200);
