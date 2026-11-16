@@ -80,6 +80,18 @@
 - **Interfaz:** portada con la mejor rebaja como precio tachado grande; resultados en un solo ticket
   de heladería (bordes en zigzag, puntitos entre producto y precio). Celular revisado. Extensión v0.7.0.
 
+## Hecho (rama `fase-1-diseno-ticket`, 2026-11-16)
+- **Nuevo diseño "ticket de caja"** (elegido por el usuario a partir de un prototipo propio), que
+  reemplaza la UI anterior. Sistema de diseño en `DESIGN.md` y como artifact de Design System.
+- Dos columnas en escritorio: a la izquierda la edición (ciudad y hace cuánto se buscó), el titular,
+  la bajada y el panel de controles con sombra dura; a la derecha el comprobante de rebajas con sello
+  "−X% HOY", el destacado con el precio tachado en rojo y los renglones numerados. En celular, una columna.
+- **Tipografía:** Bricolage Grotesque (titulares), Plus Jakarta Sans (texto), IBM Plex Mono (datos del
+  ticket), alojadas en `web/fonts/` (OFL). Se sacó Rosario. Fracciones ¼ ½ ¾ en los nombres.
+- Se adaptó lo que en el prototipo era de mentira: el titular cambia según la mejor rebaja real, la
+  insignia muestra el estado real de la extensión y no hay selector de tipografías ni factores por ciudad.
+- E2E: arranca con un perfil de Chrome limpio (antes podía tomar resultados guardados de otra corrida).
+
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),
       pero el formato de `/v2/niles/partners/{id}/menus` todavía no lo vimos: en el navegador integrado
