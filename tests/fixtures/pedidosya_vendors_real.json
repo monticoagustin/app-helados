@@ -1,0 +1,48 @@
+{
+  "_comentario": "Recorte REAL de POST /v4/shoplist/vendors (Rosario, categoría Helados, 2026-11-16). Se sacaron tokens y medios de pago. El 3er local es inventado para cubrir un descuento en %.",
+  "vendors": [
+    {
+      "id": 59418, "name": "Esther Helados Centro",
+      "location": { "latitude": -32.93930054, "longitude": -60.64360046 },
+      "delivery": { "type": "OWN_DELIVERY", "modes": ["DELIVERY"], "bucket": { "lower": 15, "upper": 30, "label": "15-30 min" },
+        "price": { "deliveryFeeTotalWithDiscount": 0.0, "deliveryFeeTotal": 1679.0 } },
+      "distance": { "distance": 2242.0, "legacyDistance": 2.24 },
+      "rating": { "score": 4.63, "surveyCount": 89 },
+      "state": { "status": "OPEN", "until": "2026-11-16T23:59:59-03:00" },
+      "discounts": [{ "type": "DELIVERY_FEE", "amount": 100.0, "calculationType": "PERCENTAGE", "target": "DELIVERY_FEE", "discountTag": "", "conditions": { "SUBSCRIPTION": [{}] } }],
+      "mainFoodCategories": [{ "id": 25, "name": "Helados" }],
+      "discountSummary": { "scenario": [], "totalAmount": 0.0, "type": "PERCENTAGE" },
+      "url": "/restaurantes/rosario/esther-helados-centro-menu"
+    },
+    {
+      "id": 393747, "name": "Tento Helados San Juan 608",
+      "location": { "latitude": -32.951338, "longitude": -60.6322832 },
+      "delivery": { "bucket": { "lower": 5, "upper": 20, "label": "5-20 min" },
+        "price": { "deliveryFeeTotalWithDiscount": 0.0, "deliveryFeeTotal": 529.0 } },
+      "distance": { "legacyDistance": 0.37 },
+      "rating": { "score": 4.87, "surveyCount": 67 },
+      "state": { "status": "OPEN" },
+      "discounts": [{ "type": "DELIVERY_FEE", "amount": 100.0, "calculationType": "PERCENTAGE", "target": "DELIVERY_FEE", "discountTag": "", "conditions": { "SUBSCRIPTION": [{}] } }],
+      "mainFoodCategories": [{ "id": 25, "name": "Helados" }],
+      "discountSummary": { "totalAmount": 0.0, "type": "PERCENTAGE" },
+      "url": "/restaurantes/rosario/tento-helados-san-juan-608-8a9627c0-2375-4efa-803e-f0788b4b0c39-menu"
+    },
+    {
+      "id": 1, "name": "Heladería Inventada",
+      "delivery": { "bucket": { "label": "10-25 min" }, "price": { "deliveryFeeTotalWithDiscount": 900.0, "deliveryFeeTotal": 900.0 } },
+      "rating": { "score": 4.5, "surveyCount": 10 },
+      "state": { "status": "CLOSED" },
+      "discounts": [{ "type": "PRODUCT", "amount": 30.0, "calculationType": "PERCENTAGE", "discountTag": "30% off en kilos", "conditions": {} }],
+      "mainFoodCategories": [{ "id": 25, "name": "Helados" }],
+      "discountSummary": { "totalAmount": 30.0, "type": "PERCENTAGE" },
+      "url": "/restaurantes/rosario/heladeria-inventada-menu"
+    },
+    {
+      "id": 2, "name": "Mulita Empanadas Y Mucho Mas",
+      "delivery": { "bucket": { "label": "25-45 min" }, "price": { "deliveryFeeTotalWithDiscount": 0.0 } },
+      "rating": { "score": 4.3 }, "state": { "status": "OPEN" },
+      "mainFoodCategories": [{ "id": 7, "name": "Empanadas" }],
+      "url": "/restaurantes/rosario/mulita-menu"
+    }
+  ]
+}

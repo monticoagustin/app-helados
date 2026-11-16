@@ -43,7 +43,24 @@
 - Problema reportado: con la dirección cargada, PedidosYa no devolvió heladerías → falta ver el JSON
   real (diagnóstico) para ajustar el parser.
 
+## Hecho (rama `fase-1-pedidosya-real`, 2026-11-16)
+- **PedidosYa con datos reales** (vistos en el navegador integrado con la sesión del usuario, solo lectura):
+  - Lista de Helados: `/restaurantes?bt=RESTAURANT&category=25&lat=…&lng=…&areaId=…&areaName=…&address=…`
+  - Datos: `POST /v4/shoplist/vendors?size=30&page=N` → `{ vendors: [...] }` con id, name, url,
+    rating.score, delivery.bucket.label, delivery.price.deliveryFeeTotal(WithDiscount), state.status,
+    location, mainFoodCategories (Helados = 25), discounts[], discountSummary.
+  - El envío gratis que se ve suele ser **solo con PedidosYa Plus** (`conditions.SUBSCRIPTION`).
+  - El listado no trae precios por producto: están en el menú de cada local (pendiente).
+- Parser específico para ese formato (+ heurístico de respaldo), con fixture real recortado.
+- La extensión guarda la dirección de PedidosYa (desde la URL) y va directo a Helados. Si no hay
+  dirección, la persona la carga en la pestaña y la búsqueda sigue sola. Extensión v0.4.0.
+
 ## Falta / próximos pasos
+- [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),
+      pero el formato de `/v2/niles/partners/{id}/menus` todavía no lo vimos: en el navegador integrado
+      PedidosYa lo bloqueó con **PerimeterX** (403 con `blockScript`); en el Chrome del usuario el menú
+      carga. Parser heurístico + diagnóstico → ajustar con la primera captura real. Si PerimeterX
+      bloquea en la búsqueda, se muestra la pestaña por si hay desafío y, si no, se sigue sin precios.
 - [x] Secreto `SPACEFAST_TOKEN` cargado y publicación funcionando.
 - [ ] Usuario: instalar la extensión y hacer la primera búsqueda real.
 - [ ] Ajustar el parser de PedidosYa con el diagnóstico real (botón "Descargar diagnóstico").

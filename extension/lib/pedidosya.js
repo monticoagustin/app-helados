@@ -14,8 +14,9 @@ const ADDRESS_KEYS = ["address", "street", "addressLine", "formattedAddress"];
 const CATEGORY_KEYS = ["categories", "cuisines", "foodCategories", "mainCategory", "tags"];
 const PROMO_KEYS = ["discounts", "promotions", "campaigns", "badges", "promotionText", "discountText", "tags"];
 const URL_KEYS = ["link", "url", "permalink", "slug"];
-const PRICE_KEYS = ["price", "finalPrice", "discountedPrice", "priceAfterDiscount"];
-const ORIGINAL_KEYS = ["originalPrice", "realPrice", "priceBeforeDiscount", "basePrice", "listPrice"];
+const PRICE_KEYS = ["price", "finalPrice", "discountedPrice", "priceAfterDiscount", "unitPrice", "amount"];
+const ORIGINAL_KEYS = ["originalPrice", "realPrice", "priceBeforeDiscount", "beforePrice", "previousPrice", "oldPrice",
+  "strikethroughPrice", "basePrice", "listPrice", "regularPrice"];
 const PRODUCT_LIST_KEYS = ["products", "items", "menuItems", "sections", "categories", "corridors"];
 const STORE_SIGNALS = [...RATING_KEYS, ...ETA_KEYS, ...FEE_KEYS];
 
@@ -126,29 +127,155 @@ const richness = (s) => s.products.length * 10 + s.promos.length
 
 function merge(a, b) {
   const [base, other] = richness(b) > richness(a) ? [b, a] : [a, b];
-  for (const k of ["address", "rating", "eta", "deliveryFee", "url", "open"]) if (base[k] == null) base[k] = other[k];
+  for (const k of ["address", "rating", "eta", "deliveryFee", "url", "open", "location", "categoryIds"]) if (base[k] == null) base[k] = other[k];
   base.promos = [...new Set([...base.promos, ...other.promos])];
   base.categories = [...new Set([...base.categories, ...other.categories])];
   if (!base.products.length) base.products = other.products;
   return base;
 }
 
+// ---------------------------------------------------------------- formato real (2026-11-16)
+// POST /v4/shoplist/vendors?size=30&page=N → { vendors: [ { id, name, url, rating:{score,surveyCount},
+//   delivery:{ bucket:{label}, price:{ deliveryFeeTotal, deliveryFeeTotalWithDiscount } },
+//   state:{status}, location:{latitude,longitude}, mainFoodCategories:[{id,name}],
+//   discounts:[{ type, amount, calculationType, discountTag, conditions }], discountSummary:{totalAmount,type} } ] }
+export const HELADOS_CATEGORY_ID = 25;
+
+const isVendor = (v) => isObj(v) && v.id != null && typeof v.name === "string"
+  && (isObj(v.delivery) || isObj(v.state) || isObj(v.rating));
+
+function discountTexts(v) {
+  const out = [];
+  for (const d of Array.isArray(v.discounts) ? v.discounts : []) {
+    if (!isObj(d)) continue;
+    const plus = isObj(d.conditions) && "SUBSCRIPTION" in d.conditions ? " (con PedidosYa Plus)" : "";
+    const pct = d.calculationType === "PERCENTAGE" ? Number(d.amount) : null;
+    if (d.type === "DELIVERY_FEE" || d.target === "DELIVERY_FEE") {
+      out.push(pct === 100 ? `Envío gratis${plus}` : pct ? `Envío ${pct}% off${plus}` : `Envío con descuento${plus}`);
+    } else if (d.discountTag) {
+      out.push(`${d.discountTag}${plus}`);
+    } else if (pct) {
+      out.push(`${pct}% off${plus}`);
+    } else if (d.amount) {
+      out.push(`$${Math.round(d.amount).toLocaleString("es-AR")} off${plus}`);
+    }
+  }
+  const sum = isObj(v.discountSummary) ? v.discountSummary : null;
+  if (sum && Number(sum.totalAmount) > 0 && sum.type === "PERCENTAGE") out.push(`Hasta ${Number(sum.totalAmount)}% off`);
+  return [...new Set(out)];
+}
+
+export function parseVendor(v) {
+  const price = isObj(v.delivery?.price) ? v.delivery.price : {};
+  const fee = toNumber(price.deliveryFeeTotalWithDiscount ?? price.deliveryFeeTotal);
+  return {
+    platform: "pedidosya",
+    id: String(v.id),
+    name: v.name.trim(),
+    address: null,
+    rating: toNumber(v.rating?.score) ? Math.round(toNumber(v.rating.score) * 10) / 10 : null,
+    reviews: toNumber(v.rating?.surveyCount),
+    eta: v.delivery?.bucket?.label || v.distance?.delivery?.valueLabel || null,
+    deliveryFee: fee,
+    freeShipping: fee === 0,
+    open: v.state?.status ? v.state.status === "OPEN" : null,
+    url: typeof v.url === "string" ? (v.url.startsWith("http") ? v.url : PEDIDOSYA_BASE + v.url) : null,
+    location: v.location ? { lat: v.location.latitude, lng: v.location.longitude } : null,
+    distanceKm: toNumber(v.distance?.legacyDistance),
+    categories: (v.mainFoodCategories || []).map((c) => c?.name).filter(Boolean),
+    categoryIds: (v.mainFoodCategories || []).map((c) => c?.id).filter((x) => x != null),
+    promos: discountTexts(v),
+    products: [],
+  };
+}
+
+/** Locales con el formato real de /v4/shoplist/vendors (cualquier objeto con { vendors: [...] }). */
+export function parseVendorLists(payloads) {
+  const out = [];
+  for (const payload of payloads) {
+    for (const node of walk(payload)) {
+      if (Array.isArray(node.vendors)) out.push(...node.vendors.filter(isVendor).map(parseVendor));
+    }
+  }
+  return out;
+}
+
 /** Todas las heladerías encontradas en las respuestas capturadas. */
 export function parseCaptured(payloads) {
   const byId = new Map();
+  for (const s of parseVendorLists(payloads)) byId.set(s.id, byId.has(s.id) ? merge(byId.get(s.id), s) : s);
   for (const payload of payloads) {
     for (const node of walk(payload)) {
+      if (Array.isArray(node.vendors)) continue; // ya procesado arriba
       if (!looksLikeStore(node)) continue;
       const s = parseStore(node);
       byId.set(s.id, byId.has(s.id) ? merge(byId.get(s.id), s) : s);
     }
   }
   return [...byId.values()]
-    .filter((s) => isIceCreamStore(s.name, s.categories))
+    .filter((s) => (s.categoryIds || []).includes(HELADOS_CATEGORY_ID) || isIceCreamStore(s.name, s.categories))
     .map(summarizeStore);
 }
 
+// ---------------------------------------------------------------- menús
+// GET /v2/niles/partners/{id}/menus. El formato todavía no lo vimos (PedidosYa lo bloqueó en el
+// navegador integrado), así que se lee de forma heurística: secciones con productos (nombre + precio).
+
+/** Id del local a partir de la URL del menú (/v2/niles/partners/59418/menus → "59418"). */
+export function menuPartnerId(url) {
+  const m = String(url).match(/\/partners\/(\d+)\/menus/);
+  return m ? m[1] : null;
+}
+
+/** ¿La respuesta es un bloqueo de PerimeterX (y no un menú)? */
+export function isBotBlock(body) {
+  return isObj(body) && (typeof body.blockScript === "string" || (typeof body.appId === "string" && /^PX/.test(body.appId)));
+}
+
+function priceOf(p) {
+  const v = first(p, PRICE_KEYS);
+  if (isObj(v)) {
+    return {
+      price: toNumber(first(v, ["finalPrice", "discountedPrice", "value", "amount", "price"])),
+      original: toNumber(first(v, ["originalPrice", "beforePrice", "previousPrice", "oldPrice", "original", "before", "regular"])),
+    };
+  }
+  return { price: toNumber(v), original: toNumber(first(p, ORIGINAL_KEYS)) };
+}
+
+/** Productos de un menú, con la sección a la que pertenecen (sirve para saber si es helado). */
+export function parseMenu(body) {
+  const out = [];
+  const seen = new Set();
+  const visit = (node, section) => {
+    if (Array.isArray(node)) { for (const v of node) visit(v, section); return; }
+    if (!isObj(node)) return;
+    const hasList = ["products", "items", "menuItems"].some((k) => Array.isArray(node[k]));
+    const name = first(node, NAME_KEYS);
+    const here = hasList && typeof name === "string" ? name : section;
+    if (!hasList && typeof name === "string") {
+      const { price, original } = priceOf(node);
+      if (price != null && price > 0 && !seen.has(`${name}|${price}`)) {
+        seen.add(`${name}|${price}`);
+        out.push(normalizeProduct({
+          name: name.trim(),
+          description: typeof node.description === "string" ? node.description : "",
+          section: here || "",
+          price,
+          originalPrice: original,
+        }));
+        return;
+      }
+    }
+    for (const v of Object.values(node)) visit(v, here);
+  };
+  visit(body, "");
+  return out;
+}
+
 const CHALLENGE_MARKERS = [
+  "press & hold", "press and hold", "mantené presionado", "mantén presionado", "presiona y mantén",
+  "access to this page has been denied", "px-captcha", "human verification", "verify you are a human",
   "just a moment", "trafico inusual", "tráfico inusual", "comprobación de seguridad",
   "comprobacion de seguridad", "attention required", "verify you are human", "checking your browser",
 ];
