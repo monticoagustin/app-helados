@@ -1,4 +1,4 @@
-// Página de teskel.online/helados. Habla con la extensión vía window.postMessage
+// Página de teskel.online/cuartito. Habla con la extensión vía window.postMessage
 // (la extensión inyecta un "puente" en esta página).
 const $ = (id) => document.getElementById(id);
 const PLATFORM_NAMES = { pedidosya: "PedidosYa", rappi: "Rappi" };
@@ -71,7 +71,7 @@ window.addEventListener("message", (e) => {
 });
 
 function onExtension() {
-  $("ext-badge").textContent = `Extensión conectada · v${extVersion}`;
+  $("ext-text").innerHTML = `<span class="ext-word">EXTENSIÓN </span>${esc(extVersion)} ACTIVA`;
   $("ext-badge").className = "ext-badge on";
   $("install").hidden = true;
   $("fetch").disabled = false;
@@ -86,7 +86,7 @@ function renderSetup() {
   try { done = done || localStorage.getItem("helados:pya-address") === "1"; } catch { /* nada */ }
   $("pya-setup").hidden = !extVersion || done;
   $("show-pya-setup").hidden = !extVersion || !done;
-  $("show-pya-setup").textContent = pyaAddress ? `PedidosYa: ${pyaAddress} · cambiar` : "Cambiar dirección de PedidosYa";
+  $("show-pya-setup").textContent = pyaAddress ? `PedidosYa busca cerca de ${pyaAddress}. Cambiar` : "Cambiar dirección de PedidosYa";
 }
 function setPyaDone(value) {
   try { localStorage.setItem("helados:pya-address", value ? "1" : "0"); } catch { /* nada */ }
@@ -97,7 +97,7 @@ function fetchDeals(force) {
   if (busy) return;
   setBusy(true);
   for (const k of Object.keys(progress)) delete progress[k];
-  progress._ = "Arrancando… (tarda 1–2 minutos; podés dejar esta pestaña abierta)";
+  progress._ = "Buscando… tarda uno o dos minutos. Podés seguir en otra pestaña.";
   renderProgress();
   send("FETCH", { force, city, platforms: ["pedidosya", "rappi"] });
 }
@@ -129,7 +129,6 @@ function setCity(slug) {
   const found = CITIES.find(([s]) => s === slug) || CITIES[0];
   city = { slug: found[0], name: found[1] };
   try { localStorage.setItem("helados:city", city.slug); } catch { /* nada */ }
-  $("city-name").textContent = city.name;
   loadLocal();
   render();
   if (extVersion) send("GET_CACHED", { city });
@@ -138,7 +137,11 @@ function setCity(slug) {
 // ------------------------------------------------------------ render
 const money = (n) => (n == null ? "" : "$" + Math.round(n).toLocaleString("es-AR"));
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const hora = (iso) => new Date(iso).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+const hora = (iso) => new Date(iso).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+/** "PALETA AMERICANA CON OREO" → "Paleta americana con oreo": los nombres en mayúsculas gritan. */
+const tame = (t) => frac(/[a-záéíóúñ]/.test(t) ? t : t.charAt(0) + t.slice(1).toLowerCase());
+/** "1/4 de helado" → "¼ de helado", como en la pizarra de la heladería. */
+const frac = (t) => String(t).replace(/(^|[^\d/])([13])\/([24])(?![\d/])/g, (m, a, n, d) => a + ({ "1/4": "¼", "1/2": "½", "3/4": "¾" }[`${n}/${d}`] || `${n}/${d}`));
 
 function renderProgress() {
   const lines = Object.entries(progress).map(([k, m]) => {
@@ -150,62 +153,165 @@ function renderProgress() {
   $("progress").hidden = !lines.length;
 }
 
-function render() {
-  const all = Object.values(results);
-  $("status").innerHTML = all.map((r) => `<span class="pill">${PLATFORM_NAMES[r.platform] || r.platform}:
-    <b class="${esc(r.status)}">${esc(r.status)}</b> · ${esc(r.message)} · ${hora(r.capturedAt)}${r.fromCache ? " (caché)" : ""}</span>`).join("");
+const isPlusPromo = (t) => /pedidosya plus/i.test(t);
 
-  const fPlat = $("f-platform").value;
-  const onlyOpen = $("f-open").checked;
-  const onlyDeals = $("f-deals").checked;
-  const sort = $("f-sort").value;
-
-  let stores = all.flatMap((r) => r.stores || []);
-  $("filters").hidden = !stores.length;
-  if (fPlat) stores = stores.filter((s) => s.platform === fPlat);
-  if (onlyOpen) stores = stores.filter((s) => s.open !== false);
-  if (onlyDeals) stores = stores.filter((s) => s.bestDiscountPct || s.freeShipping);
-  stores.sort(sort === "perkg"
-    ? (a, b) => (a.bestPricePerKg ?? Infinity) - (b.bestPricePerKg ?? Infinity)
-    : (a, b) => (b.bestDiscountPct ?? 0) - (a.bestDiscountPct ?? 0) || (a.bestPricePerKg ?? Infinity) - (b.bestPricePerKg ?? Infinity));
-
-  if (!stores.length) {
-    $("list").innerHTML = `<p class="empty">${all.length ? "No hay heladerías con estos filtros." : "Apretá “Traer descuentos” para buscar."}</p>`;
-    return;
-  }
-  $("list").innerHTML = stores.map(card).join("");
+/** Descuentos que cuentan según los filtros (sin Plus si se destilda). */
+function view(s, withPlus) {
+  const deals = (s.deals || (s.products || []).filter((p) => p.discountPct))
+    .filter((p) => withPlus || !p.plusOnly)
+    .sort((a, b) => b.discountPct - a.discountPct);
+  // Si tenemos el detalle de productos, manda el mejor producto y se ocultan los "Hasta X%" del local.
+  const hasDetail = (s.products || []).length > 0;
+  const promos = (s.promosParsed || [])
+    .filter((p) => withPlus || !isPlusPromo(p.text))
+    .filter((p) => !(hasDetail && p.upTo));
+  const promoPct = Math.max(0, ...promos.filter((p) => p.pct && !p.payment && !(p.upTo && hasDetail)).map((p) => p.pct));
+  const best = Math.max(0, deals[0]?.discountPct || 0, promoPct);
+  return { deals, promos, best, hasDetail };
 }
 
-function card(s) {
-  const fee = s.freeShipping ? "envío gratis" : s.deliveryFee != null ? `envío ${money(s.deliveryFee)}` : "";
-  const meta = [
-    s.open === false ? "cerrada" : null,
-    s.rating ? `⭐ ${s.rating}` : null,
-    s.eta, fee, s.address,
-  ].filter(Boolean).map(esc).join(" · ");
-  const tags = (s.promosParsed || []).map((p) =>
-    `<span class="tag ${p.payment ? "pay" : ""}">${esc(p.text)}</span>`).join("");
-  const sized = (s.products || []).filter((p) => p.sizeKg).sort((a, b) => b.sizeKg - a.sizeKg);
-  const deals = (s.products || []).filter((p) => p.discountPct && !p.sizeKg);
-  const rows = [...sized, ...deals].map((p) => `<tr>
-      <td>${esc(p.name)}</td>
-      <td class="num">${p.discountPct ? `<span class="strike">${money(p.originalPrice)}</span>` : ""}${money(p.price)}</td>
-      <td class="num">${p.discountPct ? Math.round(p.discountPct) + "%" : ""}</td>
-      <td class="num">${p.pricePerKg ? money(p.pricePerKg) : ""}</td></tr>`).join("");
-  const name = s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>` : esc(s.name);
-  return `<article class="card ${s.open === false ? "closed" : ""}">
-    <div>
-      <div class="name">${name}<span class="plat ${esc(s.platform)}">${PLATFORM_NAMES[s.platform] || esc(s.platform)}</span></div>
-      <div class="meta">${meta}</div>
-    </div>
-    <div class="big">
-      ${s.bestDiscountPct ? `<div class="pct">${Math.round(s.bestDiscountPct)}% off</div>` : ""}
-      ${s.bestPricePerKg ? `<div class="kg">kg desde <b>${money(s.bestPricePerKg)}</b></div>` : ""}
-    </div>
-    ${tags ? `<div class="tags">${tags}</div>` : ""}
-    ${rows ? `<details><summary>Ver precios</summary><table>
-      <tr><th>Producto</th><th class="num">Precio</th><th class="num">Desc.</th><th class="num">$/kg</th></tr>${rows}</table></details>` : ""}
+const platformFilter = () => document.querySelector('input[name="plat"]:checked')?.value || "";
+let lastTop = null;
+
+function render() {
+  const all = Object.values(results);
+  $("status").innerHTML = all.map((r) => {
+    const cls = r.status === "ok" ? "" : "error";
+    return `<p class="${cls}"><b>${PLATFORM_NAMES[r.platform] || esc(r.platform)}:</b> ${esc(String(r.message).replace(/\.+$/, ""))}. `
+      + `Actualizado el ${hora(r.capturedAt)}${r.fromCache ? ", guardado de antes" : ""}.</p>`;
+  }).join("");
+  $("city-name").textContent = city.name;
+  $("city-upper").textContent = city.name.toLocaleUpperCase("es-AR");
+  renderSync();
+
+  const fPlat = platformFilter();
+  const onlyOpen = $("f-open").checked;
+  const withPlus = $("f-plus").checked;
+
+  let rows = all.flatMap((r) => r.stores || []).map((s) => ({ s, ...view(s, withPlus) }));
+  const withDiscount = rows.filter((r) => r.best > 0).length;
+  if (fPlat) rows = rows.filter((r) => r.s.platform === fPlat);
+  if (onlyOpen) rows = rows.filter((r) => r.s.open !== false);
+  rows = rows.filter((r) => r.best > 0); // solo heladerías con descuento en helado
+  // Primero las que tienen precios por producto (el descuento se ve), después las que solo dicen "hasta X%".
+  const sure = rows.filter((r) => r.deals.length).sort((a, b) => b.deals[0].discountPct - a.deals[0].discountPct);
+  const vague = rows.filter((r) => !r.deals.length).sort((a, b) => b.best - a.best);
+
+  renderHero(sure, vague, all.length > 0);
+  $("total").textContent = withDiscount ? `HELADERÍAS VISIBLES: ${rows.length} DE ${withDiscount}` : "";
+  if (!rows.length) {
+    $("list").innerHTML = `<p class="empty">${all.length
+      ? "No quedaron heladerías con esos filtros. Probá con “Todas” o desmarcando “Solo abiertas”."
+      : "Todavía no buscaste. Tocá “Traer descuentos” y en uno o dos minutos aparecen acá."}</p>`;
+    return;
+  }
+  $("list").innerHTML = sure.map(shop).join("")
+    + (vague.length ? `<section class="vague">
+        <h3 class="vague-title">Con descuento, sin precios por producto</h3>
+        <p class="vague-note">No pudimos ver qué productos tienen el descuento: tocá el nombre para verlos en la app.</p>
+        <ul class="vague-list">${vague.map(vagueRow).join("")}</ul>
+      </section>` : "");
+}
+
+/** "Edición Rosario • hace 3 min": cuándo se trajeron los datos que estás viendo. */
+function renderSync() {
+  const times = Object.values(results).map((r) => Date.parse(r.capturedAt)).filter(Boolean);
+  if (!times.length) { $("last-sync").textContent = "sin buscar todavía"; return; }
+  const min = Math.round((Date.now() - Math.max(...times)) / 60000);
+  $("last-sync").textContent = min < 1 ? "recién" : min < 60 ? `hace ${min} min`
+    : min < 24 * 60 ? `hace ${Math.round(min / 60)} h` : `del ${hora(new Date(Math.max(...times)).toISOString()).split(",")[0]}`;
+}
+
+/** Titular, bajada y destacado del ticket: la rebaja más grande con producto. */
+function renderHero(sure, vague, searched) {
+  const hero = $("hero");
+  const best = sure[0]?.deals[0].discountPct || 0;
+  $("headline").textContent = best >= 50 ? "Helado a mitad de precio. Sin abrir diez apps."
+    : best > 0 ? `Helado hasta ${Math.round(best)}% más barato. Sin abrir diez apps.`
+    : "El helado más barato de hoy. Sin abrir diez apps.";
+  $("stamp").hidden = !best;
+  $("stamp").textContent = `−${Math.round(best)}% HOY`;
+
+  const top = sure[0] || null;
+  const key = top ? `${top.s.platform}:${top.s.id}:${top.deals[0].price}` : null;
+  if (!top) {
+    hero.innerHTML = "";
+    $("lede").hidden = false;
+    $("lede").innerHTML = vague.length
+      ? `Hay ${vague.length} ${vague.length === 1 ? "heladería" : "heladerías"} con descuento en ${esc(city.name)}, pero no pudimos ver a qué productos se aplica.`
+      : searched
+        ? "Con estos filtros no quedó ninguna heladería con descuento."
+        : "Elegí tu ciudad y tocá <b>Traer descuentos</b>: buscamos en Rappi y PedidosYa desde tu Chrome y en uno o dos minutos aparecen en el ticket.";
+    lastTop = null;
+    return;
+  }
+  // Con resultados, el destacado del ticket ya cuenta la mejor rebaja: la bajada sobra.
+  $("lede").hidden = true;
+  const d = top.deals[0];
+  const plat = PLATFORM_NAMES[top.s.platform];
+  hero.innerHTML = `<div class="feature">
+      <p class="feature-who">${esc(top.s.name)} <span>en ${plat}${d.plusOnly ? ", con PedidosYa Plus" : ""}</span></p>
+      <p class="feature-what">${esc(tame(d.name))}</p>
+      <p class="feature-prices">
+        <span class="feature-now"><span class="sr">ahora </span>${money(d.price)}</span>
+        <span class="feature-before"><span class="sr">antes </span>${money(d.originalPrice)}</span>
+      </p>
+      <p class="feature-foot">TE AHORRÁS ${money(d.originalPrice - d.price)} (−${Math.round(d.discountPct)}%)</p>
+    </div>`;
+  if (key !== lastTop) {
+    hero.classList.remove("is-new"); void hero.offsetWidth; hero.classList.add("is-new");
+    const t = $("ticket"); t.classList.remove("is-printing"); void t.offsetWidth; t.classList.add("is-printing");
+  }
+  lastTop = key;
+}
+
+const lower = (t) => String(t).charAt(0).toLowerCase() + String(t).slice(1);
+const SHOW_DEALS = 3;
+
+/** Plataforma, demora y envío: lo que decide el pedido. El resto (puntaje, distancia) sobra acá. */
+function metaLine(s, promos) {
+  const fs = promos.find((p) => p.freeShipping);
+  const fee = (s.freeShipping || fs)
+    ? `envío gratis${fs && isPlusPromo(fs.text) ? " con Plus" : ""}${fs?.minAmount ? ` desde ${money(fs.minAmount)}` : ""}`
+    : s.deliveryFee != null ? `envío ${money(s.deliveryFee)}` : null;
+  return [`<b>${esc(PLATFORM_NAMES[s.platform] || s.platform)}</b>`, ...[s.eta, fee].filter(Boolean).map(esc)].join(" · ");
+}
+const storeName = (s) => (s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>` : esc(s.name));
+
+function shop({ s, deals, promos }) {
+  const extra = promos.filter((p) => !p.freeShipping && !p.upTo);
+  const line = (p) => `<li class="deal">
+      <span class="deal-off">−${Math.round(p.discountPct)}%</span>
+      <span class="deal-name">${esc(tame(p.name))}${p.plusOnly ? '<span class="plus-tag">Plus</span>' : ""}</span>
+      <span class="deal-price"><b><span class="sr">ahora </span>${money(p.price)}</b><s><span class="sr">antes </span>${money(p.originalPrice)}</s></span>
+    </li>`;
+  const first = deals.slice(0, SHOW_DEALS).map(line).join("");
+  const rest = deals.slice(SHOW_DEALS);
+  const more = rest.length
+    ? `<details class="more"><summary>${rest.length} ${rest.length === 1 ? "descuento más" : "descuentos más"}</summary><ul class="deals">${rest.map(line).join("")}</ul></details>` : "";
+  return `<article class="shop ${s.open === false ? "closed" : ""}">
+    <header class="shop-head">
+      <h3 class="shop-name">${storeName(s)}</h3>
+      ${s.open === false ? '<span class="closed-tag">Cerrada ahora</span>' : ""}
+    </header>
+    <p class="shop-meta">${metaLine(s, promos)}</p>
+    <ul class="deals">${first}</ul>${more}
+    ${extra.length ? `<p class="shop-extra">También: ${extra.map((p) => esc(p.text)).join(" · ")}</p>` : ""}
   </article>`;
+}
+
+/** Heladería que anuncia "hasta X%" sin que veamos los productos: una línea corta, al final. */
+function vagueRow({ s, promos, best }) {
+  const main = promos.find((p) => p.pct && !p.payment) || promos[0];
+  const upTo = promos.some((p) => p.upTo);
+  const plus = main && isPlusPromo(main.text);
+  return `<li class="vague-row ${s.open === false ? "closed" : ""}">
+      <span class="deal-off ${upTo ? "is-upto" : ""}">${upTo ? "<small>hasta</small>" : ""}−${Math.round(best)}%</span>
+      <span class="vague-body">
+        <span class="vague-name">${storeName(s)}${plus ? '<span class="plus-tag">Plus</span>' : ""}</span>
+        <span class="shop-meta">${metaLine(s, promos)}</span>
+      </span>
+    </li>`;
 }
 
 function downloadRaw(raw) {
@@ -219,7 +325,6 @@ function downloadRaw(raw) {
 // ------------------------------------------------------------ arranque
 $("city").innerHTML = CITIES.map(([s, n]) => `<option value="${s}">${n}</option>`).join("");
 $("city").value = city.slug;
-$("city-name").textContent = city.name;
 $("city").addEventListener("change", (e) => setCity(e.target.value));
 $("fetch").addEventListener("click", () => fetchDeals(false));
 $("cancel").addEventListener("click", () => send("CANCEL"));
@@ -227,7 +332,8 @@ $("open-pya").addEventListener("click", () => { send("OPEN_PYA"); setPyaDone(tru
 $("pya-done").addEventListener("click", () => setPyaDone(true));
 $("show-pya-setup").addEventListener("click", () => { pyaAddress = null; setPyaDone(false); });
 $("force").addEventListener("click", () => fetchDeals(true));
-for (const id of ["f-platform", "f-sort", "f-open", "f-deals"]) $(id).addEventListener("change", render);
+for (const id of ["f-open", "f-plus"]) $(id).addEventListener("change", render);
+for (const r of document.querySelectorAll('input[name="plat"]')) r.addEventListener("change", render);
 $("diag").addEventListener("click", (e) => {
   e.preventDefault();
   if (extVersion) send("GET_RAW"); else alert("Necesitás la extensión instalada.");
@@ -235,9 +341,11 @@ $("diag").addEventListener("click", (e) => {
 
 loadLocal();
 render();
+setInterval(renderSync, 60000);
 send("PING");
 setTimeout(() => {
   if (extVersion) return;
-  $("ext-badge").textContent = "Extensión no detectada";
+  $("ext-text").innerHTML = `<span class="ext-word">EXTENSIÓN </span>NO DETECTADA`;
+  $("ext-badge").className = "ext-badge off";
   $("install").hidden = false;
 }, 1200);

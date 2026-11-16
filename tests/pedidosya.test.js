@@ -118,3 +118,33 @@ test("parseMenu: precios planos con beforePrice", () => {
   assert.equal(products[0].discountPct, 25);
   assert.equal(products[0].sizeKg, 0.5);
 });
+
+// ---- recortes REALES del diagnóstico del 2026-11-16
+const MENU_REAL = JSON.parse(readFileSync(new URL("./fixtures/pedidosya_menu_real.json", import.meta.url), "utf8"));
+const DESC_REAL = JSON.parse(readFileSync(new URL("./fixtures/pedidosya_vendors_descuentos_real.json", import.meta.url), "utf8"));
+
+test("menú real (Yomo): productos con descuento y precio final", () => {
+  const products = parseMenu(MENU_REAL);
+  const p = products.find((x) => x.name === "1/4 de helado + 1 copa stop");
+  assert.deepEqual([p.price, p.originalPrice, p.discountPct, p.isIceCream], [8600, 12400, 30.6, true]);
+  const kilo = products.find((x) => x.name === "Helado 1 kg");
+  assert.equal(kilo.discountPct, null);
+  assert.equal(kilo.price, 23500);
+});
+
+test("listado real: Renato 'hasta 50%' y Cantabria solo con Plus", () => {
+  const stores = parseCaptured([DESC_REAL]);
+  const renato = stores.find((s) => s.name.startsWith("Renato"));
+  const cantabria = stores.find((s) => s.name.startsWith("Heladeria Cantabria"));
+  assert.deepEqual(renato.promos.filter((t) => t.startsWith("Hasta")), ["Hasta 50% off en productos"]);
+  assert.equal(renato.bestDiscountPct, 50); // sin menú leído, vale el "hasta"
+  assert.ok(cantabria.promos.includes("Hasta 36% off en productos (con PedidosYa Plus)"));
+});
+
+test("summarizeStore arma la lista de productos en descuento (deals) con el menú real", async () => {
+  const { summarizeStore } = await import("../extension/lib/normalize.js");
+  const store = summarizeStore({ name: "Yomo", promos: ["Hasta 31% off en productos"], products: parseMenu(MENU_REAL) });
+  assert.equal(store.deals[0].discountPct, 30.6);
+  assert.ok(store.deals.every((d) => d.discountPct));
+  assert.equal(store.bestDiscountPct, 30.6); // con productos reales, el "hasta" no manda
+});

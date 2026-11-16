@@ -4,6 +4,7 @@
 
 ## Decisiones
 - 2026-11-15: la app vive en **teskel.online/helados** (Spacefast, flujo GitHub → Spacefast).
+- 2026-11-16: se muda a **teskel.online/cuartito**.
   Como ahí solo se sirven archivos estáticos (sin Python, sin IP argentina), la búsqueda se hace
   con una **extensión de Chrome** en la compu del usuario. Reemplaza al prototipo en Python
   (PR #1, rama `fase-1-pedidosya`, sin mergear).
@@ -60,6 +61,47 @@
   trae lat/lng) y la búsqueda esperaba ayuda sin llegar a Helados. Ahora la ubicación se toma también de
   las llamadas internas de la portada (`/home-page/v44/home/lazy_load?lat=..&lng=..`) y la dirección del
   texto "Enviar a …". Extensión v0.5.1.
+
+## Hecho (rama `fase-1-solo-descuentos-segundo-plano`, 2026-11-16)
+- Con el diagnóstico real: formato del menú de PedidosYa confirmado
+  (`price: { finalPrice, originalPrice, discount: { percentage, isPlus, type } }`). Fixtures reales.
+- Se leen los menús de las heladerías **con descuento** (las de mayor % primero, hasta 20), no las
+  más cercanas. Descuentos `SUBSIDIZED_PRODUCT_PLUS` / `isPlus` marcados como "PedidosYa Plus".
+- **Segundo plano:** los menús se piden directo (sin abrir páginas); si PedidosYa no lo permite,
+  se abren en una **ventana minimizada**, que solo se muestra si hay que resolver algo.
+- **Página:** solo heladerías con descuento en helado; se muestran los productos en descuento con
+  "queda a" y "antes" (sin $/kg). Filtro para incluir o no descuentos de PedidosYa Plus. v0.6.0.
+
+## Hecho (rama `fase-1-diseno-cuartito`, 2026-11-16)
+- **Marca: Cuartito.** Logo: el pote de telgopor visto de arriba, con tres gustos y el cuarto vacío
+  punteado (lo que te ahorrás). Lienzo de exploración: https://claude.ai/artifact/HLiFUSYpsEeDgKa6wcNJZ5
+- **Paleta:** telgopor #F3F5F0, granizado #2A1712, frutilla #D61F4B (solo descuentos), sambayón
+  #FFCE4A, rosa #F7A8B8, chocolate #6B3A2A. **Tipografía:** Rosario (Omnibus-Type), alojada en
+  `web/fonts/` (OFL), con números alineados y fracciones reales (¼, ½).
+- **Interfaz:** portada con la mejor rebaja como precio tachado grande; resultados en un solo ticket
+  de heladería (bordes en zigzag, puntitos entre producto y precio). Celular revisado. Extensión v0.7.0.
+
+## Hecho (rama `fase-1-diseno-ticket`, 2026-11-16)
+- **Nuevo diseño "ticket de caja"** (elegido por el usuario a partir de un prototipo propio), que
+  reemplaza la UI anterior. Sistema de diseño en `DESIGN.md` y como artifact de Design System.
+- Dos columnas en escritorio: a la izquierda la edición (ciudad y hace cuánto se buscó), el titular,
+  la bajada y el panel de controles con sombra dura; a la derecha el comprobante de rebajas con sello
+  "−X% HOY", el destacado con el precio tachado en rojo y los renglones numerados. En celular, una columna.
+- **Tipografía:** Bricolage Grotesque (titulares), Plus Jakarta Sans (texto), IBM Plex Mono (datos del
+  ticket), alojadas en `web/fonts/` (OFL). Se sacó Rosario. Fracciones ¼ ½ ¾ en los nombres.
+- Se adaptó lo que en el prototipo era de mentira: el titular cambia según la mejor rebaja real, la
+  insignia muestra el estado real de la extensión y no hay selector de tipografías ni factores por ciudad.
+- E2E: arranca con un perfil de Chrome limpio (antes podía tomar resultados guardados de otra corrida).
+- **Descuento más claro (pensado para celular):** cada producto lleva su % en una etiqueta roja a la
+  izquierda y el precio final a la derecha, con el anterior tachado debajo. Por heladería: nombre y una línea
+  de datos (plataforma, demora, envío); se sacaron puntaje, distancia y dirección. Hasta 3 productos a la
+  vista y el resto en "N descuentos más". Las que solo anuncian "hasta X%" van al final, en un grupo
+  aparte. Los filtros pasaron al ticket. En celular el encabezado y el panel son más compactos.
+- Análisis con la skill design-taste-frontend: contraste OK, sin desbordes a 320 px; se arreglaron
+  botones y links chicos (44 px). Las reglas de sitio de marketing (una sección por pantalla, fotos,
+  hero) no aplican a una herramienta.
+- **Nueva dirección: teskel.online/cuartito** (el workflow publica en `cuartito/`; `helados/` queda
+  con la última versión vieja). Extensión v0.8.0: el puente también corre en /cuartito.
 
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),

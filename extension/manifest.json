@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Helados · Buscador de descuentos",
-  "version": "0.5.1",
+  "version": "0.8.0",
   "description": "Trae los descuentos de heladerías de PedidosYa y Rappi a teskel.online/helados. Uso personal.",
   "background": {
     "service_worker": "background.js",
@@ -19,6 +19,8 @@
   "content_scripts": [
     {
       "matches": [
+        "https://teskel.online/cuartito*",
+        "https://teskel.space.fast/cuartito*",
         "https://teskel.online/helados*",
         "https://teskel.space.fast/helados*",
         "http://localhost/*",

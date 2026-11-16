@@ -1,0 +1,180 @@
+{
+ "_comentario": "Recorte REAL de GET /v2/niles/partners/182110/menus (Yomo Helados, Rosario, 2026-11-16).",
+ "id": "187461",
+ "name": "Menú de Yomo Helados - Suc Pellegrini Y J.M. De Rosas",
+ "globalDiscounts": null,
+ "sections": [
+  {
+   "name": "Promos",
+   "products": [
+    {
+     "id": "213855537",
+     "name": "1 kg de helado + 2 copas stop",
+     "description": "1 kg de helado más más 2 copas stop sabor granizado y chocolate split y/o americana y frutilla con salsa",
+     "enabled": true,
+     "price": {
+      "additionalDiscounts": [],
+      "currency": "ARS",
+      "currencyMask": "$",
+      "discount": {
+       "amount": 6000,
+       "isExclusive": false,
+       "isPlus": false,
+       "isSponsoredDeal": false,
+       "percentage": 20,
+       "tag": null,
+       "type": [
+        "SUBSIDIZED_PRODUCT"
+       ]
+      },
+      "finalPrice": 23500,
+      "finalPriceWithoutTaxes": null,
+      "originalPrice": 29500,
+      "potentialDiscounts": []
+     }
+    },
+    {
+     "id": "213864501",
+     "name": "1/2 kg de helado + 1 copa stop",
+     "description": "1/2 kg de helado más 1 copa stop sabor granizado y chocolate split y/o americana y frutilla con salsa",
+     "enabled": true,
+     "price": {
+      "additionalDiscounts": [],
+      "currency": "ARS",
+      "currencyMask": "$",
+      "discount": {
+       "amount": 3000,
+       "isExclusive": false,
+       "isPlus": false,
+       "isSponsoredDeal": false,
+       "percentage": 18,
+       "tag": null,
+       "type": [
+        "SUBSIDIZED_PRODUCT"
+       ]
+      },
+      "finalPrice": 13800,
+      "finalPriceWithoutTaxes": null,
+      "originalPrice": 16800,
+      "potentialDiscounts": []
+     }
+    },
+    {
+     "id": "213871202",
+     "name": "1 kg de candy con salsa + 2 copas stop",
+     "description": "1 kg de candy con salsa más 2 copas stop sabor granizado y chocolate split y/o americana y frutilla con salsa",
+     "enabled": true,
+     "price": {
+      "additionalDiscounts": [],
+      "currency": "ARS",
+      "currencyMask": "$",
+      "discount": {
+       "amount": 6000,
+       "isExclusive": false,
+       "isPlus": false,
+       "isSponsoredDeal": false,
+       "percentage": 20,
+       "tag": null,
+       "type": [
+        "SUBSIDIZED_PRODUCT"
+       ]
+      },
+      "finalPrice": 23500,
+      "finalPriceWithoutTaxes": null,
+      "originalPrice": 29500,
+      "potentialDiscounts": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Helados",
+   "products": [
+    {
+     "id": "216829382",
+     "name": "1/4 de helado + 1 copa stop",
+     "description": "1/4 de helado más 1 copa stop a elección",
+     "enabled": true,
+     "price": {
+      "additionalDiscounts": [],
+      "currency": "ARS",
+      "currencyMask": "$",
+      "discount": {
+       "amount": 3800,
+       "isExclusive": false,
+       "isPlus": false,
+       "isSponsoredDeal": false,
+       "percentage": 31,
+       "tag": null,
+       "type": [
+        "SUBSIDIZED_PRODUCT"
+       ]
+      },
+      "finalPrice": 8600,
+      "finalPriceWithoutTaxes": null,
+      "originalPrice": 12400,
+      "potentialDiscounts": []
+     }
+    },
+    {
+     "id": "216829589",
+     "name": "1/4 kg de candy + 1 copa stop",
+     "description": "1/4 de crema candy más 1 copa stop a elección",
+     "enabled": true,
+     "price": {
+      "additionalDiscounts": [],
+      "currency": "ARS",
+      "currencyMask": "$",
+      "discount": {
+       "amount": 3800,
+       "isExclusive": false,
+       "isPlus": false,
+       "isSponsoredDeal": false,
+       "percentage": 31,
+       "tag": null,
+       "type": [
+        "SUBSIDIZED_PRODUCT"
+       ]
+      },
+      "finalPrice": 8600,
+      "finalPriceWithoutTaxes": null,
+      "originalPrice": 12400,
+      "potentialDiscounts": []
+     }
+    },
+    {
+     "id": "25679547",
+     "name": "Helado 1 kg",
+     "description": "1kg de helado, hasta 5 sabores a eleccion",
+     "enabled": true,
+     "price": {
+      "additionalDiscounts": [],
+      "currency": "ARS",
+      "currencyMask": "$",
+      "discount": null,
+      "finalPrice": 23500,
+      "finalPriceWithoutTaxes": null,
+      "originalPrice": null,
+      "potentialDiscounts": []
+     }
+    },
+    {
+     "id": "25679548",
+     "name": "Helado 1/2 kg",
+     "description": "1/2kg de helado, hasta 3 sabores a elección",
+     "enabled": true,
+     "price": {
+      "additionalDiscounts": [],
+      "currency": "ARS",
+      "currencyMask": "$",
+      "discount": null,
+      "finalPrice": 13800,
+      "finalPriceWithoutTaxes": null,
+      "originalPrice": null,
+      "potentialDiscounts": []
+     }
+    }
+   ]
+  }
+ ]
+}

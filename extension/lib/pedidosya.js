@@ -152,6 +152,10 @@ function discountTexts(v) {
     const pct = d.calculationType === "PERCENTAGE" ? Number(d.amount) : null;
     if (d.type === "DELIVERY_FEE" || d.target === "DELIVERY_FEE") {
       out.push(pct === 100 ? `Envío gratis${plus}` : pct ? `Envío ${pct}% off${plus}` : `Envío con descuento${plus}`);
+    } else if (/SUBSIDIZED_PRODUCT|WEEKLY/.test(String(d.type)) && pct) {
+      // Descuento en algunos productos del menú (el % es el máximo): "Hasta X% off".
+      const plusOnly = /PLUS/.test(String(d.type)) ? " (con PedidosYa Plus)" : plus;
+      out.push(`Hasta ${pct}% off en productos${plusOnly}`);
     } else if (d.discountTag) {
       out.push(`${d.discountTag}${plus}`);
     } else if (pct) {
@@ -161,7 +165,9 @@ function discountTexts(v) {
     }
   }
   const sum = isObj(v.discountSummary) ? v.discountSummary : null;
-  if (sum && Number(sum.totalAmount) > 0 && sum.type === "PERCENTAGE") out.push(`Hasta ${Number(sum.totalAmount)}% off`);
+  if (sum && Number(sum.totalAmount) > 0 && sum.type === "PERCENTAGE" && !out.some((t) => t.startsWith("Hasta "))) {
+    out.push(`Hasta ${Number(sum.totalAmount)}% off`);
+  }
   return [...new Set(out)];
 }
 
@@ -218,8 +224,9 @@ export function parseCaptured(payloads) {
 }
 
 // ---------------------------------------------------------------- menús
-// GET /v2/niles/partners/{id}/menus. El formato todavía no lo vimos (PedidosYa lo bloqueó en el
-// navegador integrado), así que se lee de forma heurística: secciones con productos (nombre + precio).
+// GET /v2/niles/partners/{id}/menus → { name, sections: [ { name, products: [ { name, description, enabled,
+//   price: { finalPrice, originalPrice, discount: { percentage, amount, isPlus, type } } } ] } ] }
+// (formato real visto en el diagnóstico del 2026-11-16). Se recorre de forma tolerante por si cambia.
 
 /** Id del local a partir de la URL del menú (/v2/niles/partners/59418/menus → "59418"). */
 export function menuPartnerId(url) {
@@ -254,16 +261,20 @@ export function parseMenu(body) {
     const name = first(node, NAME_KEYS);
     const here = hasList && typeof name === "string" ? name : section;
     if (!hasList && typeof name === "string") {
+      if (node.enabled === false) return;
       const { price, original } = priceOf(node);
       if (price != null && price > 0 && !seen.has(`${name}|${price}`)) {
         seen.add(`${name}|${price}`);
-        out.push(normalizeProduct({
+        const product = normalizeProduct({
           name: name.trim(),
           description: typeof node.description === "string" ? node.description : "",
           section: here || "",
           price,
           originalPrice: original,
-        }));
+        });
+        // formato real: price.discount = { percentage, amount, isPlus, type: ["SUBSIDIZED_PRODUCT"] }
+        if (node.price?.discount?.isPlus) product.plusOnly = true;
+        out.push(product);
         return;
       }
     }

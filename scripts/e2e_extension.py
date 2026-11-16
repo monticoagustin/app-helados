@@ -12,6 +12,7 @@ from playwright.sync_api import sync_playwright
 WEB = os.path.join(ROOT, "web")
 SRC = os.path.join(ROOT, "extension"); EXT = "/tmp/ext-test"
 shutil.rmtree(EXT, ignore_errors=True); shutil.copytree(SRC, EXT)
+shutil.rmtree("/tmp/prof-e2e3", ignore_errors=True)  # perfil limpio: sin caché de corridas anteriores
 MOCK = "http://127.0.0.1:8768"
 for f, subs in {
   "lib/rappi.js": [('"https://www.rappi.com.ar"', f'"{MOCK}/rappi"')],
@@ -45,7 +46,10 @@ PYA_ADDRESS = """<html><head><title>PedidosYa</title></head><body><h1>Ingresá t
 PYA_HOME_WITH_ADDRESS = """<html><head><title>PedidosYa</title></head><body><div>Enviar a</div><div>1 de Mayo 910</div><div>Restaurantes</div>
 <script>fetch('/pya/home-page/v44/home/lazy_load?country_id=3&area_id=0&lat=-32.949493&lng=-60.630245&broker_version=v1').then(r=>r.json());</script></body></html>"""
 PYA_RESULTS_NO_CAT = """<html><head><title>PedidosYa! Resultados</title></head><body>Todos los restaurantes</body></html>"""
-VENDORS = open(os.path.join(ROOT, "tests", "fixtures", "pedidosya_vendors_real.json")).read()
+_v = json.load(open(os.path.join(ROOT, "tests", "fixtures", "pedidosya_vendors_real.json")))
+for vend, pct in ((_v["vendors"][0], 20), (_v["vendors"][1], 25)):   # Esther 20%, Tento 25% (formato real SUBSIDIZED_PRODUCT)
+    vend["discounts"].append({"type": "SUBSIDIZED_PRODUCT", "amount": pct, "calculationType": "PERCENTAGE"})
+VENDORS = json.dumps(_v)
 # Menú: la página pide /v2/niles/partners/{id}/menus. Tento carga bien; Esther está bloqueado (PerimeterX real).
 MENU_PAGE = """<html><head><title>Menú</title></head><body><div id="m">Cargando menú…</div>
 <script>fetch('/pya/v2/niles/partners/%s/menus?occasion=DELIVERY').then(r=>r.json()).then(()=>{});</script></body></html>"""
@@ -115,13 +119,14 @@ with sync_playwright() as p:
     n = len(state["calls"]); page.click("#fetch"); page.wait_for_timeout(3000)
     cache_new = len(state["calls"]) - n
     print("pedidos nuevos con caché:", cache_new)
+    page.wait_for_function("() => { const t = document.getElementById('status').innerText; return t.includes('Rappi:') && t.includes('PedidosYa:'); }", timeout=15000)
     status = page.inner_text("#status")
-    assert "Rappi: ok" in status and "PedidosYa: ok" in status, status
+    assert not page.query_selector("#status .error"), status
     assert solved, "no apareció el aviso de verificación"
     assert address_done, "no apareció el pedido de dirección"
     # ciudad que Rappi no tiene: el mock devuelve Rosario → tiene que avisar
     page.select_option("#city", "cordoba"); page.wait_for_timeout(500)
-    assert "Córdoba" in page.inner_text("#city-name")
+    assert "córdoba" in page.inner_text("#city-name").lower()
     assert "Grido" not in page.inner_text("#list"), "mezcló resultados de otra ciudad"
     page.evaluate("window.postMessage({app:'helados', type:'FETCH', force:true, city:{slug:'cordoba',name:'Córdoba'}, platforms:['rappi']}, location.origin)")
     for i in range(20):
@@ -155,9 +160,14 @@ with sync_playwright() as p:
     assert "Esther Helados Centro" in page.inner_text("#list")
     st = page.inner_text("#status")
     print("MENÚS:", [l for l in st.split("\n") if "PedidosYa" in l])
-    assert "bloqueó los menús: precios de 1" in st, st
+    assert "no dejó ver el detalle de algunas (1 con detalle)" in st, st
+    lista = page.inner_text("#list")
+    assert "Esther Helados Centro" in page.inner_text(".vague") and "No pudimos ver qué productos" in page.inner_text(".vague"), "Esther debería ir entre las que no tienen detalle"
     tento = page.inner_text("#list").split("Tento Helados")[1][:200]
-    assert "15% off" in tento and "17.000" in tento, tento  # 1 kg 17000 (antes 20000), sin contar el agua
+    assert "−15%" in tento and "17.000" in tento and "20.000" in tento, tento  # 1 kg queda a 17000 (antes 20000)
+    assert "Agua" not in tento and "/kg" not in page.inner_text("#list")
+    # la búsqueda no debe dejar ventanas de PedidosYa abiertas ni haberlas mostrado (no hubo nada que resolver)
+    assert not [pg for pg in ctx.pages if "/pya/" in pg.url]
     # cancelar una búsqueda trabada en la verificación
     state["challenge"] = True
     page.click("#force"); page.wait_for_timeout(5000)
