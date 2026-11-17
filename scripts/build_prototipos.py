@@ -477,7 +477,7 @@ PAGES["mostrador"] = head2("mostrador", "Mostrador", "#F9D9DF", ["bricolage-grot
 """ + TAIL
 
 # ------------------------------------------------------------------ Cartel (Monumento + Vidriera, paleta atardecer, Anton)
-PAGES["cartel"] = head2("cartel", "Cartel", "#F8B195", ["anton-latin-400-normal.woff2", "bricolage-grotesque-latin-500-normal.woff2"]).replace(
+PAGES["cartel"] = head2("cartel", "Cartel", "#F9F4E6", ["anton-latin-400-normal.woff2", "bricolage-grotesque-latin-500-normal.woff2"]).replace(
     '<link rel="stylesheet" href="styles.css">', '<link rel="stylesheet" href="../lib/comun.css">\n  <link rel="stylesheet" href="styles.css">').replace(
     "<body>", '<body class="iso" data-theme="light">') + f"""<header class="top">
   <a class="brand" href="../../" aria-label="cuartito, versión original">{MARK}<span>cuartito</span></a>
@@ -487,7 +487,7 @@ PAGES["cartel"] = head2("cartel", "Cartel", "#F8B195", ["anton-latin-400-normal.
   <section class="hero">
     <div class="intro">
       <p class="edition"><span id="city-name">Rosario</span> · <span id="last-sync">sin buscar todavía</span></p>
-      <h1 class="lema">Pagá el helado, no el delivery.</h1>
+      <h1 class="lema">Que para encontrar la promo no tardes 2 horas</h1>
       <p class="bajada">Comparamos Rappi, PedidosYa y Uber Eats en tu ciudad. <a href="https://github.com/monticoagustin/app-helados" target="_blank" rel="noopener">Código abierto</a>, 0% humo corporativo.</p>
       <p class="lede" id="lede" aria-live="polite"></p>
       {INSTALL}

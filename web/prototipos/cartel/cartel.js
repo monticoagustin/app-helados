@@ -168,8 +168,8 @@ function pintar() {
   const fila = shops.map((x, i) => {
     const mx = mejorDe(x), ax = ahorro(mx);
     return `<li class="${i === selected ? "on" : ""}" style="--i:${i % 4}">
-      <button type="button" class="elegir" data-i="${i}" aria-pressed="${i === selected}"><span class="p">−${Math.round(x.best)}%</span><span class="n">${esc(corto(x.name))}</span></button>
-      <p class="x">${esc(mx.name)}: <b>${esc(mx.now)}</b>${mx.before ? ` <s>${esc(mx.before)}</s>` : ""}${ax ? ` · ahorrás ${ars(ax)}` : ""}</p>
+      <button type="button" class="elegir" data-i="${i}" aria-pressed="${i === selected}"><span class="p">−${Math.round(x.best)}%</span><span class="n">${esc(corto(x.name))}</span>
+        <span class="x">${esc(mx.name)}: <b>${esc(mx.now)}</b>${mx.before ? ` <s>${esc(mx.before)}</s>` : ""}${ax ? ` · ahorrás ${ars(ax)}` : ""}</span></button>
       ${pedir(x)}
     </li>`;
   }).join("");

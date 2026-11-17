@@ -1,47 +1,49 @@
-/* CARTEL — Monumento + Vidriera. Titular en Anton (pesada y angosta), la heladera sobre una forma azul con
-   el % del elegido gigante detrás, y abajo el destacado y todas las heladerías en franjas de color.
-   Paleta atardecer: durazno #F8B195, coral #F67280, rosa #C06C84, ciruela #6C5B7B, azul #355C7D. */
+/* CARTEL — Monumento + Vidriera. Lema en Anton (pesada y angosta), la heladera sobre una mancha azul con el %
+   del elegido gigante detrás; abajo, el destacado y todas las heladerías como bochas redondas, sin cajas.
+   Paleta: azul #365367, durazno #FFBAA2, crema #F9F4E6, rosa #F494AB. */
 @font-face { font-family: "Anton"; font-display: swap; src: url("../fonts/anton-latin-400-normal.woff2") format("woff2"); }
 @font-face { font-family: "Bricolage"; font-weight: 500; font-display: swap; src: url("../fonts/bricolage-grotesque-latin-500-normal.woff2") format("woff2"); }
 @font-face { font-family: "Bricolage"; font-weight: 700; font-display: swap; src: url("../fonts/bricolage-grotesque-latin-700-normal.woff2") format("woff2"); }
 @font-face { font-family: "Bricolage"; font-weight: 800; font-display: swap; src: url("../fonts/bricolage-grotesque-latin-800-normal.woff2") format("woff2"); }
 
+html { overflow-x: clip; }
 body {
-  --durazno: #F8B195; --coral: #F67280; --rosa: #C06C84; --ciruela: #6C5B7B; --azul: #355C7D; --noche: #1F3550;
-  --bg: var(--durazno); --ink: var(--noche); --muted: #4A3A55; --accent: var(--azul); --borde: var(--noche); --papel: #FFFBF7;
+  --azul: #365367; --durazno: #FFBAA2; --crema: #F9F4E6; --rosa: #F494AB; --noche: #25394A; --rosa-hondo: #C9496A;
+  --bg: var(--crema); --ink: var(--noche); --muted: #4F6575; --accent: var(--azul); --borde: var(--noche); --papel: #FFFDF8;
   --f0: #E5426B; --f1: #5B3022; --f2: #7CCFB2; --f3: #F3DF5A; --f4: #FFF6E4; --f5: #C88A4B; --f6: #A9C77A; --f7: #B5174C;
   --display: "Anton", Impact, "Arial Narrow", sans-serif; --body: "Bricolage", system-ui, sans-serif;
   font-size: 1.0625rem; line-height: 1.45; font-weight: 500; overflow-x: clip;
 }
+.proto-switch { position: relative; z-index: 10; }
 .brand { font: 800 1.6rem/1 var(--body); }
 .brand .mark { width: 36px; height: 36px; }
 .top { position: relative; z-index: 3; }
 .edition { color: var(--muted); }
 
-/* el lema: Anton grande, en mayúsculas */
-.lema { margin: 0; font: 400 clamp(3.2rem, 5.6vw, 5.4rem)/0.92 var(--display); text-transform: uppercase; letter-spacing: 0.005em; max-width: 11ch; color: var(--ink); }
+/* el lema: Anton grande, en mayúsculas; "2 horas" queda en rosa por el subrayado de marcador */
+.lema { margin: 0; font: 400 clamp(3rem, 5.4vw, 5.2rem)/0.94 var(--display); text-transform: uppercase; letter-spacing: 0.005em; max-width: 12ch; color: var(--ink); }
 .bajada { margin: 1rem 0 0; max-width: 26rem; color: var(--muted); }
-.bajada a { color: var(--ink); font-weight: 700; text-decoration-thickness: 2px; }
+.bajada a { color: var(--ink); font-weight: 700; text-decoration-thickness: 2px; text-decoration-color: var(--rosa); }
 
 /* buscador: botón sólido azul y la ciudad como píldora */
 .panel { margin-top: 1.75rem; }
 .buscar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
 .btn-solido {
   min-height: 60px; padding: 0 1.9rem; border: 0; border-radius: 999px; cursor: pointer;
-  background: var(--azul); color: var(--papel); font: 400 1.35rem/1 var(--display); text-transform: uppercase; letter-spacing: 0.02em;
+  background: var(--azul); color: var(--crema); font: 400 1.35rem/1 var(--display); text-transform: uppercase; letter-spacing: 0.02em;
   box-shadow: 0 4px 0 var(--noche); transition: translate .12s ease, box-shadow .12s ease, background-color .2s;
 }
-.btn-solido:hover:not(:disabled) { background: var(--noche); translate: 0 -1px; box-shadow: 0 5px 0 #0E1A28; }
+.btn-solido:hover:not(:disabled) { background: var(--noche); translate: 0 -1px; box-shadow: 0 5px 0 #15222D; }
 .btn-solido:active:not(:disabled) { translate: 0 3px; box-shadow: 0 1px 0 var(--noche); }
-.btn-solido:disabled { background: color-mix(in oklab, var(--azul) 45%, var(--bg)); box-shadow: none; cursor: default; }
-.btn-solido:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
-.buscar select { min-height: 56px; padding: 0 2.6rem 0 1.25rem; border: 0; border-radius: 999px; box-shadow: inset 0 0 0 2.5px var(--ink); font: 700 1.05rem var(--body); background-position: right 1rem center; flex: 0 1 auto; }
+.btn-solido:disabled { background: color-mix(in oklab, var(--azul) 40%, var(--bg)); box-shadow: none; cursor: default; }
+.btn-solido:focus-visible { outline: 3px solid var(--rosa-hondo); outline-offset: 3px; }
+.buscar select { min-height: 56px; padding: 0 2.6rem 0 1.25rem; border: 0; border-radius: 999px; background-color: var(--durazno); font: 700 1.05rem var(--body); background-position: right 1rem center; flex: 0 1 auto; }
 @media (max-width: 520px) { .btn-solido { width: 100%; } .buscar select { width: 100%; } }
 .note .btn { font: 400 1.4rem var(--display); text-transform: uppercase; color: var(--azul); }
 .note h2 { font: 400 2rem/1 var(--display); text-transform: uppercase; }
 
-/* la heladera sobre la forma azul, con el % gigante detrás */
-body.iso { --anatomy-page: var(--azul); --anatomy-paper: var(--papel); --anatomy-card: var(--azul); --anatomy-text: #C9D6E4; --anatomy-strong: var(--ink); }
+/* la heladera sobre una mancha azul orgánica, con el % gigante detrás */
+body.iso { --anatomy-page: var(--azul); --anatomy-paper: var(--papel); --anatomy-card: var(--azul); --anatomy-text: #C9D6E1; --anatomy-strong: var(--ink); }
 .flav { --anatomy-paper: var(--c); --anatomy-face: var(--c); --anatomy-top: color-mix(in oklab, var(--c) 80%, white);
   --anatomy-shade-0: color-mix(in oklab, var(--c) 70%, black); --anatomy-shade-1: color-mix(in oklab, var(--c) 78%, black);
   --anatomy-shade-2: color-mix(in oklab, var(--c) 86%, black); --anatomy-shade-3: color-mix(in oklab, var(--c) 93%, black);
@@ -51,60 +53,72 @@ body.iso { --anatomy-page: var(--azul); --anatomy-paper: var(--papel); --anatomy
 .flav[data-flavor="6"] { --c: var(--f6); } .flav[data-flavor="7"] { --c: var(--f7); }
 .hit { fill: transparent; stroke: none; cursor: pointer; pointer-events: all; }
 .rot text { font: 400 27px/1 var(--display); fill: var(--ink); stroke: var(--papel); stroke-width: 6px; stroke-linejoin: round; paint-order: stroke fill; pointer-events: none; }
-.rot.sel text { font-size: 36px; fill: #D4405C; }
+.rot.sel text { font-size: 36px; fill: var(--rosa-hondo); }
 .vitrina-wrap { position: relative; min-width: 0; }
-.forma { position: absolute; z-index: 0; background: var(--azul); overflow: hidden; }
-.gigante { position: absolute; margin: 0; font: 400 1px/0.8 var(--display); color: var(--coral); white-space: nowrap; letter-spacing: -0.01em; }
+.forma { position: absolute; z-index: 0; background: var(--azul); overflow: hidden; border-radius: 58% 42% 47% 53% / 46% 52% 48% 54%; }
+.gigante { position: absolute; margin: 0; font: 400 1px/0.8 var(--display); color: var(--rosa); white-space: nowrap; letter-spacing: -0.01em; }
 .iso-stage { position: relative; z-index: 1; outline-offset: 6px; }
-.iso-stage svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 24px 24px rgba(15, 25, 40, .35)); }
-.leyenda { position: relative; z-index: 1; margin: 0.25rem 0 0; text-align: center; font-size: 0.9375rem; color: #DCE6F0; }
+.iso-stage svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 24px 24px rgba(20, 35, 48, .35)); }
+.leyenda { position: relative; z-index: 1; margin: 1.25rem 0 0; text-align: center; font-size: 0.9375rem; color: var(--muted); }
 
 .hero { display: grid; gap: 1rem 3rem; align-items: center; }
 @media (min-width: 1000px) {
   .hero { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
-  .forma { top: -9rem; right: -50vw; bottom: -2rem; left: -2rem; border-radius: 0 0 0 240px; }
-  .gigante { top: 4.5rem; left: 0; font-size: min(22vw, 20rem); }
+  .forma { top: -3rem; right: -3rem; bottom: 2.2rem; left: -1rem; }
+  .gigante { top: 3.5rem; left: 1.5rem; font-size: min(19vw, 17rem); }
+  .top .ext-badge { position: relative; z-index: 3; }
 }
 @media (max-width: 999px) {
-  .vitrina-wrap { margin: 1.5rem -1.25rem 0; padding: 0 0 1.5rem; }
-  .forma { inset: 0; border-radius: 120px 0 0 0; }
-  .gigante { top: 1.25rem; left: 1.25rem; font-size: 38vw; }
-  .iso-stage { padding-top: 22vw; }
+  .vitrina-wrap { margin: 1.5rem -0.5rem 0; padding: 0; }
+  .iso-stage { padding-bottom: 1rem; }
+  .forma { inset: 0 0 3rem 0; border-radius: 52% 48% 44% 56% / 38% 40% 60% 62%; }
+  .gigante { top: 2rem; left: 1.5rem; font-size: 34vw; }
+  .iso-stage { padding-top: 24vw; }
   .rot text { font-size: 29px; }
   .rot.sel text { font-size: 36px; }
 }
 
-/* abajo: el destacado y la franja de todas */
-.resultados { position: relative; z-index: 2; margin-top: 2.5rem; }
-.abajo { display: grid; margin: 0 -1.25rem; }
-@media (min-width: 900px) { .abajo { grid-template-columns: 20rem minmax(0, 1fr); margin: 0 -3rem; } }
-.destacado { background: var(--coral); color: var(--noche); padding: 2rem 1.5rem 2rem; border-radius: 0 140px 0 0; }
-@media (max-width: 899px) { .destacado { border-radius: 60px 60px 0 0; } }
-.destacado .cual { margin: 0; font-weight: 700; }
-.destacado .p { margin: 0.25rem 0 0; font: 400 5.5rem/0.85 var(--display); }
-.destacado .n { margin: 0.4rem 0 0; font: 400 2rem/1 var(--display); text-transform: uppercase; }
-.destacado .x { margin: 0.6rem 0 0; }
+/* abajo, sin cajas: el destacado al lado de una bocha rosa grande y todas las heladerías como bochas */
+.resultados { position: relative; z-index: 2; margin-top: 3rem; }
+.abajo { display: grid; gap: 3rem; }
+@media (min-width: 900px) { .abajo { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.destacado { display: grid; grid-template-columns: auto 1fr; column-gap: 1.25rem; align-items: center; }
+.destacado .cual { grid-column: 1 / -1; margin: 0 0 0.5rem; font-weight: 700; color: var(--muted); }
+.destacado .p {
+  grid-row: span 5; margin: 0; width: 9.5rem; height: 9.5rem; border-radius: 50%; background: var(--rosa); color: var(--noche);
+  display: grid; place-items: center; font: 400 3.4rem/1 var(--display); letter-spacing: -0.01em; box-shadow: inset 0 -12px 0 rgba(0, 0, 0, .08);
+}
+.destacado .n { margin: 0; font: 400 2.2rem/1 var(--display); text-transform: uppercase; }
+.destacado .x { margin: 0.35rem 0 0; }
 .destacado .x b { font: 400 1.7rem var(--display); }
-.destacado .ah { margin: 0.2rem 0 0; font-weight: 800; }
-.franja { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
-.franja li { padding: 1.4rem 1.5rem 1.6rem; display: grid; align-content: start; gap: 0.2rem; }
-.franja li[style*="--i:0"] { background: #F9C6AE; color: var(--noche); }
-.franja li[style*="--i:1"] { background: var(--rosa); color: #fff; }
-.franja li[style*="--i:2"] { background: var(--ciruela); color: #fff; }
-.franja li[style*="--i:3"] { background: var(--azul); color: #fff; }
-.franja li.on { box-shadow: inset 0 6px 0 var(--coral); }
-.elegir { display: grid; justify-items: start; gap: 0.1rem; padding: 0; border: 0; background: none; cursor: pointer; text-align: left; color: inherit; font: inherit; min-height: 44px; }
-.franja .p { font: 400 2.8rem/0.9 var(--display); }
-.franja .n { font: 800 1.1rem/1.15 var(--body); }
-.elegir:hover .n, .on .n { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
-.franja .x { margin: 0.3rem 0 0; font-size: 0.875rem; }
-.franja .x s, .destacado .x s { opacity: 0.75; }
+.destacado .ah { margin: 0.1rem 0 0; font-weight: 800; color: var(--rosa-hondo); }
+@media (max-width: 520px) { .destacado .p { width: 7.5rem; height: 7.5rem; font-size: 2.7rem; } .destacado .n { font-size: 1.8rem; } }
+
+.franja { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 1.75rem 2rem; }
+.franja li { display: grid; grid-template-columns: 4.6rem 1fr; column-gap: 0.9rem; align-items: start; }
+.franja li > :not(.elegir) { grid-column: 2; }
+.elegir { grid-column: 1 / -1; display: grid; grid-template-columns: 4.6rem 1fr; column-gap: 0.9rem; align-content: center; align-items: end; padding: 0; border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.elegir:focus-visible { outline: none; }
+.elegir .p {
+  grid-row: span 2; align-self: center; width: 4.6rem; height: 4.6rem; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  font: 400 1.45rem/1 var(--display); color: var(--noche); background: var(--durazno); box-shadow: inset 0 -6px 0 rgba(0, 0, 0, .07);
+}
+.franja li[style*="--i:1"] .p { background: var(--rosa); }
+.franja li[style*="--i:2"] .p { background: var(--azul); color: var(--crema); }
+.franja li[style*="--i:3"] .p { background: #FBD9CB; }
+.franja li.on .p { outline: 3px solid var(--noche); outline-offset: 3px; }
+.elegir .n { font: 800 1.15rem/1.15 var(--body); color: var(--ink); }
+.franja li.on .n, .franja li:hover .n { text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: var(--rosa); text-underline-offset: 4px; }
+.elegir:focus-visible .p { outline: 3px solid var(--rosa-hondo); outline-offset: 3px; }
+.franja .x { display: block; align-self: start; margin: 0.15rem 0 0; font-size: 0.875rem; color: var(--muted); }
+.franja .x b { color: var(--ink); }
+.franja .x s, .destacado .x s { opacity: 0.7; }
 
 /* botón de cada app con su color */
 .pedir {
-  display: inline-flex; align-items: center; justify-self: start; min-height: 46px; margin-top: 0.7rem; padding: 0 1.15rem; border-radius: 999px;
-  font-weight: 800; font-size: 1rem; text-decoration: none; background: var(--app); color: var(--app-t);
-  box-shadow: 0 3px 0 rgba(0, 0, 0, .35), inset 0 0 0 2px rgba(255, 255, 255, .35); transition: translate .12s ease;
+  display: inline-flex; align-items: center; justify-self: start; min-height: 44px; margin-top: 0.6rem; padding: 0 1.1rem; border-radius: 999px;
+  font-weight: 800; font-size: 0.975rem; text-decoration: none; background: var(--app); color: var(--app-t);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .3); transition: translate .12s ease;
 }
 .pedir::after { content: "↗"; margin-left: 0.35rem; }
 .pedir:hover { translate: 0 -1px; }
@@ -113,10 +127,7 @@ body.iso { --anatomy-page: var(--azul); --anatomy-paper: var(--papel); --anatomy
 .app-pya { --app: #D9004B; --app-t: #fff; }
 .app-uber { --app: #000; --app-t: #fff; }
 .app-otra { --app: var(--noche); --app-t: #fff; }
-.destacado .pedir { min-height: 54px; font-size: 1.1rem; }
+.destacado .pedir { grid-column: 2; min-height: 52px; font-size: 1.05rem; }
 
-.filters, .estado { margin-top: 2.5rem; }
+.filters, .estado { margin-top: 3rem; }
 .vacio { margin: 2rem 0; font: 400 2rem/1.05 var(--display); text-transform: uppercase; max-width: 22ch; }
-html { overflow-x: clip; }
-@media (min-width: 1000px) { .top .ext-badge { color: #DCE6F0; } }
-.proto-switch { position: relative; z-index: 10; }
