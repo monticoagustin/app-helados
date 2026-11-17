@@ -1,19 +1,19 @@
 <!doctype html>
-<html lang="es" data-proto="mostrador">
+<html lang="es" data-proto="mostrador" data-paleta="frutilla" data-letra="redonda">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>cuartito · Mostrador (prototipo)</title>
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#2B1B15">
+  <meta name="theme-color" content="#F9D9DF">
   <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
-  <link rel="preload" href="../fonts/bagel-fat-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="../fonts/dm-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/fredoka-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/hanken-grotesk-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="../switch.css">
   <link rel="stylesheet" href="../lib/comun.css">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="iso" data-theme="dark">
+<body class="iso" data-theme="light">
 <nav class="proto-switch" aria-label="Prototipos de diseño">
   <a class="proto-all" href="../">Prototipos</a><a href="../../">Original</a><a href="../vitrina/">Vitrina</a><a href="../cucurucho/">Cucurucho</a><a href="../numero/">Número</a><a href="../mostrador/" aria-current="page">Mostrador</a>
 </nav>
@@ -25,7 +25,13 @@
         <path d="M33.5 33.5H54C54 44.8218 44.8218 54 33.5 54V33.5Z" fill="#633624"/>
         <path d="M34 30H53.5C53.2 19.3 44.7 10.8 34 10.5V30Z" fill="none" stroke="#1E120D" stroke-width="2.6" stroke-dasharray="4.2 3.2" stroke-linejoin="round"/>
       </svg><span>cuartito</span></a>
-  <div class="paletas" role="group" aria-label="Paleta de colores"><button type="button" data-set-paleta="cacao" aria-pressed="false"><span class="sw" aria-hidden="true"></span>Cacao</button><button type="button" data-set-paleta="frutilla" aria-pressed="false"><span class="sw" aria-hidden="true"></span>Frutilla</button><button type="button" data-set-paleta="limon" aria-pressed="false"><span class="sw" aria-hidden="true"></span>Limón</button></div>
+  <div class="letras" role="group" aria-label="Probar letra">
+    <span class="letras-t">Letra:</span>
+    <button type="button" data-set-letra="redonda" aria-pressed="true">Redonda</button>
+    <button type="button" data-set-letra="clara" aria-pressed="false">Clara</button>
+    <button type="button" data-set-letra="gordita" aria-pressed="false">Gordita</button>
+    <button type="button" data-set-letra="moderna" aria-pressed="false">Moderna</button>
+  </div>
   <p id="ext-badge" class="ext-badge"><span class="ext-dot" aria-hidden="true"></span><span id="ext-text">BUSCANDO<span class="ext-word"> LA EXTENSIÓN</span>…</span></p>
 </header>
 <main class="sala">
@@ -65,12 +71,13 @@
   </section>
   <section id="ticket" class="escena" aria-label="Heladera de descuentos">
     <div class="vitrina-wrap">
+      <p class="leyenda">Cada pote es una heladería. Cuanto más lleno, más descuento. Tocá uno para ver qué conviene pedir.</p>
       <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Heladera: con las flechas pasás de un pote a otro"></div>
-      <p class="lectura" data-readout aria-live="polite"></p>
     </div>
     <div class="lado">
       <article id="detalle" class="detalle" aria-live="polite"></article>
-      <ol id="indice" class="indice" aria-label="Potes de la heladera, del descuento más grande al más chico"></ol>
+      <h2 class="indice-t">Todas, de mayor a menor descuento</h2>
+      <ol id="indice" class="indice"></ol>
       <div id="filters" class="filters" aria-label="Filtros">
           <fieldset class="seg">
             <legend class="sr">Plataforma</legend>

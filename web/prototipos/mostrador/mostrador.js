@@ -1,7 +1,8 @@
-// MOSTRADOR — mezcla: la heladera isométrica de Vitrina (kit Anatomy) con la tipografía de Número
-// (el % gigante en Bagel Fat One) y las paletas de Cucurucho. Lee #list con lib/datos.js.
+// MOSTRADOR — la heladera de Vitrina (kit Anatomy), quieta y rotulada: cada pote es una heladería,
+// lleno según su descuento y con el % escrito arriba. Al lado, el elegido en grande y cuánto te ahorrás.
+// Paleta Frutilla; la letra se elige arriba para comparar. Lee #list con lib/datos.js.
 import * as k from "../lib/iso-kit.mjs";
-import { alCambiar, paletas } from "../lib/datos.js";
+import { alCambiar } from "../lib/datos.js";
 
 const style = document.createElement("style");
 style.textContent = k.ISO_CSS;
@@ -117,155 +118,89 @@ function tag(i, x, y) {
   ].join("");
 }
 
-// la pala: la única parte iluminada
-function scoop() {
-  return [
-    `<path class="iso-halo" d="${k.haloOf({ x: -10, y: -12, w: 20, d: 52, r: 6 }, -8, 0.1, P)}" style="filter:blur(3px);opacity:.35"/>`,
-    S(k.slabOf({ x: -10, y: -12, w: 20, d: 18, r: 7 }, 0, 1.8, P, 6, 0.5), { tone: "hi", lit: true }),
-    S(k.slabOf({ x: -2.2, y: 5, w: 4.4, d: 34, r: 1.8 }, 1.8, 3, P, 4, 0.6), { tone: "hi", lit: true }),
-    S(k.cylinder(0, 40, 3.4, 0.8, 4.6, P, 20, 0.7), { tone: "mid" }),
-  ].join("");
-}
-
 // ------------------------------------------------------------- página
 const stage = document.getElementById("vitrina");
-const readout = document.querySelector("[data-readout]");
 const detail = document.getElementById("detalle");
 const indice = document.getElementById("indice");
-const still = matchMedia("(prefers-reduced-motion: reduce)");
-let shops = [], selected = 0, touring = !still.matches, pos = [0, 0, 0], target = [0, 0, 0];
-let heights = [], grow = 0, frame = 0, last = 0, clock = 0, idle = 0, visible = true;
+let shops = [], selected = 0;
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pesos = (t) => Number(String(t || "").replace(/[^\d]/g, "")) || 0;
+const ars = (n) => "$" + n.toLocaleString("es-AR");
+const ahorro = (d) => { const a = pesos(d.before) - pesos(d.now); return a > 0 ? a : 0; };
+const mejorDe = (s) => s.deals.slice().sort((a, b) => b.off - a.off)[0];
+
+// el % arriba de cada pote, con el número de puesto
+function rotulos() {
+  const order = shops.map((_, i) => i).sort((a, b) => k.depthOf([...tubAt(a), 0], P) - k.depthOf([...tubAt(b), 0], P));
+  return order.map((i) => {
+    const [x, y] = tubAt(i);
+    const [sx, sy] = at([x, y, CASE_TOP + RIM + moundH(shops[i].best) + 4]);
+    return `<g class="rot${i === selected ? " sel" : ""}" data-i="${i}" style="--c:var(--f${i % FLAVORS})">
+      <text x="${sx.toFixed(1)}" y="${(sy - 6).toFixed(1)}" text-anchor="middle"><tspan class="pct">−${Math.round(shops[i].best)}%</tspan></text>
+    </g>`;
+  }).join("");
+}
 
 function render(data) {
-  shops = data.shops.slice(0, COLS * 2);
-  heights = shops.map((s) => s.best);
-  grow = still.matches ? 1 : 0;
+  shops = data.shops.slice().sort((a, b) => b.best - a.best).slice(0, COLS * 2);
   selected = Math.min(selected, Math.max(0, shops.length - 1));
-  const order = [...Array(COLS * 2).keys()].sort((a, b) => {
-    const [ax, ay] = tubAt(a), [bx, by] = tubAt(b);
-    return k.depthOf([ax, ay, 0], P) - k.depthOf([bx, by, 0], P);
-  });
+  const order = [...Array(COLS * 2).keys()].sort((a, b) => k.depthOf([...tubAt(a), 0], P) - k.depthOf([...tubAt(b), 0], P));
   const hits = shops.map((s, i) => {
     const [x, y] = tubAt(i);
     return `<path class="hit" data-i="${i}" d="${k.ring(x, y, TUB_R + 4, CASE_TOP + RIM + moundH(s.best) / 2, P, 32)}"/>`;
   }).join("");
-  const svg = k.figureSvg({
+  stage.innerHTML = k.figureSvg({
     width: W, height: H,
-    label: `Vitrina de helado con ${shops.length} potes: cada pote es una heladería y el helado sube tanto como su mejor descuento, medido en la escala de la pared del fondo.`,
-    body: [
-      wall(), base(),
-      order.map((i) => tub(i, shops[i], 0)).join(""),
-      `<g data-part="scoop">${scoop()}</g>`,
-      `<g class="hits">${hits}</g>`,
-    ],
+    label: `Heladera con ${shops.length} potes, uno por heladería, ordenados del descuento más grande al más chico. Cada pote está tan lleno como su descuento.`,
+    body: [wall(), base(), order.map((i) => tub(i, shops[i], shops[i] ? shops[i].best : 0)).join(""), `<g class="rotulos">${rotulos()}</g>`, `<g class="hits">${hits}</g>`],
   });
-  stage.innerHTML = svg;
-  for (const h of stage.querySelectorAll(".hit")) {
-    h.addEventListener("pointerenter", () => choose(Number(h.dataset.i)));
-    h.addEventListener("click", () => choose(Number(h.dataset.i)));
-  }
-  indice.innerHTML = shops.length
-    ? shops.map((s, i) => `<li style="--c:var(--f${i % 8})"><button type="button" data-i="${i}" aria-pressed="${i === selected}"><span class="p">−${Math.round(s.best)}%</span><span class="nm">${esc(s.name)}</span></button></li>`).join("")
-    : "";
+  for (const h of stage.querySelectorAll(".hit")) h.addEventListener("click", () => choose(Number(h.dataset.i)));
+  indice.innerHTML = shops.map((s, i) => {
+    const m = mejorDe(s), a = ahorro(m);
+    return `<li style="--c:var(--f${i % FLAVORS})"><button type="button" data-i="${i}" aria-pressed="${i === selected}">
+      <span class="puesto">${i + 1}º</span><span class="p">−${Math.round(s.best)}%</span>
+      <span class="txt"><span class="nm">${esc(s.name)}</span><span class="pz">${esc(m.name)}: ${esc(m.now)}${a ? ` · ahorrás ${ars(a)}` : ""}</span></span>
+    </button></li>`;
+  }).join("");
   for (const b of indice.querySelectorAll("button")) b.addEventListener("click", () => {
     choose(Number(b.dataset.i));
-    // en el celular, la lista queda abajo: subimos hasta el número
-    if (matchMedia("(max-width: 999px)").matches) detail.scrollIntoView({ behavior: still.matches ? "auto" : "smooth", block: "start" });
+    if (matchMedia("(max-width: 999px)").matches) detail.scrollIntoView({ behavior: "smooth", block: "start" });
   });
-  target = scoopTarget(selected);
-  pos = [...target];
   describe();
-  run();
-}
-
-const scoopTarget = (i) => {
-  if (!shops[i]) return [0, 120, 30];
-  const [x, y] = tubAt(i);
-  return [x - 2, y + 2, CASE_TOP + RIM + moundH(shops[i].best) + 10];
-};
-
-let shown = 0, countFrame = 0;
-function contar(el, desde, hasta) {
-  cancelAnimationFrame(countFrame);
-  if (still.matches || desde === hasta) { el.textContent = hasta; return; }
-  const t0 = performance.now();
-  const paso = (t) => {
-    const k2 = Math.min(1, (t - t0) / 380);
-    el.textContent = Math.round(desde + (hasta - desde) * (1 - Math.pow(1 - k2, 3)));
-    if (k2 < 1) countFrame = requestAnimationFrame(paso);
-  };
-  countFrame = requestAnimationFrame(paso);
 }
 
 function describe() {
   const s = shops[selected];
   if (!s) {
-    readout.textContent = "vitrina vacía";
     detail.innerHTML = `<p class="vacio">${esc(document.querySelector("#list .empty")?.textContent || "Tocá “Traer descuentos” y se llena la heladera.")}</p>`;
     return;
   }
-  document.body.style.setProperty("--sel", `var(--f${selected % 8})`);
-  readout.textContent = `pote ${selected + 1} de ${shops.length}`;
-  const [mejor, ...resto] = s.deals.slice().sort((a, b) => b.off - a.off);
+  const m = mejorDe(s), a = ahorro(m);
+  const resto = s.deals.slice().sort((x, y) => y.off - x.off).slice(1);
   const pedir = s.url ? `<a class="pedir" href="${esc(s.url)}" target="_blank" rel="noopener">Pedir en ${esc(s.platform || "la app")}</a>` : "";
   const otros = resto.slice(0, 4).map((d) => `<li><span class="off">−${Math.round(d.off)}%</span><span class="nm">${esc(d.name)}${d.plus ? " <em>con Plus</em>" : ""}</span><span class="pr">${esc(d.now)}${d.before ? ` <s>${esc(d.before)}</s>` : ""}</span></li>`).join("");
-  const best = Math.round(s.best);
-  detail.innerHTML = `<h3 class="quien">${esc(s.name)}</h3>
-    <p class="numero" aria-label="hasta ${best}% menos"><span class="menos" aria-hidden="true">−</span><span class="cifra" aria-hidden="true">${shown}</span><span class="pc" aria-hidden="true">%</span></p>
+  detail.style.setProperty("--c", `var(--f${selected % FLAVORS})`);
+  detail.innerHTML = `<p class="puesto-g">${selected === 0 ? "El mejor descuento de hoy" : `${selected + 1}º descuento más grande`}</p>
+    <h3 class="quien">${esc(s.name)}</h3>
+    <p class="numero"><span class="menos" aria-hidden="true">−</span>${Math.round(s.best)}<span class="pc">%</span></p>
     <div class="dato">
-      <p class="producto">${esc(mejor.name)}${mejor.plus ? ' <em class="plus">con Plus</em>' : ""}</p>
-      <p class="precio"><b>${esc(mejor.now)}</b>${mejor.before ? ` <s>${esc(mejor.before)}</s>` : ""}</p>
+      <p class="producto">${esc(m.name)}${m.plus ? ' <em class="plus">con Plus</em>' : ""}</p>
+      <p class="precio">Pagás <b>${esc(m.now)}</b>${m.before ? ` en vez de <s>${esc(m.before)}</s>` : ""}</p>
+      ${a ? `<p class="ahorro">Te ahorrás ${ars(a)}</p>` : ""}
       <p class="meta">${esc(s.meta)}${s.closed ? " · cerrada ahora" : ""}</p>
       ${pedir}
     </div>
-    ${otros ? `<ul class="otros">${otros}</ul>` : ""}${resto.length > 4 ? `<p class="mas">y ${resto.length - 4} descuentos más</p>` : ""}`;
-  contar(detail.querySelector(".cifra"), shown, best);
-  shown = best;
+    ${otros ? `<h4 class="otros-t">Otros descuentos en ${esc(s.name)}</h4><ul class="otros">${otros}</ul>` : ""}${resto.length > 4 ? `<p class="mas">y ${resto.length - 4} más</p>` : ""}`;
   for (const b of indice.querySelectorAll("button")) b.setAttribute("aria-pressed", String(Number(b.dataset.i) === selected));
+  for (const g of stage.querySelectorAll(".rot")) g.classList.toggle("sel", Number(g.dataset.i) === selected);
 }
 
-function choose(i, fromTour = false) {
-  if (!shops[i]) return;
-  if (!fromTour) {
-    touring = false;
-    clearTimeout(idle);
-    idle = setTimeout(() => { touring = !still.matches; clock = 0; run(); }, 6000);
-  }
-  if (i === selected && !fromTour) return;
+function choose(i) {
+  if (!shops[i] || i === selected) return;
   selected = i;
-  target = scoopTarget(i);
   describe();
-  run();
 }
-
-function tick(now) {
-  const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
-  last = now;
-  if (touring && shops.length > 1) {
-    clock += dt;
-    if (clock > 2.8) { clock = 0; choose((selected + 1) % shops.length, true); }
-  }
-  // los potes se llenan una vez cuando llegan los datos
-  if (grow < 1) {
-    grow = Math.min(1, grow + dt / 1.4);
-    const e = 1 - Math.pow(1 - grow, 3);
-    shops.forEach((s, i) => {
-      const g = stage.querySelector(`[data-mound="${i}"]`);
-      const [x, y] = tubAt(i);
-      if (g) g.innerHTML = mound(x, y, s.best * e);
-    });
-  }
-  const f = still.matches ? 1 : 1 - Math.exp(-dt / 0.22);
-  pos = pos.map((v, j) => v + (target[j] - v) * f);
-  const sc = stage.querySelector('[data-part="scoop"]');
-  if (sc) sc.setAttribute("transform", k.translateAlong(P, pos));
-  const moving = pos.some((v, j) => Math.abs(v - target[j]) > 0.02);
-  frame = visible && (moving || grow < 1 || touring) ? requestAnimationFrame(tick) : 0;
-}
-const run = () => { if (!frame && visible) { last = 0; frame = requestAnimationFrame(tick); } };
-new IntersectionObserver((es) => { visible = es[es.length - 1].isIntersecting; if (visible) run(); }).observe(stage);
 
 stage.addEventListener("keydown", (e) => {
   const map = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
@@ -274,8 +209,18 @@ stage.addEventListener("keydown", (e) => {
   choose((selected + map[e.key] + shops.length) % shops.length);
 });
 
-paletas(["cacao", "frutilla", "limon"], "cuartito:paleta:mostrador");
-const tema = () => { document.body.dataset.theme = document.documentElement.dataset.paleta === "cacao" ? "dark" : "light"; };
-document.documentElement.addEventListener("paleta", tema);
-tema();
+// letra: para comparar tipografías; se guarda en el navegador
+const root = document.documentElement;
+let letra = "redonda";
+try { letra = localStorage.getItem("cuartito:letra:mostrador") || letra; } catch { /* nada */ }
+const ponerLetra = (v) => {
+  root.dataset.letra = v;
+  for (const b of document.querySelectorAll("[data-set-letra]")) b.setAttribute("aria-pressed", String(b.dataset.setLetra === v));
+};
+for (const b of document.querySelectorAll("[data-set-letra]")) b.addEventListener("click", () => {
+  ponerLetra(b.dataset.setLetra);
+  try { localStorage.setItem("cuartito:letra:mostrador", b.dataset.setLetra); } catch { /* nada */ }
+});
+ponerLetra(letra);
+document.body.dataset.theme = "light";
 alCambiar(render);

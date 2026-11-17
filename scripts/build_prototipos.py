@@ -421,19 +421,31 @@ PAGES["numero"] = head2("numero", "Número", "#FF6F91", ["bagel-fat-one-latin-40
 """ + TAIL
 
 # ------------------------------------------------------------------ Mostrador (Vitrina + Número + paletas de Cucurucho)
-PAGES["mostrador"] = head2("mostrador", "Mostrador", "#2B1B15", ["bagel-fat-one-latin-400-normal.woff2", "dm-mono-latin-400-normal.woff2"]).replace(
+PAGES["mostrador"] = head2("mostrador", "Mostrador", "#F9D9DF", ["fredoka-latin-700-normal.woff2", "hanken-grotesk-latin-400-normal.woff2"]).replace(
     '<link rel="stylesheet" href="styles.css">', '<link rel="stylesheet" href="../lib/comun.css">\n  <link rel="stylesheet" href="styles.css">').replace(
-    "<body>", '<body class="iso" data-theme="dark">') + f"""{top2([("cacao", "Cacao"), ("frutilla", "Frutilla"), ("limon", "Limón")])}
+    '<html lang="es" data-proto="mostrador">', '<html lang="es" data-proto="mostrador" data-paleta="frutilla" data-letra="redonda">').replace(
+    "<body>", '<body class="iso" data-theme="light">') + f"""<header class="top">
+  <a class="brand" href="../../" aria-label="cuartito, versión original">{MARK}<span>cuartito</span></a>
+  <div class="letras" role="group" aria-label="Probar letra">
+    <span class="letras-t">Letra:</span>
+    <button type="button" data-set-letra="redonda" aria-pressed="true">Redonda</button>
+    <button type="button" data-set-letra="clara" aria-pressed="false">Clara</button>
+    <button type="button" data-set-letra="gordita" aria-pressed="false">Gordita</button>
+    <button type="button" data-set-letra="moderna" aria-pressed="false">Moderna</button>
+  </div>
+  {EXT}
+</header>
 <main class="sala">
   {INTRO2("El helado más barato de hoy, a la vista.", "Heladerías de")}
   <section id="ticket" class="escena" aria-label="Heladera de descuentos">
     <div class="vitrina-wrap">
+      <p class="leyenda">Cada pote es una heladería. Cuanto más lleno, más descuento. Tocá uno para ver qué conviene pedir.</p>
       <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Heladera: con las flechas pasás de un pote a otro"></div>
-      <p class="lectura" data-readout aria-live="polite"></p>
     </div>
     <div class="lado">
       <article id="detalle" class="detalle" aria-live="polite"></article>
-      <ol id="indice" class="indice" aria-label="Potes de la heladera, del descuento más grande al más chico"></ol>
+      <h2 class="indice-t">Todas, de mayor a menor descuento</h2>
+      <ol id="indice" class="indice"></ol>
       {FILTERS}
     </div>
   </section>
