@@ -156,9 +156,13 @@
     de 0 al entrar. DM Mono. Paletas Fruta / Papel / Neón.
   - Las tres leen lo que app.js dibuja en `#list` (que queda oculto) con `lib/datos.js`;
     `lib/comun.css` tiene los controles en versión texto suelto.
-- **Mostrador** (pedido del usuario, 2026-11-17): mezcla de la heladera de Vitrina, la tipografía de
-  Número (Bagel Fat One + DM Mono) y las paletas de Cucurucho (Cacao / Frutilla / Limón). El pote elegido
-  pinta el % gigante (con contorno tipo sticker) y debajo están todos los potes como lista de % en color.
+- **Mostrador** (pedido del usuario, 2026-11-17): la heladera de Vitrina con el % gigante de Número.
+  Segunda vuelta según su feedback ("no se entiende qué representa cada pote", "no me gusta la animación",
+  "que los descuentos se entiendan fácil"): dibujo quieto (sin pala ni recorrido), cada pote con su % escrito
+  arriba y ordenados de mayor a menor, leyenda que explica el dibujo, "Pagás $X en vez de $Y · Te ahorrás $Z",
+  ranking completo con puesto, %, heladería, producto y ahorro. Paleta Frutilla fija (la que más le gustó).
+  Selector de letra para comparar: Redonda (Fredoka), Clara (Atkinson Hyperlegible), Gordita (Bagel Fat One),
+  Moderna (Bricolage Grotesque). Texto con Hanken Grotesk (Atkinson pone barra en el cero, raro en precios).
 - E2E: abre los 8 prototipos; en los nuevos también chequea que el dibujo propio muestre los datos.
 
 ## Falta / próximos pasos
