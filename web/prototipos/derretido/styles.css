@@ -1,0 +1,176 @@
+/* DERRETIDO — el precio se derrite. Climate Crisis tiene un eje (YEAR) que funde las letras:
+   1979 = sólidas, 2019 = chorreadas. La marca entra derritiéndose; cada heladería es una franja de
+   gusto que chorrea sobre la siguiente, y los porcentajes se derriten al pasar el mouse.
+   Martian Mono para los datos. Frutilla de fondo, chocolate de tinta. */
+@font-face { font-family: "Climate"; font-display: swap; src: url("../fonts/climate-crisis-latin-year-normal.woff2") format("woff2"); }
+@font-face { font-family: "Martian"; font-weight: 400; font-display: swap; src: url("../fonts/martian-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Martian"; font-weight: 700; font-display: swap; src: url("../fonts/martian-mono-latin-700-normal.woff2") format("woff2"); }
+
+:root {
+  --frutilla: #FF5470;
+  --choco: #2A0F0A;
+  --crema: #FFF1DC;
+  --ddl: #E2A35E;       /* dulce de leche */
+  --pista: #BCE27A;     /* pistacho */
+  --menta: #98E6CD;
+  --limon: #FFE36E;
+  --melt: "Climate", Impact, sans-serif;
+  --mono: "Martian", ui-monospace, monospace;
+}
+body { background: var(--frutilla); color: var(--choco); font: 400 0.9375rem/1.55 var(--mono); }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--choco); outline-offset: 3px; }
+.melt { font-family: var(--melt); }
+
+/* barra */
+.melt-top { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; gap: 1rem; }
+@media (min-width: 760px) { .melt-top { padding: 1rem 2rem; } }
+.melt-top .brand { display: inline-flex; min-height: 44px; align-items: center; }
+.ext-badge { margin: 0; display: inline-flex; gap: 0.5rem; align-items: center; font: 700 0.6875rem/1 var(--mono); letter-spacing: 0.04em; background: var(--choco); color: var(--crema); padding: 0.55rem 0.8rem; }
+.ext-dot { width: 9px; height: 9px; border-radius: 50%; background: #9b8b84; }
+.ext-badge.on .ext-dot { background: var(--pista); }
+.ext-badge.off .ext-dot { background: var(--frutilla); }
+@media (max-width: 520px) { .ext-word { display: none; } }
+
+/* el goteo: la marca gigante se derrite al cargar */
+.drip { position: relative; overflow: hidden; padding: 0 0 1.5rem; }
+.giant {
+  margin: 0 0 0 -0.03em; font: 400 clamp(4.6rem, 22.5vw, 23rem)/0.8 var(--melt); text-transform: uppercase;
+  letter-spacing: -0.02em; color: var(--choco);
+  font-variation-settings: "YEAR" 2019;
+  animation: derretir 2.6s cubic-bezier(.55,0,.2,1) .2s both;
+}
+@keyframes derretir { from { font-variation-settings: "YEAR" 1979; } }
+.drip-copy {
+  position: relative; margin: 1.25rem 1rem 0; padding: 1.25rem; background: var(--choco); color: var(--crema);
+  max-width: 40rem;
+}
+@media (min-width: 900px) {
+  .giant { font-size: 13.6vw; white-space: nowrap; }
+  .giant br { display: none; }
+  .drip-copy { margin: 1.5rem 2rem 0 auto; }
+}
+.edition { margin: 0 0 0.6rem; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pista); }
+.headline { margin: 0; font: 400 clamp(1.6rem, 3.4vw, 2.5rem)/1.02 var(--melt); text-transform: uppercase; font-variation-settings: "YEAR" 1979; }
+.lede { margin: 0.75rem 0 0; font-size: 0.875rem; }
+.lede b { color: var(--limon); font-weight: 700; }
+
+/* controles: una franja de chocolate */
+.controls { background: var(--choco); color: var(--crema); padding: 2rem 1rem; display: grid; gap: 1.5rem; }
+@media (min-width: 900px) { .controls { padding: 2.5rem 2rem; grid-template-columns: 1fr 1fr; align-items: start; } .controls .panel { grid-column: 1 / -1; } }
+.panel { display: grid; gap: 0.75rem; }
+.label { font: 400 clamp(1.5rem, 4vw, 2.75rem)/1 var(--melt); text-transform: uppercase; font-variation-settings: "YEAR" 1990; }
+.search-row { display: grid; gap: 0.75rem; }
+@media (min-width: 640px) { .search-row { grid-template-columns: minmax(0, 1fr) auto; } }
+select {
+  appearance: none; min-height: 56px; padding: 0 3rem 0 1rem; border: 0; border-bottom: 4px solid var(--pista); background: transparent;
+  color: var(--crema); font: 700 1.25rem/1 var(--mono); cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M1 1l7 7 7-7' fill='none' stroke='%23BCE27A' stroke-width='2.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 1rem center;
+}
+select option { color: #000; }
+.btn {
+  min-height: 56px; padding: 0 1.75rem; border: 0; background: var(--pista); color: var(--choco); cursor: pointer;
+  font: 400 1.25rem/1 var(--melt); text-transform: uppercase; font-variation-settings: "YEAR" 1979;
+  transition: font-variation-settings .6s ease, background .2s;
+}
+.btn:hover:not(:disabled) { font-variation-settings: "YEAR" 2019; background: var(--limon); }
+.btn:active:not(:disabled) { transform: translateY(2px); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn-ghost { background: transparent; color: var(--crema); border: 2px solid var(--crema); }
+.link { background: none; border: 0; padding: 0; min-height: 44px; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; font: 400 0.8125rem/1.3 var(--mono); color: inherit; text-align: left; }
+.link:hover:not(:disabled) { color: var(--pista); }
+.link:disabled { opacity: 0.5; cursor: default; }
+.panel-links { display: flex; flex-wrap: wrap; gap: 0 1.5rem; }
+.progress { font-size: 0.8125rem; border-left: 4px solid var(--pista); padding-left: 0.75rem; }
+.progress .alert { color: var(--limon); font-weight: 700; }
+.note { background: var(--crema); color: var(--choco); padding: 1.25rem; }
+.note h2 { margin: 0 0 0.5rem; font: 400 1.5rem/1 var(--melt); text-transform: uppercase; }
+.note p, .note ol { margin: 0 0 0.75rem; font-size: 0.8125rem; }
+.note .btn { background: var(--choco); color: var(--crema); }
+.note-actions { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; }
+
+/* las bochas */
+.scoops-head { padding: 2.5rem 1rem 1rem; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; }
+@media (min-width: 760px) { .scoops-head { padding: 3rem 2rem 1.25rem; } }
+.scoops-head h2 { margin: 0; font: 400 clamp(2rem, 6vw, 4.5rem)/0.9 var(--melt); text-transform: uppercase; max-width: 14ch; font-variation-settings: "YEAR" 1995; }
+.stamp { margin: 0; font: 400 clamp(2.5rem, 9vw, 7rem)/0.8 var(--melt); font-variation-settings: "YEAR" 2019; }
+.filters { padding: 0 1rem 1.5rem; display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; align-items: center; }
+@media (min-width: 760px) { .filters { padding: 0 2rem 1.75rem; } }
+.seg-box { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.seg span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 1rem; border: 2px solid var(--choco); font: 700 0.8125rem/1 var(--mono); }
+.seg input:checked + span { background: var(--choco); color: var(--frutilla); }
+.seg input:focus-visible + span, .chip:has(input:focus-visible) { outline: 3px solid var(--choco); outline-offset: 2px; }
+.chips { display: flex; gap: 1rem; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 44px; font: 700 0.8125rem/1 var(--mono); }
+.chip .box { width: 20px; height: 20px; border: 2px solid var(--choco); border-radius: 50%; }
+.chip input:checked + .box { background: var(--choco); box-shadow: inset 0 0 0 3px var(--frutilla); }
+
+/* destacado: el número gigante que chorrea */
+.feature { background: var(--crema); padding: 1.5rem 1rem 2rem; position: relative; }
+@media (min-width: 900px) { .feature { padding: 2rem 2rem 2.5rem; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; column-gap: 2rem; } }
+.feature { overflow: hidden; }
+.feature p { margin: 0; }
+.feature-who { font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.feature-who span { opacity: 0.8; }
+.feature-what { font: 400 clamp(1.75rem, 5vw, 3.25rem)/0.95 var(--melt); text-transform: uppercase; font-variation-settings: "YEAR" 1979; margin-top: 0.3rem !important; }
+.feature-prices { margin-top: 0.75rem !important; display: flex; flex-direction: column; align-items: flex-start; }
+@media (min-width: 900px) { .feature-prices { grid-column: 2; grid-row: 1 / span 3; align-items: flex-end; margin: 0 !important; } }
+.feature-now { font: 400 clamp(3.4rem, 12.5vw, 9.5rem)/0.8 var(--melt); color: #E02A52; -webkit-text-stroke: 2px var(--choco); font-variation-settings: "YEAR" 2014; letter-spacing: -0.02em; }
+.feature-before { font-size: 1.125rem; text-decoration: line-through; text-decoration-thickness: 2px; margin-top: 0.5rem; }
+.feature-foot { font-weight: 700; margin-top: 0.75rem !important; }
+.is-new .feature-now { animation: derretir 2s cubic-bezier(.55,0,.2,1) both; }
+
+/* cada heladería es una franja de gusto que chorrea sobre la de abajo */
+.list { counter-reset: bocha; }
+.shop, .vague { --bg: var(--ddl); --fg: var(--choco); position: relative; background: var(--bg); color: var(--fg); padding: 1.75rem 1rem 2.75rem; }
+@media (min-width: 760px) { .shop, .vague { padding: 2rem 2rem 3.25rem; } }
+.shop:nth-child(5n+2) { --bg: var(--pista); }
+.shop:nth-child(5n+3) { --bg: var(--crema); }
+.shop:nth-child(5n+4) { --bg: var(--choco); --fg: var(--crema); }
+.shop:nth-child(5n+5) { --bg: var(--menta); }
+.shop::after, .vague::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 46px; z-index: 1; pointer-events: none;
+  background:
+    radial-gradient(ellipse 13px 30px at 12% 0, var(--bg) 98%, transparent 100%),
+    radial-gradient(ellipse 22px 44px at 31% 0, var(--bg) 98%, transparent 100%),
+    radial-gradient(ellipse 9px 22px at 55% 0, var(--bg) 98%, transparent 100%),
+    radial-gradient(ellipse 18px 38px at 74% 0, var(--bg) 98%, transparent 100%),
+    radial-gradient(ellipse 11px 26px at 92% 0, var(--bg) 98%, transparent 100%);
+}
+.shop-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1rem; }
+.shop-name { margin: 0; font: 400 clamp(1.6rem, 4.6vw, 3rem)/0.95 var(--melt); text-transform: uppercase; font-variation-settings: "YEAR" 1979; transition: font-variation-settings .8s ease; }
+.shop:hover .shop-name { font-variation-settings: "YEAR" 2019; }
+.shop-name a { text-decoration: none; }
+.closed-tag { font: 700 0.6875rem/1 var(--mono); text-transform: uppercase; border: 2px solid currentColor; padding: 0.3rem 0.5rem; }
+.shop-meta { display: block; margin: 0.6rem 0 0; font-size: 0.8125rem; }
+.shop-meta b { font-weight: 700; }
+.deals { margin-top: 1.25rem; }
+.deal { display: grid; grid-template-columns: minmax(5.5rem, auto) 1fr auto; gap: 1rem; align-items: center; padding: 0.6rem 0; border-top: 2px dashed currentColor; }
+.deal-off { font: 400 clamp(1.75rem, 5vw, 3rem)/0.85 var(--melt); font-variation-settings: "YEAR" 1990; transition: font-variation-settings .7s ease; }
+.deal:hover .deal-off { font-variation-settings: "YEAR" 2019; }
+.deal-name { font-size: 0.9375rem; }
+.deal-price { display: flex; flex-direction: column; align-items: flex-end; }
+.deal-price b { font-size: 1.125rem; }
+.deal-price s { font-size: 0.75rem; opacity: 0.85; }
+.plus-tag { margin-left: 0.4rem; font-size: 0.6875rem; font-weight: 700; padding: 0.1rem 0.35rem; border: 2px solid currentColor; }
+.more summary { min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+.shop-extra { margin: 0.5rem 0 0; font-size: 0.75rem; }
+.vague { --bg: var(--limon); }
+.vague-title { margin: 0; font: 400 clamp(1.5rem, 4vw, 2.5rem)/1 var(--melt); text-transform: uppercase; }
+.vague-note { margin: 0.5rem 0 1rem; font-size: 0.8125rem; }
+.vague-row { display: grid; grid-template-columns: 6rem 1fr; gap: 1rem; padding: 0.75rem 0; border-top: 2px dashed currentColor; }
+.vague-row .deal-off { font-size: 1.75rem; }
+.vague-row .deal-off small { display: block; font: 700 0.625rem/1 var(--mono); text-transform: uppercase; }
+.vague-name { display: block; font-weight: 700; }
+.vague-name a { text-decoration: none; }
+.empty { padding: 2rem 1rem; font-size: 1rem; }
+.scoops-foot { position: relative; z-index: 2; background: var(--choco); color: var(--crema); padding: 3rem 1rem 1.5rem; font-size: 0.75rem; }
+@media (min-width: 760px) { .scoops-foot { padding: 3.5rem 2rem 1.5rem; } }
+.status p { margin: 0 0 0.3rem; }
+.status .error { color: var(--limon); }
+.total { margin: 0.5rem 0 0; font-weight: 700; }
+.melt-foot { background: var(--choco); color: var(--crema); padding: 0 1rem 2rem; font-size: 0.75rem; }
+@media (min-width: 760px) { .melt-foot { padding: 0 2rem 2rem; } }
+.fineprint a { display: inline-flex; min-height: 44px; align-items: center; color: var(--pista); }
+
