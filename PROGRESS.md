@@ -156,13 +156,15 @@
     de 0 al entrar. DM Mono. Paletas Fruta / Papel / Neón.
   - Las tres leen lo que app.js dibuja en `#list` (que queda oculto) con `lib/datos.js`;
     `lib/comun.css` tiene los controles en versión texto suelto.
-- **Mostrador** (pedido del usuario, 2026-11-17): la heladera de Vitrina con el % gigante de Número.
-  Segunda vuelta según su feedback ("no se entiende qué representa cada pote", "no me gusta la animación",
-  "que los descuentos se entiendan fácil"): dibujo quieto (sin pala ni recorrido), cada pote con su % escrito
-  arriba y ordenados de mayor a menor, leyenda que explica el dibujo, "Pagás $X en vez de $Y · Te ahorrás $Z",
-  ranking completo con puesto, %, heladería, producto y ahorro. Paleta Frutilla fija (la que más le gustó).
-  Selector de letra para comparar: Redonda (Fredoka), Clara (Atkinson Hyperlegible), Gordita (Bagel Fat One),
-  Moderna (Bricolage Grotesque). Texto con Hanken Grotesk (Atkinson pone barra en el cero, raro en precios).
+- **Mostrador** (pedido del usuario, 2026-11-17): la heladera de Vitrina, quieta y rotulada (cada pote con su %
+  arriba, ordenados de mayor a menor), paleta Frutilla y letra Bricolage Grotesque ("Moderna", la elegida).
+  Tercera vuelta según su feedback ("el botón tiene que resaltar", "lista a la izquierda y blanco a la derecha no
+  es atractivo", "menos texto, que ocupe el ancho"): arriba titular + buscador con botón sólido + heladera; abajo
+  los descuentos a todo el ancho en tres diseños para comparar con el selector "Diseño":
+  - **Podio**: los 3 mejores grandes en columnas y el resto en una tira.
+  - **Grilla**: todas iguales, 4 por fila en compu y 2 en el celular.
+  - **Foco**: el elegido enorme de lado a lado y abajo todas para pasar.
+  Cada una muestra precio, precio anterior, "Ahorrás $X" y "Pedir en …". Tocar un pote marca su heladería.
 - E2E: abre los 8 prototipos; en los nuevos también chequea que el dibujo propio muestre los datos.
 
 ## Falta / próximos pasos
