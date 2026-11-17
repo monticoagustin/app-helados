@@ -1,0 +1,30 @@
+/* Base común de los prototipos + barra para pasar de uno a otro. Cada prototipo trae su estilo aparte. */
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+img, svg { display: block; max-width: 100%; }
+button, select, input { font: inherit; color: inherit; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mark { width: 40px; height: 40px; flex: none; }
+.ext-word { display: inline; }
+.seg { border: 0; margin: 0; padding: 0; min-width: 0; }
+.seg label, .chip { position: relative; cursor: pointer; }
+.seg input, .chip input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.deals, .vague-list { list-style: none; margin: 0; padding: 0; }
+.more summary { cursor: pointer; list-style: none; }
+.more summary::-webkit-details-marker { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ---- selector de prototipos (no es parte del diseño) */
+.proto-switch {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0 1rem;
+  padding: 0.25rem 1rem; background: #000; color: #fff;
+  font: 500 12px/1.2 ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+.proto-switch a { color: #cfcfcf; text-decoration: none; padding: 0.6rem 0; min-height: 36px; display: inline-flex; align-items: center; }
+.proto-switch a:hover, .proto-switch a:focus-visible { color: #fff; text-decoration: underline; }
+.proto-switch a[aria-current="page"] { color: #fff; text-decoration: underline; text-underline-offset: 4px; }
+.proto-switch .proto-all { color: #fff; font-weight: 700; margin-right: 0.5rem; }
