@@ -294,6 +294,7 @@ PROTOS2 = [
     ("vitrina", "Vitrina", "La heladera vista desde arriba: el helado sube según el descuento"),
     ("cucurucho", "Cucurucho", "Los descuentos apilados como bochas"),
     ("numero", "Número", "El porcentaje gigante es la página"),
+    ("mostrador", "Mostrador", "Mezcla: la heladera de Vitrina con la tipografía de Número"),
 ]
 
 def switcher2(current):
@@ -417,6 +418,29 @@ PAGES["numero"] = head2("numero", "Número", "#FF6F91", ["bagel-fat-one-latin-40
   {OCULTO}
 </main>
 <script type="module" src="numero.js"></script>
+""" + TAIL
+
+# ------------------------------------------------------------------ Mostrador (Vitrina + Número + paletas de Cucurucho)
+PAGES["mostrador"] = head2("mostrador", "Mostrador", "#2B1B15", ["bagel-fat-one-latin-400-normal.woff2", "dm-mono-latin-400-normal.woff2"]).replace(
+    '<link rel="stylesheet" href="styles.css">', '<link rel="stylesheet" href="../lib/comun.css">\n  <link rel="stylesheet" href="styles.css">').replace(
+    "<body>", '<body class="iso" data-theme="dark">') + f"""{top2([("cacao", "Cacao"), ("frutilla", "Frutilla"), ("limon", "Limón")])}
+<main class="sala">
+  {INTRO2("El helado más barato de hoy, a la vista.", "Heladerías de")}
+  <section id="ticket" class="escena" aria-label="Heladera de descuentos">
+    <div class="vitrina-wrap">
+      <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Heladera: con las flechas pasás de un pote a otro"></div>
+      <p class="lectura" data-readout aria-live="polite"></p>
+    </div>
+    <div class="lado">
+      <article id="detalle" class="detalle" aria-live="polite"></article>
+      <ol id="indice" class="indice" aria-label="Potes de la heladera, del descuento más grande al más chico"></ol>
+      {FILTERS}
+    </div>
+  </section>
+  {STATUS2}
+  {OCULTO}
+</main>
+<script type="module" src="mostrador.js"></script>
 """ + TAIL
 
 for slug, html in PAGES.items():

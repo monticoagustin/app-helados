@@ -1,0 +1,100 @@
+/* MOSTRADOR — mezcla: la heladera isométrica de Vitrina (kit Anatomy), la tipografía de Número
+   (el % gigante en Bagel Fat One, el resto en DM Mono) y las paletas de Cucurucho.
+   El gusto del pote elegido tiñe el número grande. */
+@font-face { font-family: "Bagel Fat One"; font-display: swap; src: url("../fonts/bagel-fat-one-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "DM Mono"; font-weight: 400; font-display: swap; src: url("../fonts/dm-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "DM Mono"; font-weight: 500; font-display: swap; src: url("../fonts/dm-mono-latin-500-normal.woff2") format("woff2"); }
+
+body { --display: "Bagel Fat One", "Arial Rounded MT Bold", sans-serif; --body: "DM Mono", ui-monospace, monospace; font-size: 0.9375rem; }
+/* paletas de Cucurucho; --borde es el contorno de sticker del número grande */
+html[data-paleta="cacao"] body {
+  --bg: #2B1B15; --ink: #F6E9DC; --muted: #C2AC9B; --accent: #FF9DB5; --borde: #F6E9DC;
+  --f0: #F7A8BC; --f1: #BDE3A1; --f2: #FBE29A; --f3: #F6F0E2; --f4: #A6D8E8; --f5: #E0B184; --f6: #F5B98A; --f7: #E77A97;
+}
+html[data-paleta="frutilla"] body {
+  --bg: #F9D9DF; --ink: #4A0F22; --muted: #8B4A5C; --accent: #B8102C; --borde: #4A0F22;
+  --f0: #E5426B; --f1: #5B3022; --f2: #7CCFB2; --f3: #F3DF5A; --f4: #FFF6E4; --f5: #C88A4B; --f6: #A9C77A; --f7: #B5174C;
+}
+html[data-paleta="limon"] body {
+  --bg: #F3F0C4; --ink: #1F2A14; --muted: #5A6440; --accent: #D23A27; --borde: #1F2A14;
+  --f0: #F28BA8; --f1: #6FC3A0; --f2: #8B5A3C; --f3: #FFF8EA; --f4: #F5A25B; --f5: #9ED36A; --f6: #E85A7A; --f7: #B9DCEB;
+}
+[data-set-paleta="cacao"] .sw { background: conic-gradient(#F7A8BC 0 33%, #BDE3A1 0 66%, #2B1B15 0); }
+[data-set-paleta="frutilla"] .sw { background: conic-gradient(#E5426B 0 33%, #5B3022 0 66%, #F9D9DF 0); }
+[data-set-paleta="limon"] .sw { background: conic-gradient(#6FC3A0 0 33%, #F28BA8 0 66%, #F3F0C4 0); }
+
+/* el dibujo usa los colores de la paleta */
+body.iso { --anatomy-page: var(--bg); --anatomy-paper: var(--bg); --anatomy-card: var(--bg); --anatomy-text: var(--muted); --anatomy-strong: var(--ink); }
+.flav { --anatomy-paper: var(--c); --anatomy-face: var(--c); --anatomy-top: color-mix(in oklab, var(--c) 80%, white);
+  --anatomy-shade-0: color-mix(in oklab, var(--c) 70%, black); --anatomy-shade-1: color-mix(in oklab, var(--c) 78%, black);
+  --anatomy-shade-2: color-mix(in oklab, var(--c) 86%, black); --anatomy-shade-3: color-mix(in oklab, var(--c) 93%, black);
+  --anatomy-hi: color-mix(in oklab, var(--c) 45%, black); }
+.flav[data-flavor="0"] { --c: var(--f0); } .flav[data-flavor="1"] { --c: var(--f1); } .flav[data-flavor="2"] { --c: var(--f2); }
+.flav[data-flavor="3"] { --c: var(--f3); } .flav[data-flavor="4"] { --c: var(--f4); } .flav[data-flavor="5"] { --c: var(--f5); }
+.flav[data-flavor="6"] { --c: var(--f6); } .flav[data-flavor="7"] { --c: var(--f7); }
+.hit { fill: transparent; stroke: none; cursor: pointer; pointer-events: all; }
+.iso-stage { outline-offset: 6px; }
+.iso-stage svg { width: 100%; height: auto; display: block; }
+.vitrina-wrap { min-width: 0; margin-top: 1.5rem; }
+.lectura { margin: 0.25rem 0 0; text-align: right; font-size: 0.8125rem; color: var(--muted); }
+
+.brand { font-size: 1.6rem; }
+.headline { font-size: clamp(2.6rem, 7vw, 5.6rem); line-height: 0.92; letter-spacing: -0.01em; max-width: 13ch; }
+.frase { font-size: clamp(1.4rem, 3vw, 2.1rem); }
+
+/* el pote elegido, a lo Número: nombre, % gigante con el color del gusto, y el precio */
+.detalle { margin-top: 1.5rem; }
+.quien { margin: 0; font: 400 clamp(1.9rem, 5vw, 3.4rem)/0.98 var(--display); max-width: 16ch; overflow-wrap: anywhere; }
+.numero {
+  margin: 0.5rem 0 0; display: flex; align-items: flex-start; white-space: nowrap;
+  font: 400 min(46vw, 15rem)/0.82 var(--display); letter-spacing: -0.04em; font-variant-numeric: tabular-nums;
+  color: var(--sel, var(--accent)); -webkit-text-stroke: 0.035em var(--borde); paint-order: stroke fill;
+  transition: color .35s ease;
+}
+.numero .menos, .numero .pc { font-size: 0.3em; line-height: 1; margin-top: 0.14em; letter-spacing: 0; }
+.numero .menos { margin-right: 0.05em; }
+.numero .pc { margin-left: 0.06em; }
+.dato { margin-top: 1.25rem; }
+.producto { margin: 0; font: 500 clamp(1.15rem, 2vw, 1.45rem)/1.25 var(--body); }
+.producto .plus, .otros em { font-style: normal; font-size: 0.75rem; color: var(--muted); }
+.precio { margin: 0.35rem 0 0; font: 400 clamp(2rem, 4vw, 2.9rem)/1 var(--display); }
+.precio s { font: 400 1rem/1 var(--body); color: var(--muted); margin-left: 0.4rem; }
+.meta { margin: 0.75rem 0 0; font-size: 0.8125rem; color: var(--muted); }
+.pedir {
+  display: inline-flex; align-items: center; min-height: 48px; margin-top: 0.25rem; font-weight: 500; color: var(--ink);
+  text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px;
+}
+.pedir::after { content: "↗"; margin-left: 0.35rem; transition: translate .2s; }
+.pedir:hover::after { translate: 2px -2px; }
+.otros { list-style: none; margin: 1.25rem 0 0; padding: 0; font-size: 0.875rem; }
+.otros li { display: grid; grid-template-columns: 3.4rem 1fr auto; gap: 0.25rem 0.75rem; align-items: baseline; padding: 0.3rem 0; }
+.otros .off { font: 400 1.15rem/1 var(--display); }
+.otros .pr { white-space: nowrap; font-weight: 500; }
+.otros .pr s { color: var(--muted); font-weight: 400; font-size: 0.75rem; margin-left: 0.3rem; }
+.mas { margin: 0.25rem 0 0; font-size: 0.8125rem; color: var(--muted); }
+@media (max-width: 520px) { .otros li { grid-template-columns: 3rem 1fr; } .otros .pr { grid-column: 2; } }
+
+/* todos los potes: el % en Bagel con el color de su gusto */
+.indice { list-style: none; margin: 2.5rem 0 0; padding: 0; }
+.indice button {
+  display: grid; grid-template-columns: 5.2rem 1fr; align-items: baseline; gap: 0.75rem; width: 100%; min-height: 48px;
+  padding: 0.35rem 0; border: 0; background: none; cursor: pointer; text-align: left; color: var(--muted); font: inherit;
+}
+.indice .p { font: 400 1.9rem/1 var(--display); color: var(--c); -webkit-text-stroke: 0.04em var(--borde); paint-order: stroke fill; }
+.indice .nm { font-size: 0.9375rem; }
+.indice button:hover .nm, .indice button[aria-pressed="true"] .nm { color: var(--ink); }
+.indice button[aria-pressed="true"] .nm { text-decoration: underline; text-underline-offset: 5px; }
+.indice button:active { translate: 0 1px; }
+.vacio { margin: 1rem 0; }
+
+/* en pantallas anchas: texto y número a la izquierda, la heladera quieta a la derecha */
+@media (min-width: 1000px) {
+  .sala { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: 3.5rem; align-items: start; }
+  .escena { display: contents; }
+  .intro { grid-column: 1; grid-row: 1; }
+  .vitrina-wrap { grid-column: 2; grid-row: 1 / span 2; position: sticky; top: 1rem; margin-top: 0; }
+  .lado { grid-column: 1; grid-row: 2; margin-top: 2rem; }
+  .estado, .app-oculta { grid-column: 1 / -1; }
+  .headline { font-size: clamp(2.6rem, 4.6vw, 4.6rem); }
+  .numero { font-size: min(17vw, 16rem); }
+}
