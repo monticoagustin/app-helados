@@ -144,6 +144,19 @@
 - Los HTML se generan con `python scripts/build_prototipos.py` (editar ahí, no el HTML).
 - E2E: abre los 4 prototipos, detectan la extensión, buscan y muestran resultados.
 - El workflow publica `web/prototipos/` en `/cuartito/prototipos/`.
+- **Segunda tanda, sin cajas** (al usuario no le gustó ninguna de las 4: "muy cuadrado, muchas boxes").
+  Cada una con 3 paletas para elegir arriba (se guarda en el navegador):
+  - **Vitrina**: la heladera de mostrador en dibujo isométrico (kit Anatomy, MIT, en `lib/iso-kit.mjs`).
+    Cada pote se llena según el descuento, la pala va al que elegís (click, flechas o recorrido solo).
+    Gloock + Geist Mono. Paletas Mármol / Noche / Pistacho.
+  - **Cucurucho**: las heladerías apiladas como bochas SVG con chorreones sobre un barquillo; arriba la
+    del descuento más grande. Tocás una bocha y abajo aparece el detalle. Instrument Serif + Hanken Grotesk.
+    Paletas Cacao / Frutilla / Limón.
+  - **Número**: una heladería por pantalla, el % gigante en Bagel Fat One es la composición y cuenta
+    de 0 al entrar. DM Mono. Paletas Fruta / Papel / Neón.
+  - Las tres leen lo que app.js dibuja en `#list` (que queda oculto) con `lib/datos.js`;
+    `lib/comun.css` tiene los controles en versión texto suelto.
+- E2E: abre los 7 prototipos; en los nuevos también chequea que el dibujo propio muestre los datos.
 
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),
