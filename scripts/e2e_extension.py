@@ -129,7 +129,7 @@ with sync_playwright() as p:
     print("LIST:\n" + page.inner_text("#list")[:1200])
     print("tabs al final:", [pg.url for pg in ctx.pages])
     print("pedidos:", state["calls"])
-    page.click("details summary") if page.query_selector("details summary") else None
+    page.evaluate("document.querySelectorAll('#list details').forEach(d => d.open = true)")
     page.screenshot(path="/tmp/e2e.png", full_page=True)
     # segundo click: debe usar caché (no nuevos pedidos)
     n = len(state["calls"]); page.click("#fetch"); page.wait_for_timeout(3000)
@@ -207,7 +207,7 @@ with sync_playwright() as p:
     assert cache_new == 0, "el segundo click no usó la caché"
     # prototipos de diseño: misma app.js, mismos ids → detectan la extensión, buscan y muestran resultados
     PROPIO = {"vitrina": "#indice", "cucurucho": "#bochas", "numero": "#ticket", "mostrador": "#ticket", "cartel": "#ticket"}  # lo que dibuja cada prototipo nuevo
-    for proto in ("cotizacion", "derretido", "oferton", "nocciola", "vitrina", "cucurucho", "numero", "mostrador", "cartel"):
+    for proto in ("ticket", "cotizacion", "derretido", "oferton", "nocciola", "vitrina", "cucurucho", "numero", "mostrador", "cartel"):
         pp = ctx.new_page(); errs = []
         pp.on("pageerror", lambda e: errs.append(str(e)))
         pp.goto(f"http://127.0.0.1:8769/prototipos/{proto}/"); pp.wait_for_timeout(2000)

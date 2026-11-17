@@ -180,6 +180,18 @@
   con el % gigante en rosa directo sobre el crema (sin la mancha azul, que no le gustó), el destacado con una bocha rosa y la lista como bochas redondas con el %.
 - E2E: abre los 9 prototipos; en los nuevos también chequea que el dibujo propio muestre los datos.
 
+## Hecho (rama `fase-4-cartel`, 2026-11-17): Cartel es el diseño principal
+- A pedido del usuario ("publicalo como diseño principal"), `web/index.html` ahora es **Cartel**. Lema:
+  "¿Te cierran las heladerías buscando promociones? Usá [logo] cuartito". Paleta #365367 #FFBAA2 #F9F4E6 #F494AB,
+  Anton + Bricolage Grotesque, la heladera de Vitrina con el % gigante detrás, bochas en vez de cajas y los
+  botones de cada app con su color.
+- Se genera desde el prototipo: `python3 scripts/build_prototipos.py` escribe `web/index.html`, `web/styles.css`
+  (base + estilos de Cartel), `web/cartel.js` y copia `web/lib/` (kit isométrico, datos.js, comun.css). Editar
+  `web/prototipos/cartel/` y regenerar; no editar esos archivos a mano.
+- El diseño anterior (ticket) quedó guardado en `/cuartito/prototipos/ticket/`.
+- Workflow: publica también `cartel.js` y `lib/`.
+- E2E: la lista de app.js queda oculta en Cartel; la prueba abre los desplegables por código.
+
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),
       pero el formato de `/v2/niles/partners/{id}/menus` todavía no lo vimos: en el navegador integrado
