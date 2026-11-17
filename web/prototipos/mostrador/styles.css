@@ -80,17 +80,17 @@ body.iso { --anatomy-page: var(--bg); --anatomy-paper: var(--papel); --anatomy-c
 .ahorro { margin: 0.15rem 0 0; font-weight: 800; color: var(--accent); }
 .pedir { display: inline-block; padding: 0.55rem 0; min-height: 44px; font-weight: 700; color: var(--ink); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px; }
 .pedir::after { content: "↗"; margin-left: 0.3rem; }
-/* botón de cada app con su color: Rappi naranja, PedidosYa fucsia, Uber Eats verde */
+/* botón de cada app con su color: Rappi naranja, PedidosYa fucsia, Uber Eats negro */
 .pedir[class*="app-"] {
   display: inline-flex; align-items: center; min-height: 48px; margin-top: 0.75rem; padding: 0 1.2rem; border-radius: 999px;
   font-weight: 800; font-size: 1.05rem; text-decoration: none; background: var(--app); color: var(--app-t);
-  box-shadow: 0 3px 0 color-mix(in oklab, var(--app) 60%, black); transition: translate .12s ease, box-shadow .12s ease;
+  box-shadow: 0 3px 0 color-mix(in oklab, var(--app) 60%, var(--ink)); transition: translate .12s ease, box-shadow .12s ease;
 }
 .pedir[class*="app-"]:hover { translate: 0 -1px; box-shadow: 0 4px 0 color-mix(in oklab, var(--app) 60%, black); }
 .pedir[class*="app-"]:active { translate: 0 2px; box-shadow: 0 1px 0 color-mix(in oklab, var(--app) 60%, black); }
 .app-rappi { --app: #E5390E; --app-t: #fff; }
 .app-pya { --app: #D9004B; --app-t: #fff; }
-.app-uber { --app: #06C167; --app-t: #062B1B; }
+.app-uber { --app: #000; --app-t: #fff; }
 .app-otra { --app: var(--ink); --app-t: var(--bg); }
 .pedir-grande { min-height: 56px !important; padding: 0 1.6rem !important; font-size: 1.2rem !important; }
 .meta { margin: 0.5rem 0 0; font-size: 0.9375rem; color: var(--muted); }
