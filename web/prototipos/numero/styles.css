@@ -1,0 +1,81 @@
+/* NÚMERO — la tipografía es el contenido. Cada heladería ocupa una pantalla y su descuento,
+   en Bagel Fat One a tamaño de cartel, arma la composición; el resto se acomoda alrededor en DM Mono. */
+@font-face { font-family: "Bagel Fat One"; font-display: swap; src: url("../fonts/bagel-fat-one-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "DM Mono"; font-weight: 400; font-display: swap; src: url("../fonts/dm-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "DM Mono"; font-weight: 500; font-display: swap; src: url("../fonts/dm-mono-latin-500-normal.woff2") format("woff2"); }
+
+body { --display: "Bagel Fat One", "Arial Rounded MT Bold", sans-serif; --body: "DM Mono", ui-monospace, monospace; font-size: 0.9375rem; }
+html[data-paleta="fruta"] body {
+  --bg: #FFE6EC; --ink: #2A0F14; --muted: #7A4A55; --accent: #C8173A; --ink-pantalla: #1C0E08;
+  --f0: #FF6F91; --f1: #FFD23F; --f2: #7BDFB5; --f3: #FF9F45; --f4: #B9E769; --f5: #6B3A26; --f6: #9AD0FF; --f7: #F6C1A6;
+  --t5: #FFE9D6;
+}
+html[data-paleta="papel"] body {
+  --bg: #EDEFF2; --ink: #16181C; --muted: #5D636B; --accent: #D0204A; --ink-pantalla: #16181C;
+  --f0: #E0284F; --f1: #E59E00; --f2: #1E9E78; --f3: #F26B1D; --f4: #5E9A22; --f5: #8A4B2E; --f6: #2B7BD9; --f7: #D9577C;
+}
+html[data-paleta="neon"] body {
+  --bg: #121015; --ink: #F4F1FA; --muted: #A9A4B4; --accent: #FF5C93; --ink-pantalla: #F4F1FA;
+  --f0: #FF5C93; --f1: #FFE14D; --f2: #3DF2B4; --f3: #FF8A3D; --f4: #B6FF5C; --f5: #F5D7B2; --f6: #5CC8FF; --f7: #FF9EC4;
+}
+[data-set-paleta="fruta"] .sw { background: conic-gradient(#FF6F91 0 33%, #FFD23F 0 66%, #7BDFB5 0); }
+[data-set-paleta="papel"] .sw { background: conic-gradient(#E0284F 0 33%, #1E9E78 0 66%, #EDEFF2 0); }
+[data-set-paleta="neon"] .sw { background: conic-gradient(#FF5C93 0 33%, #3DF2B4 0 66%, #121015 0); }
+
+html { scroll-snap-type: y proximity; }
+.headline { font-size: clamp(2.6rem, 7.4vw, 6.4rem); line-height: 0.92; letter-spacing: -0.01em; max-width: 13ch; }
+.frase { font-size: clamp(1.4rem, 3vw, 2.1rem); }
+.frase label { color: var(--muted); }
+.brand { font-size: 1.6rem; }
+
+/* cada pantalla */
+body { overflow-x: clip; }
+.numeros { margin: 3rem calc(50% - 50vw) 0; }
+@media (min-width: 900px) { .numeros { margin-top: 4rem; } }
+.pantalla {
+  position: relative; min-height: 100svh; scroll-snap-align: start; overflow: hidden;
+  display: grid; grid-template-rows: auto auto 1fr auto; padding: 1.25rem 1.25rem 2.5rem; color: var(--ink-pantalla);
+}
+@media (min-width: 900px) {
+  .pantalla { grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); grid-template-rows: auto auto 1fr; column-gap: 3rem; padding: 2rem 3rem 3rem; }
+  .pantalla .orden, .pantalla .quien { grid-column: 1 / -1; }
+  .pantalla .numero { grid-row: 3; align-self: end; }
+  .pantalla .dato { grid-column: 2; grid-row: 3; align-self: end; }
+}
+html[data-paleta="fruta"] .pantalla { background: var(--c); color: var(--t); }
+html[data-paleta="fruta"] .pantalla .numero { color: var(--t); }
+.pantalla .numero { color: var(--c); }
+.pantalla.cerrada .numero { opacity: 0.45; }
+.quien { margin: 0.75rem 0 0; font: 400 clamp(2rem, 6vw, 5rem)/0.95 var(--display); letter-spacing: -0.01em; max-width: 18ch; overflow-wrap: anywhere; }
+html[data-paleta="papel"] .quien, html[data-paleta="neon"] .quien { color: var(--ink); }
+.orden { margin: 0; font-size: 0.8125rem; letter-spacing: 0.02em; opacity: 0.8; }
+
+/* el número: dígitos enormes, el signo y el % chiquitos colgados */
+.numero {
+  margin: 0; align-self: center; display: flex; align-items: flex-start; font: 400 min(50vw, 60svh)/0.8 var(--display);
+  letter-spacing: -0.04em; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+@media (min-width: 900px) { .numero { font-size: min(30vw, 62svh); } }
+.numero .menos, .numero .pc { font-size: 0.3em; line-height: 1; margin-top: 0.12em; letter-spacing: 0; }
+.numero .menos { margin-right: 0.04em; }
+.numero .pc { margin-left: 0.06em; }
+
+.dato { max-width: 28rem; }
+.dato h2 { margin: 0; font: 500 clamp(1.25rem, 2.2vw, 1.6rem)/1.2 var(--body); letter-spacing: -0.01em; }
+.dato .plus { font-style: normal; font-size: 0.75rem; opacity: 0.75; }
+.precio { margin: 0.35rem 0 0; font: 400 clamp(2rem, 4vw, 3rem)/1 var(--display); }
+.precio s { font: 400 1rem/1 var(--body); opacity: 0.65; margin-left: 0.4rem; }
+.local { margin: 1rem 0 0; font-size: 0.8125rem; opacity: 0.85; }
+.pedir {
+  display: inline-flex; align-items: center; min-height: 48px; margin-top: 0.5rem; font-weight: 500;
+  text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px;
+}
+.pedir:hover { text-decoration-thickness: 3px; }
+.pedir::after { content: "↗"; margin-left: 0.35rem; transition: translate .2s; }
+.pedir:hover::after { translate: 2px -2px; }
+.tambien { margin: 0.75rem 0 0; font-size: 0.8125rem; opacity: 0.85; }
+.pantalla :focus-visible { outline-color: currentColor; }
+
+.cierre { padding-top: 3rem; }
+.numeros .vacio { margin: 2rem 1.25rem; }
+@media (min-width: 900px) { .numeros .vacio { margin: 2rem 3rem; } }
