@@ -156,7 +156,10 @@
     de 0 al entrar. DM Mono. Paletas Fruta / Papel / Neón.
   - Las tres leen lo que app.js dibuja en `#list` (que queda oculto) con `lib/datos.js`;
     `lib/comun.css` tiene los controles en versión texto suelto.
-- E2E: abre los 7 prototipos; en los nuevos también chequea que el dibujo propio muestre los datos.
+- **Mostrador** (pedido del usuario, 2026-11-17): mezcla de la heladera de Vitrina, la tipografía de
+  Número (Bagel Fat One + DM Mono) y las paletas de Cucurucho (Cacao / Frutilla / Limón). El pote elegido
+  pinta el % gigante (con contorno tipo sticker) y debajo están todos los potes como lista de % en color.
+- E2E: abre los 8 prototipos; en los nuevos también chequea que el dibujo propio muestre los datos.
 
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),

@@ -206,8 +206,8 @@ with sync_playwright() as p:
     assert not [pg for pg in ctx.pages if "/pya/" in pg.url], "quedó abierta la pestaña de PedidosYa"
     assert cache_new == 0, "el segundo click no usó la caché"
     # prototipos de diseño: misma app.js, mismos ids → detectan la extensión, buscan y muestran resultados
-    PROPIO = {"vitrina": "#indice", "cucurucho": "#bochas", "numero": "#ticket"}  # lo que dibuja cada prototipo nuevo
-    for proto in ("cotizacion", "derretido", "oferton", "nocciola", "vitrina", "cucurucho", "numero"):
+    PROPIO = {"vitrina": "#indice", "cucurucho": "#bochas", "numero": "#ticket", "mostrador": "#indice"}  # lo que dibuja cada prototipo nuevo
+    for proto in ("cotizacion", "derretido", "oferton", "nocciola", "vitrina", "cucurucho", "numero", "mostrador"):
         pp = ctx.new_page(); errs = []
         pp.on("pageerror", lambda e: errs.append(str(e)))
         pp.goto(f"http://127.0.0.1:8769/prototipos/{proto}/"); pp.wait_for_timeout(2000)
