@@ -165,3 +165,20 @@ body.iso { --anatomy-page: var(--bg); --anatomy-paper: var(--papel); --anatomy-c
   .bajada { max-width: 34rem; font-size: 1.15rem; }
 }
 @media (min-width: 1600px) { body { font-size: 1.15rem; } .franja { grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr)); } }
+
+/* compu: todo en la primera pantalla. La heladera y el lema se achican según el alto de la ventana
+   para que el destacado y la primera fila de descuentos entren sin bajar. */
+@media (min-width: 1000px) {
+  .top { padding-top: 1rem; padding-bottom: 0.5rem; }
+  .hero { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); align-items: center; }
+  .intro { padding-top: 0.5rem; }
+  .lema { font-size: clamp(2.6rem, min(5.2vw, 8.6vh), 7rem); }
+  .bajada { margin-top: 0.75rem; }
+  .panel { margin-top: 1.25rem; }
+  .vitrina-wrap { justify-self: center; width: min(100%, calc((100svh - 22rem) * 1.36)); }
+  .gigante { font-size: min(17vw, 34vh) !important; top: -0.5rem; }
+  .leyenda { margin-top: 0.25rem; font-size: 0.875rem; }
+  .resultados { margin-top: 1.25rem; }
+  .destacado .p { width: 7.5rem; height: 7.5rem; font-size: 2.7rem; }
+  .destacado .n { font-size: 1.8rem; }
+}
