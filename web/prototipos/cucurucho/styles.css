@@ -1,0 +1,110 @@
+/* CUCURUCHO — los descuentos apilados como bochas sobre un cono de barquillo.
+   Arriba, la bocha del descuento más grande (y por eso la más grande). Sin cajas: la torre es el dibujo
+   y el texto anda suelto al lado. Instrument Serif para nombres y porcentajes; Hanken Grotesk para el resto. */
+@font-face { font-family: "Instrument Serif"; font-display: swap; src: url("../fonts/instrument-serif-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Instrument Serif"; font-style: italic; font-display: swap; src: url("../fonts/instrument-serif-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Hanken Grotesk"; font-weight: 400; font-display: swap; src: url("../fonts/hanken-grotesk-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Hanken Grotesk"; font-weight: 600; font-display: swap; src: url("../fonts/hanken-grotesk-latin-600-normal.woff2") format("woff2"); }
+
+body { --display: "Instrument Serif", Georgia, serif; --body: "Hanken Grotesk", system-ui, sans-serif; }
+/* paletas: fondo, tinta, cono y 8 gustos (--t = color del % sobre la bocha) */
+html[data-paleta="cacao"] body {
+  --bg: #2B1B15; --ink: #F6E9DC; --muted: #C2AC9B; --accent: #FF9DB5; --cono: #D9A15B; --cono-linea: #A8732F; --t: #3A2219;
+  --f0: #F7A8BC; --f1: #BDE3A1; --f2: #FBE29A; --f3: #F6F0E2; --f4: #A6D8E8; --f5: #E0B184; --f6: #F5B98A; --f7: #E77A97;
+}
+html[data-paleta="frutilla"] body {
+  --bg: #F9D9DF; --ink: #4A0F22; --muted: #8B4A5C; --accent: #B8102C; --cono: #E8B46A; --cono-linea: #B98236; --t: #3B0D1B;
+  --f0: #E5426B; --f1: #5B3022; --f2: #7CCFB2; --f3: #F3DF5A; --f4: #FFF6E4; --f5: #C88A4B; --f6: #A9C77A; --f7: #B5174C;
+}
+html[data-paleta="limon"] body {
+  --bg: #F3F0C4; --ink: #1F2A14; --muted: #5A6440; --accent: #D23A27; --cono: #D49A50; --cono-linea: #9C6726; --t: #1F2A14;
+  --f0: #F28BA8; --f1: #6FC3A0; --f2: #8B5A3C; --f3: #FFF8EA; --f4: #F5A25B; --f5: #9ED36A; --f6: #E85A7A; --f7: #B9DCEB;
+}
+/* gustos oscuros: el porcentaje va claro */
+html[data-paleta="frutilla"] .bocha:nth-child(1), html[data-paleta="frutilla"] .bocha:nth-child(2),
+html[data-paleta="frutilla"] .bocha:nth-child(8), html[data-paleta="limon"] .bocha:nth-child(3) { --t: #FFF6EC; }
+[data-set-paleta="cacao"] .sw { background: conic-gradient(#F7A8BC 0 33%, #BDE3A1 0 66%, #2B1B15 0); }
+[data-set-paleta="frutilla"] .sw { background: conic-gradient(#E5426B 0 33%, #5B3022 0 66%, #F9D9DF 0); }
+[data-set-paleta="limon"] .sw { background: conic-gradient(#6FC3A0 0 33%, #F28BA8 0 66%, #F3F0C4 0); }
+
+.headline { font-style: italic; }
+.btn { font-style: italic; }
+
+/* la torre */
+.torre { margin-top: 2.5rem; }
+.pila { --col: min(66vw, 300px); width: var(--col); margin: 0 auto; position: relative; }
+.bochas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
+.bocha { position: relative; width: calc(var(--col) * var(--s)); z-index: calc(var(--n) - var(--i) + 1); }
+.bocha + .bocha { margin-top: calc(var(--col) * var(--s) * -0.45); }
+.bocha:nth-child(odd) button { rotate: -2.5deg; }
+.bocha:nth-child(even) button { rotate: 2deg; }
+.bocha button {
+  display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .18)); transition: translate .25s ease, filter .25s ease;
+}
+.bocha button:hover { translate: 0 -3px; }
+.bocha button[aria-pressed="true"] { translate: 0 -6px; filter: drop-shadow(5px 6px 0 var(--ink)); }
+.bocha button:focus-visible { outline: none; filter: drop-shadow(0 0 0 var(--accent)) drop-shadow(4px 5px 0 var(--accent)); }
+.bocha svg { width: 100%; height: auto; overflow: visible; }
+.masa, .chorro { fill: var(--c); }
+.sombra { fill: color-mix(in oklab, var(--c) 82%, black); }
+.chispas { fill: color-mix(in oklab, #3B2116 85%, var(--c)); }
+.brillo { fill: none; stroke: #fff; stroke-width: 6; stroke-linecap: round; opacity: .45; }
+.nombre { font: 600 12px/1 "Hanken Grotesk", sans-serif; fill: var(--t); opacity: .8; }
+@media (min-width: 700px) { .nombre { display: none; } }
+.pct { font: italic 400 46px/1 "Instrument Serif", Georgia, serif; fill: var(--t); letter-spacing: -1px; }
+.bocha[style*="--cerrada"] { opacity: .55; }
+
+/* rótulos colgando al costado, sólo en pantallas anchas */
+.rotulo { display: none; }
+@media (min-width: 700px) {
+  .rotulo {
+    display: block; position: absolute; top: 34%; font: italic 400 1.15rem/1.05 var(--display); color: var(--muted); width: 8.5rem;
+    pointer-events: none;
+  }
+  .bocha:nth-child(odd) .rotulo { left: calc(100% + 1rem); }
+  .bocha:nth-child(even) .rotulo { right: calc(100% + 1rem); text-align: right; }
+  .bocha:has(button[aria-pressed="true"]) .rotulo { color: var(--ink); }
+}
+
+.cono { width: calc(var(--col) * 0.6); margin: calc(var(--col) * -0.16) auto 0; position: relative; z-index: 0; }
+.cono svg { width: 100%; height: calc(var(--col) * 0.8); }
+.torre.vacia .cono { margin-top: 0; }
+
+/* caída suave al cargar: primero la de abajo */
+@media (prefers-reduced-motion: no-preference) {
+  .bocha { animation: caer .7s cubic-bezier(.3, 1.35, .5, 1) both; animation-delay: calc((var(--n) - var(--i)) * 80ms); }
+  @keyframes caer { from { opacity: 0; transform: translateY(-40px) scale(.96); } }
+}
+
+/* lo que elegiste */
+.detalle { margin-top: 2.5rem; max-width: 40rem; }
+.detalle .cual { margin: 0 0 0.25rem; font-size: 0.8125rem; color: var(--muted); }
+.detalle h3 { margin: 0; font: italic 400 clamp(2.4rem, 5vw, 3.6rem)/1 var(--display); }
+.detalle h3 a { text-decoration: none; }
+.detalle h3 a:hover { text-decoration: underline; text-decoration-thickness: 1px; }
+.detalle .meta { margin: 0.5rem 0 1.25rem; font-size: 0.875rem; color: var(--muted); }
+.detalle ul { list-style: none; margin: 0; padding: 0; }
+.detalle li { display: grid; grid-template-columns: 4.2rem 1fr auto; gap: 0.25rem 1rem; align-items: baseline; padding: 0.4rem 0; }
+.detalle .off { font: italic 400 1.9rem/1 var(--display); color: var(--accent); }
+.detalle .pr { font-weight: 600; white-space: nowrap; }
+.detalle .pr s { font-weight: 400; color: var(--muted); font-size: 0.8125rem; margin-left: 0.35rem; }
+.detalle .plus { font-style: normal; font-size: 0.75rem; color: var(--muted); }
+.detalle .mas { color: var(--muted); font-size: 0.875rem; }
+@media (max-width: 520px) {
+  .detalle li { grid-template-columns: 3.6rem 1fr; }
+  .detalle .pr { grid-column: 2; }
+}
+
+/* en pantallas anchas: el texto a la izquierda y la torre a la derecha, quieta mientras bajás */
+@media (min-width: 1000px) {
+  .sala { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); column-gap: 3rem; align-items: start; }
+  .torre { display: contents; }
+  .intro { grid-column: 1; grid-row: 1; }
+  .pila { grid-column: 2; grid-row: 1 / span 3; position: sticky; top: 1.5rem; margin-top: 2rem; --col: min(19vw, 280px); }
+  .detalle { grid-column: 1; grid-row: 2; }
+  .sueltos, .filters { grid-column: 1; }
+  .torre > .sueltos { grid-row: 3; }
+  .torre > .filters { grid-row: 4; }
+  .estado, .app-oculta { grid-column: 1 / -1; }
+}
