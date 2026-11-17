@@ -1,6 +1,7 @@
 Copyright 2022 The Bricolage Grotesque Project Authors (https://github.com/ateliertriay/bricolage)
 Copyright 2020 The Plus Jakarta Sans Project Authors (https://github.com/tokotype/PlusJakartaSans)
 Copyright 2017 IBM Corp. (IBM Plex Mono, https://github.com/IBM/plex)
+Copyright 2020 The Anton Project Authors (https://github.com/googlefonts/AntonFont.git)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:
