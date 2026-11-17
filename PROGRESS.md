@@ -177,7 +177,7 @@
   Botones de cada app con su color. Publicada como artifact con datos de ejemplo.
   Segunda vuelta: paleta nueva del usuario (#365367 #FFBAA2 #F9F4E6 #F494AB), lema "Que para encontrar la promo
   no tardes 2 horas" (el anterior hablaba de delivery y la app no es de envío gratis) y menos cajas: la heladera
-  sobre una mancha azul orgánica, el destacado con una bocha rosa y la lista como bochas redondas con el %.
+  con el % gigante en rosa directo sobre el crema (sin la mancha azul, que no le gustó), el destacado con una bocha rosa y la lista como bochas redondas con el %.
 - E2E: abre los 9 prototipos; en los nuevos también chequea que el dibujo propio muestre los datos.
 
 ## Falta / próximos pasos

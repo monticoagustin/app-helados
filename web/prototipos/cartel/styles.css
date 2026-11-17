@@ -1,5 +1,5 @@
-/* CARTEL — Monumento + Vidriera. Lema en Anton (pesada y angosta), la heladera sobre una mancha azul con el %
-   del elegido gigante detrás; abajo, el destacado y todas las heladerías como bochas redondas, sin cajas.
+/* CARTEL — Monumento + Vidriera. Lema en Anton (pesada y angosta), la heladera con el % del elegido
+   gigante en rosa detrás, sin formas; abajo, el destacado y todas las heladerías como bochas redondas, sin cajas.
    Paleta: azul #365367, durazno #FFBAA2, crema #F9F4E6, rosa #F494AB. */
 @font-face { font-family: "Anton"; font-display: swap; src: url("../fonts/anton-latin-400-normal.woff2") format("woff2"); }
 @font-face { font-family: "Bricolage"; font-weight: 500; font-display: swap; src: url("../fonts/bricolage-grotesque-latin-500-normal.woff2") format("woff2"); }
@@ -42,8 +42,8 @@ body {
 .note .btn { font: 400 1.4rem var(--display); text-transform: uppercase; color: var(--azul); }
 .note h2 { font: 400 2rem/1 var(--display); text-transform: uppercase; }
 
-/* la heladera sobre una mancha azul orgánica, con el % gigante detrás */
-body.iso { --anatomy-page: var(--azul); --anatomy-paper: var(--papel); --anatomy-card: var(--azul); --anatomy-text: #C9D6E1; --anatomy-strong: var(--ink); }
+/* la heladera sobre el fondo crema, con el % gigante en rosa detrás (sin formas ni cajas) */
+body.iso { --anatomy-page: var(--bg); --anatomy-paper: var(--papel); --anatomy-card: var(--bg); --anatomy-text: var(--muted); --anatomy-strong: var(--ink); }
 .flav { --anatomy-paper: var(--c); --anatomy-face: var(--c); --anatomy-top: color-mix(in oklab, var(--c) 80%, white);
   --anatomy-shade-0: color-mix(in oklab, var(--c) 70%, black); --anatomy-shade-1: color-mix(in oklab, var(--c) 78%, black);
   --anatomy-shade-2: color-mix(in oklab, var(--c) 86%, black); --anatomy-shade-3: color-mix(in oklab, var(--c) 93%, black);
@@ -55,24 +55,22 @@ body.iso { --anatomy-page: var(--azul); --anatomy-paper: var(--papel); --anatomy
 .rot text { font: 400 27px/1 var(--display); fill: var(--ink); stroke: var(--papel); stroke-width: 6px; stroke-linejoin: round; paint-order: stroke fill; pointer-events: none; }
 .rot.sel text { font-size: 36px; fill: var(--rosa-hondo); }
 .vitrina-wrap { position: relative; min-width: 0; }
-.forma { position: absolute; z-index: 0; background: var(--azul); overflow: hidden; border-radius: 58% 42% 47% 53% / 46% 52% 48% 54%; }
+.forma { position: absolute; z-index: 0; inset: 0; pointer-events: none; }
 .gigante { position: absolute; margin: 0; font: 400 1px/0.8 var(--display); color: var(--rosa); white-space: nowrap; letter-spacing: -0.01em; }
 .iso-stage { position: relative; z-index: 1; outline-offset: 6px; }
-.iso-stage svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 24px 24px rgba(20, 35, 48, .35)); }
+.iso-stage svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 22px 22px rgba(54, 83, 103, .22)); }
 .leyenda { position: relative; z-index: 1; margin: 1.25rem 0 0; text-align: center; font-size: 0.9375rem; color: var(--muted); }
 
 .hero { display: grid; gap: 1rem 3rem; align-items: center; }
 @media (min-width: 1000px) {
   .hero { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
-  .forma { top: -3rem; right: -3rem; bottom: 2.2rem; left: -1rem; }
-  .gigante { top: 3.5rem; left: 1.5rem; font-size: min(19vw, 17rem); }
+  .gigante { top: -1rem; left: -1rem; font-size: min(21vw, 19rem); }
   .top .ext-badge { position: relative; z-index: 3; }
 }
 @media (max-width: 999px) {
   .vitrina-wrap { margin: 1.5rem -0.5rem 0; padding: 0; }
   .iso-stage { padding-bottom: 1rem; }
-  .forma { inset: 0 0 3rem 0; border-radius: 52% 48% 44% 56% / 38% 40% 60% 62%; }
-  .gigante { top: 2rem; left: 1.5rem; font-size: 34vw; }
+  .gigante { top: 0.5rem; left: 0.5rem; font-size: 40vw; }
   .iso-stage { padding-top: 24vw; }
   .rot text { font-size: 29px; }
   .rot.sel text { font-size: 36px; }
