@@ -1,6 +1,6 @@
 // MOSTRADOR — la heladera de Vitrina (kit Anatomy), quieta y rotulada: cada pote es una heladería,
-// lleno según su descuento y con el % escrito arriba. Al lado, el elegido en grande y cuánto te ahorrás.
-// Paleta Frutilla; la letra se elige arriba para comparar. Lee #list con lib/datos.js.
+// lleno según su descuento y con el % escrito arriba. Debajo, los descuentos a todo el ancho en uno de
+// tres diseños para comparar (Podio, Grilla, Foco). Paleta Frutilla, letra Bricolage. Lee #list con lib/datos.js.
 import * as k from "../lib/iso-kit.mjs";
 import { alCambiar } from "../lib/datos.js";
 
@@ -120,31 +120,28 @@ function tag(i, x, y) {
 
 // ------------------------------------------------------------- página
 const stage = document.getElementById("vitrina");
-const detail = document.getElementById("detalle");
-const indice = document.getElementById("indice");
-let shops = [], selected = 0;
+const res = document.getElementById("ticket");
+const root = document.documentElement;
+let shops = [], selected = 0, empty = "";
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const pesos = (t) => Number(String(t || "").replace(/[^\d]/g, "")) || 0;
 const ars = (n) => "$" + n.toLocaleString("es-AR");
 const ahorro = (d) => { const a = pesos(d.before) - pesos(d.now); return a > 0 ? a : 0; };
 const mejorDe = (s) => s.deals.slice().sort((a, b) => b.off - a.off)[0];
+const corto = (n) => n.split(" - ")[0];
+const movil = () => matchMedia("(max-width: 999px)").matches;
 
-// el % arriba de cada pote, con el número de puesto
 function rotulos() {
   const order = shops.map((_, i) => i).sort((a, b) => k.depthOf([...tubAt(a), 0], P) - k.depthOf([...tubAt(b), 0], P));
   return order.map((i) => {
     const [x, y] = tubAt(i);
     const [sx, sy] = at([x, y, CASE_TOP + RIM + moundH(shops[i].best) + 4]);
-    return `<g class="rot${i === selected ? " sel" : ""}" data-i="${i}" style="--c:var(--f${i % FLAVORS})">
-      <text x="${sx.toFixed(1)}" y="${(sy - 6).toFixed(1)}" text-anchor="middle"><tspan class="pct">−${Math.round(shops[i].best)}%</tspan></text>
-    </g>`;
+    return `<g class="rot${i === selected ? " sel" : ""}" data-i="${i}"><text x="${sx.toFixed(1)}" y="${(sy - 6).toFixed(1)}" text-anchor="middle">−${Math.round(shops[i].best)}%</text></g>`;
   }).join("");
 }
 
-function render(data) {
-  shops = data.shops.slice().sort((a, b) => b.best - a.best).slice(0, COLS * 2);
-  selected = Math.min(selected, Math.max(0, shops.length - 1));
+function dibujar() {
   const order = [...Array(COLS * 2).keys()].sort((a, b) => k.depthOf([...tubAt(a), 0], P) - k.depthOf([...tubAt(b), 0], P));
   const hits = shops.map((s, i) => {
     const [x, y] = tubAt(i);
@@ -152,75 +149,100 @@ function render(data) {
   }).join("");
   stage.innerHTML = k.figureSvg({
     width: W, height: H,
-    label: `Heladera con ${shops.length} potes, uno por heladería, ordenados del descuento más grande al más chico. Cada pote está tan lleno como su descuento.`,
+    label: `Heladera con ${shops.length} potes, uno por heladería, del descuento más grande al más chico.`,
     body: [wall(), base(), order.map((i) => tub(i, shops[i], shops[i] ? shops[i].best : 0)).join(""), `<g class="rotulos">${rotulos()}</g>`, `<g class="hits">${hits}</g>`],
   });
-  for (const h of stage.querySelectorAll(".hit")) h.addEventListener("click", () => choose(Number(h.dataset.i)));
-  indice.innerHTML = shops.map((s, i) => {
-    const m = mejorDe(s), a = ahorro(m);
-    return `<li style="--c:var(--f${i % FLAVORS})"><button type="button" data-i="${i}" aria-pressed="${i === selected}">
-      <span class="puesto">${i + 1}º</span><span class="p">−${Math.round(s.best)}%</span>
-      <span class="txt"><span class="nm">${esc(s.name)}</span><span class="pz">${esc(m.name)}: ${esc(m.now)}${a ? ` · ahorrás ${ars(a)}` : ""}</span></span>
-    </button></li>`;
+  for (const h of stage.querySelectorAll(".hit")) h.addEventListener("click", () => choose(Number(h.dataset.i), true));
+}
+
+// piezas de texto
+const pedir = (s, cls = "pedir") => s.url ? `<a class="${cls}" href="${esc(s.url)}" target="_blank" rel="noopener">Pedir en ${esc(s.platform || "la app")}</a>` : "";
+const precio = (m) => `<p class="precio"><b>${esc(m.now)}</b>${m.before ? ` <s>${esc(m.before)}</s>` : ""}</p>`;
+const ahorra = (m) => ahorro(m) ? `<p class="ahorro">Ahorrás ${ars(ahorro(m))}</p>` : "";
+const sel = (i) => `<button type="button" class="elegir" data-i="${i}" aria-pressed="${i === selected}" aria-label="Ver ${esc(shops[i].name)} en la heladera">`;
+
+function podio() {
+  const top = shops.slice(0, 3).map((s, i) => {
+    const m = mejorDe(s);
+    return `<article class="pod${i === selected ? " on" : ""}" style="--c:var(--f${i})">
+      ${sel(i)}<span class="puesto">${i + 1}º</span><span class="pct">−${Math.round(s.best)}%</span><span class="nm">${esc(corto(s.name))}</span></button>
+      <p class="prod">${esc(m.name)}</p>${precio(m)}${ahorra(m)}${pedir(s)}
+    </article>`;
   }).join("");
-  for (const b of indice.querySelectorAll("button")) b.addEventListener("click", () => {
-    choose(Number(b.dataset.i));
-    if (matchMedia("(max-width: 999px)").matches) detail.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-  describe();
+  const resto = shops.slice(3).map((s, j) => {
+    const i = j + 3;
+    return `<li style="--c:var(--f${i % FLAVORS})">${sel(i)}<span class="puesto">${i + 1}º</span><span class="pct-s">−${Math.round(s.best)}%</span><span class="nm">${esc(corto(s.name))}</span></button></li>`;
+  }).join("");
+  return `<h2 class="res-t">Los mejores descuentos de hoy</h2><div class="podio">${top}</div>${resto ? `<ol class="resto">${resto}</ol>` : ""}`;
 }
 
-function describe() {
-  const s = shops[selected];
-  if (!s) {
-    detail.innerHTML = `<p class="vacio">${esc(document.querySelector("#list .empty")?.textContent || "Tocá “Traer descuentos” y se llena la heladera.")}</p>`;
-    return;
-  }
-  const m = mejorDe(s), a = ahorro(m);
-  const resto = s.deals.slice().sort((x, y) => y.off - x.off).slice(1);
-  const pedir = s.url ? `<a class="pedir" href="${esc(s.url)}" target="_blank" rel="noopener">Pedir en ${esc(s.platform || "la app")}</a>` : "";
-  const otros = resto.slice(0, 4).map((d) => `<li><span class="off">−${Math.round(d.off)}%</span><span class="nm">${esc(d.name)}${d.plus ? " <em>con Plus</em>" : ""}</span><span class="pr">${esc(d.now)}${d.before ? ` <s>${esc(d.before)}</s>` : ""}</span></li>`).join("");
-  detail.style.setProperty("--c", `var(--f${selected % FLAVORS})`);
-  detail.innerHTML = `<p class="puesto-g">${selected === 0 ? "El mejor descuento de hoy" : `${selected + 1}º descuento más grande`}</p>
-    <h3 class="quien">${esc(s.name)}</h3>
-    <p class="numero"><span class="menos" aria-hidden="true">−</span>${Math.round(s.best)}<span class="pc">%</span></p>
-    <div class="dato">
-      <p class="producto">${esc(m.name)}${m.plus ? ' <em class="plus">con Plus</em>' : ""}</p>
-      <p class="precio">Pagás <b>${esc(m.now)}</b>${m.before ? ` en vez de <s>${esc(m.before)}</s>` : ""}</p>
-      ${a ? `<p class="ahorro">Te ahorrás ${ars(a)}</p>` : ""}
-      <p class="meta">${esc(s.meta)}${s.closed ? " · cerrada ahora" : ""}</p>
-      ${pedir}
+function grilla() {
+  return `<h2 class="res-t">Todos los descuentos, de mayor a menor</h2><ol class="grilla">${shops.map((s, i) => {
+    const m = mejorDe(s);
+    return `<li class="${i === selected ? "on" : ""}" style="--c:var(--f${i % FLAVORS})">
+      ${sel(i)}<span class="puesto">${i + 1}º</span><span class="pct">−${Math.round(s.best)}%</span><span class="nm">${esc(corto(s.name))}</span></button>
+      <p class="prod">${esc(m.name)}</p>${precio(m)}${ahorra(m)}${pedir(s)}
+    </li>`;
+  }).join("")}</ol>`;
+}
+
+function foco() {
+  const s = shops[selected], m = mejorDe(s);
+  const chips = shops.map((x, i) => `<li style="--c:var(--f${i % FLAVORS})">${sel(i)}<span class="pct-s">−${Math.round(x.best)}%</span><span class="nm">${esc(corto(x.name))}</span></button></li>`).join("");
+  return `<div class="foco" style="--c:var(--f${selected % FLAVORS})">
+      <div class="foco-num"><p class="puesto-g">${selected === 0 ? "El mejor de hoy" : `${selected + 1}º mejor`}</p><h2 class="quien">${esc(corto(s.name))}</h2><p class="numero"><span class="menos">−</span>${Math.round(s.best)}<span class="pc">%</span></p></div>
+      <div class="foco-dato"><p class="prod">${esc(m.name)}</p>${precio(m)}${ahorra(m)}${pedir(s, "pedir pedir-solido")}<p class="meta">${esc(s.meta)}</p></div>
     </div>
-    ${otros ? `<h4 class="otros-t">Otros descuentos en ${esc(s.name)}</h4><ul class="otros">${otros}</ul>` : ""}${resto.length > 4 ? `<p class="mas">y ${resto.length - 4} más</p>` : ""}`;
-  for (const b of indice.querySelectorAll("button")) b.setAttribute("aria-pressed", String(Number(b.dataset.i) === selected));
-  for (const g of stage.querySelectorAll(".rot")) g.classList.toggle("sel", Number(g.dataset.i) === selected);
+    <ol class="chips-d" aria-label="Todas las heladerías">${chips}</ol>`;
 }
 
-function choose(i) {
-  if (!shops[i] || i === selected) return;
+function pintar() {
+  if (!shops.length) { res.innerHTML = `<p class="vacio">${esc(empty || "Tocá “Traer descuentos” y se llena la heladera.")}</p>`; return; }
+  const layout = root.dataset.layout;
+  res.innerHTML = layout === "grilla" ? grilla() : layout === "foco" ? foco() : podio();
+  for (const b of res.querySelectorAll(".elegir")) b.addEventListener("click", () => choose(Number(b.dataset.i), false));
+}
+
+function render(data) {
+  shops = data.shops.slice().sort((a, b) => b.best - a.best).slice(0, COLS * 2);
+  empty = data.empty;
+  selected = Math.min(selected, Math.max(0, shops.length - 1));
+  dibujar();
+  pintar();
+}
+
+// elegir desde la heladera o desde la lista: se marcan los dos lados
+function choose(i, desdeDibujo) {
+  if (!shops[i]) return;
   selected = i;
-  describe();
+  for (const g of stage.querySelectorAll(".rot")) g.classList.toggle("sel", Number(g.dataset.i) === i);
+  if (root.dataset.layout === "foco") { pintar(); if (desdeDibujo && movil()) res.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+  for (const b of res.querySelectorAll(".elegir")) {
+    const on = Number(b.dataset.i) === i;
+    b.setAttribute("aria-pressed", String(on));
+    b.parentElement.classList.toggle("on", on);
+  }
+  if (desdeDibujo) res.querySelector(`.elegir[data-i="${i}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 stage.addEventListener("keydown", (e) => {
   const map = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
   if (!(e.key in map) || !shops.length) return;
   e.preventDefault();
-  choose((selected + map[e.key] + shops.length) % shops.length);
+  choose((selected + map[e.key] + shops.length) % shops.length, false);
 });
 
-// letra: para comparar tipografías; se guarda en el navegador
-const root = document.documentElement;
-let letra = "redonda";
-try { letra = localStorage.getItem("cuartito:letra:mostrador") || letra; } catch { /* nada */ }
-const ponerLetra = (v) => {
-  root.dataset.letra = v;
-  for (const b of document.querySelectorAll("[data-set-letra]")) b.setAttribute("aria-pressed", String(b.dataset.setLetra === v));
+// diseño: para comparar las tres opciones; se guarda en el navegador
+let layout = "podio";
+try { layout = localStorage.getItem("cuartito:layout:mostrador") || layout; } catch { /* nada */ }
+const ponerLayout = (v) => {
+  root.dataset.layout = ["podio", "grilla", "foco"].includes(v) ? v : "podio";
+  for (const b of document.querySelectorAll("[data-set-layout]")) b.setAttribute("aria-pressed", String(b.dataset.setLayout === root.dataset.layout));
+  pintar();
 };
-for (const b of document.querySelectorAll("[data-set-letra]")) b.addEventListener("click", () => {
-  ponerLetra(b.dataset.setLetra);
-  try { localStorage.setItem("cuartito:letra:mostrador", b.dataset.setLetra); } catch { /* nada */ }
+for (const b of document.querySelectorAll("[data-set-layout]")) b.addEventListener("click", () => {
+  ponerLayout(b.dataset.setLayout);
+  try { localStorage.setItem("cuartito:layout:mostrador", b.dataset.setLayout); } catch { /* nada */ }
 });
-ponerLetra(letra);
-document.body.dataset.theme = "light";
+ponerLayout(layout);
 alCambiar(render);

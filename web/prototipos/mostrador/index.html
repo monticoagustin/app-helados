@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es" data-proto="mostrador" data-paleta="frutilla" data-letra="redonda">
+<html lang="es" data-proto="mostrador" data-paleta="frutilla" data-layout="podio">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#F9D9DF">
   <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
-  <link rel="preload" href="../fonts/fredoka-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="../fonts/hanken-grotesk-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/bricolage-grotesque-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="../switch.css">
   <link rel="stylesheet" href="../lib/comun.css">
   <link rel="stylesheet" href="styles.css">
@@ -25,21 +25,21 @@
         <path d="M33.5 33.5H54C54 44.8218 44.8218 54 33.5 54V33.5Z" fill="#633624"/>
         <path d="M34 30H53.5C53.2 19.3 44.7 10.8 34 10.5V30Z" fill="none" stroke="#1E120D" stroke-width="2.6" stroke-dasharray="4.2 3.2" stroke-linejoin="round"/>
       </svg><span>cuartito</span></a>
-  <div class="letras" role="group" aria-label="Probar letra">
-    <span class="letras-t">Letra:</span>
-    <button type="button" data-set-letra="redonda" aria-pressed="true">Redonda</button>
-    <button type="button" data-set-letra="clara" aria-pressed="false">Clara</button>
-    <button type="button" data-set-letra="gordita" aria-pressed="false">Gordita</button>
-    <button type="button" data-set-letra="moderna" aria-pressed="false">Moderna</button>
+  <div class="disenos" role="group" aria-label="Probar diseño">
+    <span class="disenos-t">Diseño:</span>
+    <button type="button" data-set-layout="podio" aria-pressed="true">Podio</button>
+    <button type="button" data-set-layout="grilla" aria-pressed="false">Grilla</button>
+    <button type="button" data-set-layout="foco" aria-pressed="false">Foco</button>
   </div>
   <p id="ext-badge" class="ext-badge"><span class="ext-dot" aria-hidden="true"></span><span id="ext-text">BUSCANDO<span class="ext-word"> LA EXTENSIÓN</span>…</span></p>
 </header>
 <main class="sala">
-  <section class="intro">
-    <p class="edition"><span id="city-name">Rosario</span> · <span id="last-sync">sin buscar todavía</span></p>
-    <h1 id="headline" class="headline">El helado más barato de hoy, a la vista.</h1>
-    <p class="lede" id="lede" aria-live="polite"></p>
-    <section id="install" class="note" hidden>
+  <section class="hero">
+    <div class="intro">
+      <p class="edition"><span id="city-name">Rosario</span> · <span id="last-sync">sin buscar todavía</span></p>
+      <h1 id="headline" class="headline">El helado más barato de hoy, a la vista.</h1>
+      <p class="lede" id="lede" aria-live="polite"></p>
+      <section id="install" class="note" hidden>
         <h2>Primero, instalá la extensión</h2>
         <p>La búsqueda corre en tu Chrome, con tu conexión: así Rappi, PedidosYa y Uber Eats te muestran lo de tu ciudad,
           y si piden una verificación la resolvés vos con un click.</p>
@@ -50,7 +50,7 @@
           <li>Volvé acá y recargá la página.</li>
         </ol>
       </section>
-    <section id="pya-setup" class="note" hidden>
+      <section id="pya-setup" class="note" hidden>
         <h2>Una sola vez: tu dirección en PedidosYa</h2>
         <p>PedidosYa necesita saber dónde estás. Se abre en una pestaña: cargá tu dirección hasta que veas la lista de locales y volvé.</p>
         <div class="note-actions">
@@ -58,9 +58,12 @@
           <button id="pya-done" class="link" type="button">Ya la cargué</button>
         </div>
       </section>
-    <section class="panel" aria-label="Buscar descuentos">
-        <p class="frase"><label for="city">Heladerías de</label> <select id="city"></select>
-          <button id="fetch" class="btn" type="button" disabled>Traer descuentos</button></p>
+      <section class="panel" aria-label="Buscar descuentos">
+        <label class="ciudad-l" for="city">Ciudad</label>
+        <div class="buscar">
+          <select id="city"></select>
+          <button id="fetch" class="btn-solido" type="button" disabled>Traer descuentos</button>
+        </div>
         <button id="cancel" class="link" type="button" hidden>Cancelar búsqueda</button>
         <section id="progress" class="progress" hidden aria-live="polite"></section>
         <p class="panel-links">
@@ -68,17 +71,14 @@
           <button id="show-pya-setup" class="link" type="button" hidden>Cambiar dirección de PedidosYa</button>
         </p>
       </section>
-  </section>
-  <section id="ticket" class="escena" aria-label="Heladera de descuentos">
-    <div class="vitrina-wrap">
-      <p class="leyenda">Cada pote es una heladería. Cuanto más lleno, más descuento. Tocá uno para ver qué conviene pedir.</p>
-      <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Heladera: con las flechas pasás de un pote a otro"></div>
     </div>
-    <div class="lado">
-      <article id="detalle" class="detalle" aria-live="polite"></article>
-      <h2 class="indice-t">Todas, de mayor a menor descuento</h2>
-      <ol id="indice" class="indice"></ol>
-      <div id="filters" class="filters" aria-label="Filtros">
+    <div class="vitrina-wrap">
+      <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Heladera: cada pote es una heladería; con las flechas pasás de uno a otro"></div>
+      <p class="leyenda">Cada pote es una heladería: más lleno, más descuento.</p>
+    </div>
+  </section>
+  <section id="ticket" class="resultados" aria-label="Descuentos de hoy" aria-live="polite"></section>
+  <div id="filters" class="filters" aria-label="Filtros">
           <fieldset class="seg">
             <legend class="sr">Plataforma</legend>
             <div class="seg-box">
@@ -93,8 +93,6 @@
             <label class="chip"><input type="checkbox" id="f-plus" checked><span class="box" aria-hidden="true"></span>Con Plus<span class="sr"> de PedidosYa</span></label>
           </div>
         </div>
-    </div>
-  </section>
   <footer class="estado">
       <div id="status" class="status"></div>
       <p class="total"><span id="total"></span></p>

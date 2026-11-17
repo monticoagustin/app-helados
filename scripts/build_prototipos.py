@@ -421,34 +421,48 @@ PAGES["numero"] = head2("numero", "Número", "#FF6F91", ["bagel-fat-one-latin-40
 """ + TAIL
 
 # ------------------------------------------------------------------ Mostrador (Vitrina + Número + paletas de Cucurucho)
-PAGES["mostrador"] = head2("mostrador", "Mostrador", "#F9D9DF", ["fredoka-latin-700-normal.woff2", "hanken-grotesk-latin-400-normal.woff2"]).replace(
+PAGES["mostrador"] = head2("mostrador", "Mostrador", "#F9D9DF", ["bricolage-grotesque-latin-800-normal.woff2", "bricolage-grotesque-latin-500-normal.woff2"]).replace(
     '<link rel="stylesheet" href="styles.css">', '<link rel="stylesheet" href="../lib/comun.css">\n  <link rel="stylesheet" href="styles.css">').replace(
-    '<html lang="es" data-proto="mostrador">', '<html lang="es" data-proto="mostrador" data-paleta="frutilla" data-letra="redonda">').replace(
+    '<html lang="es" data-proto="mostrador">', '<html lang="es" data-proto="mostrador" data-paleta="frutilla" data-layout="podio">').replace(
     "<body>", '<body class="iso" data-theme="light">') + f"""<header class="top">
   <a class="brand" href="../../" aria-label="cuartito, versión original">{MARK}<span>cuartito</span></a>
-  <div class="letras" role="group" aria-label="Probar letra">
-    <span class="letras-t">Letra:</span>
-    <button type="button" data-set-letra="redonda" aria-pressed="true">Redonda</button>
-    <button type="button" data-set-letra="clara" aria-pressed="false">Clara</button>
-    <button type="button" data-set-letra="gordita" aria-pressed="false">Gordita</button>
-    <button type="button" data-set-letra="moderna" aria-pressed="false">Moderna</button>
+  <div class="disenos" role="group" aria-label="Probar diseño">
+    <span class="disenos-t">Diseño:</span>
+    <button type="button" data-set-layout="podio" aria-pressed="true">Podio</button>
+    <button type="button" data-set-layout="grilla" aria-pressed="false">Grilla</button>
+    <button type="button" data-set-layout="foco" aria-pressed="false">Foco</button>
   </div>
   {EXT}
 </header>
 <main class="sala">
-  {INTRO2("El helado más barato de hoy, a la vista.", "Heladerías de")}
-  <section id="ticket" class="escena" aria-label="Heladera de descuentos">
-    <div class="vitrina-wrap">
-      <p class="leyenda">Cada pote es una heladería. Cuanto más lleno, más descuento. Tocá uno para ver qué conviene pedir.</p>
-      <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Heladera: con las flechas pasás de un pote a otro"></div>
+  <section class="hero">
+    <div class="intro">
+      <p class="edition"><span id="city-name">Rosario</span> · <span id="last-sync">sin buscar todavía</span></p>
+      <h1 id="headline" class="headline">El helado más barato de hoy, a la vista.</h1>
+      <p class="lede" id="lede" aria-live="polite"></p>
+      {INSTALL}
+      {PYA}
+      <section class="panel" aria-label="Buscar descuentos">
+        <label class="ciudad-l" for="city">Ciudad</label>
+        <div class="buscar">
+          <select id="city"></select>
+          <button id="fetch" class="btn-solido" type="button" disabled>Traer descuentos</button>
+        </div>
+        <button id="cancel" class="link" type="button" hidden>Cancelar búsqueda</button>
+        <section id="progress" class="progress" hidden aria-live="polite"></section>
+        <p class="panel-links">
+          <button id="force" class="link" type="button" disabled>Buscar de nuevo, sin lo guardado</button>
+          <button id="show-pya-setup" class="link" type="button" hidden>Cambiar dirección de PedidosYa</button>
+        </p>
+      </section>
     </div>
-    <div class="lado">
-      <article id="detalle" class="detalle" aria-live="polite"></article>
-      <h2 class="indice-t">Todas, de mayor a menor descuento</h2>
-      <ol id="indice" class="indice"></ol>
-      {FILTERS}
+    <div class="vitrina-wrap">
+      <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Heladera: cada pote es una heladería; con las flechas pasás de uno a otro"></div>
+      <p class="leyenda">Cada pote es una heladería: más lleno, más descuento.</p>
     </div>
   </section>
+  <section id="ticket" class="resultados" aria-label="Descuentos de hoy" aria-live="polite"></section>
+  {FILTERS}
   {STATUS2}
   {OCULTO}
 </main>
