@@ -175,6 +175,9 @@
   Vitrina sobre una forma azul con el % del elegido gigante detrás; abajo el destacado (coral) y todas las
   heladerías en una franja de colores. Paleta atardecer del usuario: #F8B195 #F67280 #C06C84 #6C5B7B #355C7D.
   Botones de cada app con su color. Publicada como artifact con datos de ejemplo.
+  Segunda vuelta: paleta nueva del usuario (#365367 #FFBAA2 #F9F4E6 #F494AB), lema "Que para encontrar la promo
+  no tardes 2 horas" (el anterior hablaba de delivery y la app no es de envío gratis) y menos cajas: la heladera
+  sobre una mancha azul orgánica, el destacado con una bocha rosa y la lista como bochas redondas con el %.
 - E2E: abre los 9 prototipos; en los nuevos también chequea que el dibujo propio muestre los datos.
 
 ## Falta / próximos pasos
