@@ -1,0 +1,175 @@
+{
+ "_nota": "Respuesta real de POST /_p/api/getSearchFeedV1 (categoría Helado, Rosario, 2026-11-17), recortada a 6 locales. El primero va en el formato REGULAR_STORE que devolvió la web al tocar la categoría.",
+ "status": "success",
+ "data": {
+  "meta": {
+   "offset": 46,
+   "hasMore": false
+  },
+  "feedItems": [
+   {
+    "uuid": "f774b8aa-1186-549c-993d-176927ee66c7",
+    "type": "REGULAR_STORE",
+    "store": {
+     "storeUuid": "f774b8aa-1186-549c-993d-176927ee66c7",
+     "title": {
+      "text": "Grido Helados - 3912"
+     },
+     "meta": [
+      {
+       "text": "Costo de envío: $1149",
+       "accessibilityText": "El costo de envío es de $1149.",
+       "badgeType": "FARE"
+      },
+      {
+       "text": "11 min",
+       "accessibilityText": "Entrega en 11-22 min",
+       "badgeType": "ETD"
+      }
+     ],
+     "actionUrl": "/store/grido-helados-3912/93S4qhGGVJyZPRdpJ-5mxw",
+     "signposts": [
+      {
+       "text": " 30% en artículos seleccionados"
+      }
+     ]
+    }
+   },
+   {
+    "uuid": "7feeecd3-6fd4-5e35-b4be-5db72e927bd6",
+    "type": "MINI_STORE_WITH_ITEMS",
+    "miniStoreWithItems": {
+     "store": {
+      "storeUuid": "7feeecd3-6fd4-5e35-b4be-5db72e927bd6",
+      "title": {
+       "text": "Supermercado Dar - 3 de Febrero"
+      },
+      "meta": [
+       {
+        "text": "Costo de envío: $2800",
+        "accessibilityText": "El costo de envío es de $2800.",
+        "badgeType": "FARE"
+       },
+       {
+        "text": "10 min",
+        "accessibilityText": "Entrega en 10-23 min",
+        "badgeType": "PRIORITY_DELIVERY"
+       },
+       {
+        "text": "1:50PM",
+        "accessibilityText": "1:50PM",
+        "badgeType": "ETD"
+       }
+      ],
+      "actionUrl": "/store/supermercado-dar-3-de-febrero/f-7s02_UXjW0vl23LpJ71g",
+      "signposts": []
+     }
+    }
+   },
+   {
+    "uuid": "eeb2ef6e-52c2-58e6-b608-2527101a6f53",
+    "type": "MINI_STORE_WITH_ITEMS",
+    "miniStoreWithItems": {
+     "store": {
+      "storeUuid": "eeb2ef6e-52c2-58e6-b608-2527101a6f53",
+      "title": {
+       "text": "FreeShop Helados [ Mendoza y J.M Rosas ]"
+      },
+      "meta": [
+       {
+        "text": "Costo de envío: $999",
+        "accessibilityText": "El costo de envío es de $999.",
+        "badgeType": "FARE"
+       },
+       {
+        "text": "10 min",
+        "accessibilityText": "Entrega en 10-20 min",
+        "badgeType": "ETD"
+       }
+      ],
+      "actionUrl": "/store/freeshop-helados-mendoza-y-jm-rosas/7rLvblLCWOa2CCUnEBpvUw",
+      "signposts": []
+     }
+    }
+   },
+   {
+    "uuid": "2342ca88-a49b-533b-b158-9c0f92b05791",
+    "type": "MINI_STORE_WITH_ITEMS",
+    "miniStoreWithItems": {
+     "store": {
+      "storeUuid": "2342ca88-a49b-533b-b158-9c0f92b05791",
+      "title": {
+       "text": "Tento Helados - San Luis 1038"
+      },
+      "meta": [
+       {
+        "text": "Costo de envío: $1149",
+        "accessibilityText": "El costo de envío es de $1149.",
+        "badgeType": "FARE"
+       },
+       {
+        "text": "10 min",
+        "accessibilityText": "Entrega en 10-20 min",
+        "badgeType": "ETD"
+       }
+      ],
+      "actionUrl": "/store/tento-helados-san-luis-1038/I0LKiKSbUzuxWJwPkrBXkQ",
+      "signposts": []
+     }
+    }
+   },
+   {
+    "uuid": "ee207fb1-8427-525b-951e-47b39d75e672",
+    "type": "MINI_STORE_WITH_ITEMS",
+    "miniStoreWithItems": {
+     "store": {
+      "storeUuid": "ee207fb1-8427-525b-951e-47b39d75e672",
+      "title": {
+       "text": "Nobis Minimarket - San Lorenzo"
+      },
+      "meta": [
+       {
+        "text": "Costo de envío: $700",
+        "accessibilityText": "El costo de envío es de $700.",
+        "badgeType": "FARE"
+       },
+       {
+        "text": "12 min",
+        "accessibilityText": "Entrega en 12-28 min",
+        "badgeType": "ETD"
+       }
+      ],
+      "actionUrl": "/store/nobis-minimarket-san-lorenzo/7iB_sYQnUluVHkeznXXmcg",
+      "signposts": []
+     }
+    }
+   },
+   {
+    "uuid": "b7444ae8-8b6a-5fab-b170-7934c84fa8ae",
+    "type": "MINI_STORE_WITH_ITEMS",
+    "miniStoreWithItems": {
+     "store": {
+      "storeUuid": "b7444ae8-8b6a-5fab-b170-7934c84fa8ae",
+      "title": {
+       "text": "Esther Helados - Roca"
+      },
+      "meta": [
+       {
+        "text": "Costo de envío: $1299",
+        "accessibilityText": "El costo de envío es de $1299.",
+        "badgeType": "FARE"
+       },
+       {
+        "text": "14 min",
+        "accessibilityText": "Entrega en 14-24 min",
+        "badgeType": "ETD"
+       }
+      ],
+      "actionUrl": "/store/esther-helados-roca/t0RK6ItqX6uxcHk0yE-org",
+      "signposts": []
+     }
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,535 @@
+{
+ "_nota": "Respuesta real de POST /_p/api/getStoreV1 (Grido Helados - 3912, Rosario, 2026-11-17), recortada: menos productos y sin imágenes.",
+ "status": "success",
+ "data": {
+  "title": "Grido Helados - 3912",
+  "uuid": "f774b8aa-1186-549c-993d-176927ee66c7",
+  "slug": "grido-helados-3912",
+  "citySlug": "rosario",
+  "location": {
+   "city": "Rosario",
+   "streetAddress": "Leandro N Alem 1886",
+   "latitude": -32.9612178,
+   "longitude": -60.6317427
+  },
+  "isOpen": true,
+  "isOrderable": true,
+  "closedMessage": "",
+  "etaRange": {
+   "text": "11-22 min"
+  },
+  "fareBadge": {
+   "text": "Costo de envío: $1149"
+  },
+  "rating": {
+   "ratingValue": 5,
+   "reviewCount": "44"
+  },
+  "categories": [
+   "Ice Cream & Frozen Yogurt",
+   "Postres",
+   "Helado y yogur helado",
+   "Ice Cream",
+   "Jugos y smoothies"
+  ],
+  "cuisineList": [
+   "Ice Cream & Frozen Yogurt",
+   "Postres",
+   "Helado y yogur helado",
+   "Ice Cream",
+   "Jugos y smoothies"
+  ],
+  "promotion": null,
+  "hasStorePromotion": true,
+  "catalogSectionsMap": {
+   "933a348c-4e10-4096-86fc-297ab5c8394c": [
+    {
+     "type": "HORIZONTAL_GRID",
+     "payload": {
+      "standardItemsPayload": {
+       "title": {
+        "text": "Artículos destacados"
+       },
+       "catalogItems": [
+        {
+         "uuid": "81337e92-65d6-4b5e-b8dc-f86525dff426",
+         "title": "1/2 kg de Helado",
+         "itemDescription": "Helado de 1/2 kg con 3 sabores a elección. Los sabores de helado se envían en ig",
+         "price": 840000,
+         "priceTagline": {
+          "text": "$ 8.400,00",
+          "accessibilityText": "$ 8.400,00, discounted from $ 12.000,00"
+         },
+         "isSoldOut": false,
+         "isAvailable": true,
+         "purchaseInfo": {
+          "purchaseOptions": [
+           {
+            "soldByUnit": {
+             "measurementType": "MEASUREMENT_TYPE_COUNT"
+            },
+            "itemQuantityAbbreviation": "",
+            "purchasePriceV2": {
+             "base": {
+              "high": 0,
+              "low": 1200000,
+              "unsigned": false
+             },
+             "exponent": -2
+            }
+           }
+          ],
+          "pricingInfo": {}
+         },
+         "catalogItemAnalyticsData": {
+          "promoType": "DISCOUNTED_ITEM"
+         },
+         "promoInfo": {
+          "promotionUUID": "67a571d5-fa80-4fda-8a00-c45777535428",
+          "promoBadge": {
+           "content": {
+            "richText": {
+             "richTextElements": [
+              {
+               "text": {
+                "text": {
+                 "text": "- 30%"
+                }
+               },
+               "type": "text"
+              }
+             ],
+             "accessibilityText": "- 30%"
+            },
+            "type": "richText"
+           },
+           "accessibilityText": "- 30%"
+          }
+         }
+        },
+        {
+         "uuid": "5c8999b5-8a76-4212-870b-bccb37c29abe",
+         "title": "1 Kg de helado",
+         "itemDescription": "1 kg de helado con 4 sabores a elección, distribuidos en partes iguales. No es p",
+         "price": 2120000,
+         "priceTagline": {
+          "text": "$ 21.200,00",
+          "accessibilityText": "$ 21.200,00"
+         },
+         "isSoldOut": false,
+         "isAvailable": true,
+         "purchaseInfo": {
+          "purchaseOptions": [
+           {
+            "soldByUnit": {
+             "measurementType": "MEASUREMENT_TYPE_COUNT"
+            },
+            "itemQuantityAbbreviation": "",
+            "purchasePriceV2": {
+             "base": {
+              "high": 0,
+              "low": 2120000,
+              "unsigned": false
+             },
+             "exponent": -2
+            }
+           }
+          ],
+          "pricingInfo": {}
+         },
+         "catalogItemAnalyticsData": {}
+        },
+        {
+         "uuid": "4dfb3c86-81aa-44f7-bae8-3c9df29a9274",
+         "title": "Promo 2kg",
+         "itemDescription": "",
+         "price": 4240000,
+         "priceTagline": {
+          "text": "$ 42.400,00",
+          "accessibilityText": "$ 42.400,00"
+         },
+         "isSoldOut": false,
+         "isAvailable": true,
+         "purchaseInfo": {
+          "purchaseOptions": [
+           {
+            "soldByUnit": {
+             "measurementType": "MEASUREMENT_TYPE_COUNT"
+            },
+            "itemQuantityAbbreviation": "",
+            "purchasePriceV2": {
+             "base": {
+              "high": 0,
+              "low": 4240000,
+              "unsigned": false
+             },
+             "exponent": -2
+            }
+           }
+          ],
+          "pricingInfo": {}
+         },
+         "catalogItemAnalyticsData": {}
+        }
+       ]
+      }
+     }
+    },
+    {
+     "type": "VERTICAL_GRID",
+     "payload": {
+      "standardItemsPayload": {
+       "title": {
+        "text": "Ahorros exclusivos"
+       },
+       "catalogItems": [
+        {
+         "uuid": "61cfcac8-4ba2-426b-9e99-9f97f5ea9537",
+         "title": "Cassata X 8",
+         "itemDescription": "Helado tricolor de frutilla, chocolate y crema americana, 8 unidades",
+         "price": 1016000,
+         "priceTagline": {
+          "text": "$ 10.160,00",
+          "accessibilityText": "$ 10.160,00, discounted from $ 12.700,00"
+         },
+         "isSoldOut": false,
+         "isAvailable": true,
+         "purchaseInfo": {
+          "purchaseOptions": [
+           {
+            "soldByUnit": {
+             "measurementType": "MEASUREMENT_TYPE_COUNT"
+            },
+            "itemQuantityAbbreviation": "",
+            "purchasePriceV2": {
+             "base": {
+              "high": 0,
+              "low": 1270000,
+              "unsigned": false
+             },
+             "exponent": -2
+            }
+           }
+          ],
+          "pricingInfo": {}
+         },
+         "catalogItemAnalyticsData": {
+          "promoType": "DISCOUNTED_ITEM"
+         },
+         "promoInfo": {
+          "promotionUUID": "f308926a-32cf-4db2-84f4-e6c97964081a",
+          "promoBadge": {
+           "content": {
+            "richText": {
+             "richTextElements": [
+              {
+               "text": {
+                "text": {
+                 "text": "- 20%"
+                }
+               },
+               "type": "text"
+              }
+             ],
+             "accessibilityText": "- 20%"
+            },
+            "type": "richText"
+           },
+           "accessibilityText": "- 20%"
+          }
+         }
+        },
+        {
+         "uuid": "c38e5f66-9b28-42c6-b9b2-444c99856b56",
+         "title": "Almendrado X 8",
+         "itemDescription": "Almendrado de crema americana cubierta con crocante de maní, 8 unidades",
+         "price": 1016000,
+         "priceTagline": {
+          "text": "$ 10.160,00",
+          "accessibilityText": "$ 10.160,00, discounted from $ 12.700,00"
+         },
+         "isSoldOut": false,
+         "isAvailable": true,
+         "purchaseInfo": {
+          "purchaseOptions": [
+           {
+            "soldByUnit": {
+             "measurementType": "MEASUREMENT_TYPE_COUNT"
+            },
+            "itemQuantityAbbreviation": "",
+            "purchasePriceV2": {
+             "base": {
+              "high": 0,
+              "low": 1270000,
+              "unsigned": false
+             },
+             "exponent": -2
+            }
+           }
+          ],
+          "pricingInfo": {}
+         },
+         "catalogItemAnalyticsData": {
+          "promoType": "DISCOUNTED_ITEM"
+         },
+         "promoInfo": {
+          "promotionUUID": "d2a9976c-4e1e-4bee-b871-b093a30f8294",
+          "promoBadge": {
+           "content": {
+            "richText": {
+             "richTextElements": [
+              {
+               "text": {
+                "text": {
+                 "text": "- 20%"
+                }
+               },
+               "type": "text"
+              }
+             ],
+             "accessibilityText": "- 20%"
+            },
+            "type": "richText"
+           },
+           "accessibilityText": "- 20%"
+          }
+         }
+        },
+        {
+         "uuid": "81337e92-65d6-4b5e-b8dc-f86525dff426",
+         "title": "1/2 kg de Helado",
+         "itemDescription": "Helado de 1/2 kg con 3 sabores a elección. Los sabores de helado se envían en ig",
+         "price": 840000,
+         "priceTagline": {
+          "text": "$ 8.400,00",
+          "accessibilityText": "$ 8.400,00, discounted from $ 12.000,00"
+         },
+         "isSoldOut": false,
+         "isAvailable": true,
+         "purchaseInfo": {
+          "purchaseOptions": [
+           {
+            "soldByUnit": {
+             "measurementType": "MEASUREMENT_TYPE_COUNT"
+            },
+            "itemQuantityAbbreviation": "",
+            "purchasePriceV2": {
+             "base": {
+              "high": 0,
+              "low": 1200000,
+              "unsigned": false
+             },
+             "exponent": -2
+            }
+           }
+          ],
+          "pricingInfo": {}
+         },
+         "catalogItemAnalyticsData": {
+          "promoType": "DISCOUNTED_ITEM"
+         },
+         "promoInfo": {
+          "promotionUUID": "67a571d5-fa80-4fda-8a00-c45777535428",
+          "promoBadge": {
+           "content": {
+            "richText": {
+             "richTextElements": [
+              {
+               "text": {
+                "text": {
+                 "text": "- 30%"
+                }
+               },
+               "type": "text"
+              }
+             ],
+             "accessibilityText": "- 30%"
+            },
+            "type": "richText"
+           },
+           "accessibilityText": "- 30%"
+          }
+         }
+        },
+        {
+         "uuid": "fc2bdcdd-2afc-40ac-8678-dc54a5dcdb23",
+         "title": "Promo 2 Cajas de Bombones",
+         "itemDescription": "2 cajas de bombones a eleccion",
+         "price": 2484000,
+         "priceTagline": {
+          "text": "$ 24.840,00",
+          "accessibilityText": "$ 24.840,00, discounted from $ 36.000,00"
+         },
+         "isSoldOut": false,
+         "isAvailable": true,
+         "purchaseInfo": {
+          "purchaseOptions": [],
+          "pricingInfo": {}
+         },
+         "catalogItemAnalyticsData": {
+          "promoType": "DISCOUNTED_ITEM"
+         },
+         "promoInfo": {
+          "promotionUUID": "0413b63b-5741-46f9-8fb9-53cb16b153f9",
+          "promoBadge": {
+           "content": {
+            "richText": {
+             "richTextElements": [
+              {
+               "text": {
+                "text": {
+                 "text": "- 31%"
+                }
+               },
+               "type": "text"
+              }
+             ],
+             "accessibilityText": "- 31%"
+            },
+            "type": "richText"
+           },
+           "accessibilityText": "- 31%"
+          }
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "type": "VERTICAL_GRID",
+     "payload": {
+      "standardItemsPayload": {
+       "title": {
+        "text": "Helados a Granel"
+       },
+       "catalogItems": [
+        {
+         "uuid": "5c8999b5-8a76-4212-870b-bccb37c29abe",
+         "title": "1 Kg de helado",
+         "itemDescription": "1 kg de helado con 4 sabores a elección, distribuidos en partes iguales. No es p",
+         "price": 2120000,
+         "priceTagline": {
+          "text": "$ 21.200,00",
+          "accessibilityText": "$ 21.200,00"
+         },
+         "isSoldOut": false,
+         "isAvailable": true,
+         "purchaseInfo": {
+          "purchaseOptions": [
+           {
+            "soldByUnit": {
+             "measurementType": "MEASUREMENT_TYPE_COUNT"
+            },
+            "itemQuantityAbbreviation": "",
+            "purchasePriceV2": {
+             "base": {
+              "high": 0,
+              "low": 2120000,
+              "unsigned": false
+             },
+             "exponent": -2
+            }
+           }
+          ],
+          "pricingInfo": {}
+         },
+         "catalogItemAnalyticsData": {}
+        },
+        {
+         "uuid": "81337e92-65d6-4b5e-b8dc-f86525dff426",
+         "title": "1/2 kg de Helado",
+         "itemDescription": "Helado de 1/2 kg con 3 sabores a elección. Los sabores de helado se envían en ig",
+         "price": 840000,
+         "priceTagline": {
+          "text": "$ 8.400,00",
+          "accessibilityText": "$ 8.400,00, discounted from $ 12.000,00"
+         },
+         "isSoldOut": false,
+         "isAvailable": true,
+         "purchaseInfo": {
+          "purchaseOptions": [
+           {
+            "soldByUnit": {
+             "measurementType": "MEASUREMENT_TYPE_COUNT"
+            },
+            "itemQuantityAbbreviation": "",
+            "purchasePriceV2": {
+             "base": {
+              "high": 0,
+              "low": 1200000,
+              "unsigned": false
+             },
+             "exponent": -2
+            }
+           }
+          ],
+          "pricingInfo": {}
+         },
+         "catalogItemAnalyticsData": {
+          "promoType": "DISCOUNTED_ITEM"
+         },
+         "promoInfo": {
+          "promotionUUID": "67a571d5-fa80-4fda-8a00-c45777535428",
+          "promoBadge": {
+           "content": {
+            "richText": {
+             "richTextElements": [
+              {
+               "text": {
+                "text": {
+                 "text": "- 30%"
+                }
+               },
+               "type": "text"
+              }
+             ],
+             "accessibilityText": "- 30%"
+            },
+            "type": "richText"
+           },
+           "accessibilityText": "- 30%"
+          }
+         }
+        },
+        {
+         "uuid": "d4816eb0-8aee-497b-9d01-38877e24c9d5",
+         "title": "1/4 kg de Helado",
+         "itemDescription": "Helado de 1/4 kg con 2 sabores a elección. Los sabores de helado se envían en ig",
+         "price": 780000,
+         "priceTagline": {
+          "text": "$ 7.800,00",
+          "accessibilityText": "$ 7.800,00"
+         },
+         "isSoldOut": false,
+         "isAvailable": true,
+         "purchaseInfo": {
+          "purchaseOptions": [
+           {
+            "soldByUnit": {
+             "measurementType": "MEASUREMENT_TYPE_COUNT"
+            },
+            "itemQuantityAbbreviation": "",
+            "purchasePriceV2": {
+             "base": {
+              "high": 0,
+              "low": 780000,
+              "unsigned": false
+             },
+             "exponent": -2
+            }
+           }
+          ],
+          "pricingInfo": {}
+         },
+         "catalogItemAnalyticsData": {}
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "b7cdda4e-2c08-5e73-b3c8-af285e4913a6": []
+  }
+ }
+}

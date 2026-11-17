@@ -1,0 +1,31 @@
+{
+ "_nota": "Datos reales de getStoreV1 (Supermercado Dar - 3 de Febrero, Rosario, 2026-11-17): solo cabecera y categorías; aparece en la búsqueda de Helado pero no es heladería.",
+ "status": "success",
+ "data": {
+  "title": "Supermercado Dar - 3 de Febrero",
+  "uuid": "7feeecd3-6fd4-5e35-b4be-5db72e927bd6",
+  "slug": "supermercado-dar-3-de-febrero",
+  "citySlug": "rosario",
+  "location": {
+   "city": "Rosario"
+  },
+  "isOpen": true,
+  "etaRange": {
+   "text": "13-33 min"
+  },
+  "fareBadge": {
+   "text": "Costo de envío: $2800"
+  },
+  "categories": [
+   "Argentina",
+   "Panadería",
+   "Café"
+  ],
+  "cuisineList": [
+   "Argentina",
+   "Panadería",
+   "Café"
+  ],
+  "catalogSectionsMap": {}
+ }
+}

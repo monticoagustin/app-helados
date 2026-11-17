@@ -131,14 +131,14 @@ export function isIceCreamStore(name, categories = [], extra = "") {
   return ICE_CREAM_KEYWORDS.some((k) => hay.includes(k));
 }
 
-const NOT_BULK = /\b(palito|palitos|bombon|bombones|paleta|paletas|alfajor|torta|postre|cucurucho|cono|almendrado|escoces|casata|tentacion|helado de agua|unidades|\d+\s*u)\b/;
+const NOT_BULK = /\b(palito|palitos|bombon|bombones|paleta|paletas|alfajor|torta|postre|cucurucho|cono|almendrado|escoces|cass?ata|tentacion|helado de agua|unidades|\d+\s*u)\b/;
 
 /** ¿Es helado por peso (cuarto, medio, kilo)? Los packs de palitos o bombones no cuentan para $/kg. */
 export function isBulkIceCream(name) {
   return !NOT_BULK.test(clean(name));
 }
 
-const ICE_CREAM_WORDS = /\b(helad\w*|gelat\w*|sorbet\w*|palitos?|bombon\w*|paletas?|sundae|frapp\w*|batidos?|milkshake|almendrado|escoces\w*|casata|tentacion|cucuruchos?|cuchuruchos?|conos?|kilos?|kg|cuartos?|medio|1\/4|1\/2|potes?|copas?|affogato|granizad\w*)\b/;
+const ICE_CREAM_WORDS = /\b(helad\w*|gelat\w*|sorbet\w*|palitos?|bombon\w*|paletas?|sundae|frapp\w*|batidos?|milkshake|almendrado|escoces\w*|cass?ata|tentacion|cucuruchos?|cuchuruchos?|conos?|kilos?|kg|cuartos?|medio|1\/4|1\/2|potes?|copas?|affogato|granizad\w*)\b/;
 const NOT_ICE_CREAM = /\b(agua|aguas|gaseosas?|coca|cola|sprite|fanta|pepsi|7up|cervezas?|vinos?|jugos?|soda|cafe|te|infusion\w*|alfajor\w*|galletit\w*|budin\w*|medialunas?|facturas?|sandwich\w*|tostados?|bolsas?|envases?|vasos?|cucharas?|cucharitas?|servilletas?|propina|chocolatada|yogur\w*)\b/;
 
 /** ¿Es un producto de helado? Excluye bebidas, alfajores, panificados y accesorios. */
