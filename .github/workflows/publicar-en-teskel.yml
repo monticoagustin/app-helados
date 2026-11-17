@@ -50,6 +50,9 @@ jobs:
           mkdir -p ../salida
           cp web/index.html web/app.js web/styles.css web/favicon.svg ../salida/
           mkdir -p ../salida/fonts && cp web/fonts/*.woff2 web/fonts/OFL.txt ../salida/fonts/
+          # prototipos de diseño (usan el mismo app.js): /cuartito/prototipos/
+          for f in web/prototipos/index.html web/prototipos/switch.css; do [ -f "$f" ] || { echo "::error::Falta $f"; exit 1; }; done
+          cp -r web/prototipos ../salida/prototipos
           (cd extension && zip -qr ../../salida/helados-extension.zip . -x '*.DS_Store')
           ls -la ../salida
           echo "OK: listo para publicar"
@@ -88,6 +91,7 @@ jobs:
           rsync -a --delete \
             --include 'index.html' --include 'app.js' --include 'styles.css' --include 'favicon.svg' --include 'helados-extension.zip' \
             --include 'fonts/' --include 'fonts/*.woff2' --include 'fonts/OFL.txt' \
+            --include 'prototipos/***' \
             --exclude '*' \
             salida/ "teskel/${CARPETA_DESTINO}/"
 

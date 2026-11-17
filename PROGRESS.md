@@ -129,6 +129,22 @@
   (Grido con descuentos, supermercado filtrado, Córdoba "no está").
 - **Falta probar con la extensión real** en la compu del usuario.
 
+## Hecho (rama `fase-3-prototipos`, 2026-11-17)
+- **4 prototipos de diseño** radicalmente distintos, que funcionan de verdad (misma `app.js`, mismos ids;
+  la búsqueda, la extensión y la caché no cambian). La versión original queda intacta.
+  - `/cuartito/prototipos/`: selector con las 4 direcciones y el original.
+  - **Cotización** (editorial/suizo): página de mercados en papel salmón, cinta de cotizaciones
+    (`tape.js` copia lo que ya dibujó app.js), pizarra como tabla de valores. Newsreader + IBM Plex Sans Condensed.
+  - **Derretido** (experimental): Climate Crisis con su eje YEAR (la marca se derrite al cargar),
+    franjas de gustos que chorrean. Martian Mono.
+  - **Ofertón** (bold): carteles fluo con cinta sobre cartón, estrellas de oferta. Big Shoulders Display + Atkinson Hyperlegible.
+  - **Nocciola** (lujo mínimo): la carta de una gelateria, Bodoni Moda en itálica + Jost, descuento en dorado.
+- Cada prototipo tiene una barra arriba para pasar de uno a otro. Fuentes libres alojadas en
+  `web/prototipos/fonts/` (licencias en `fonts/licencias/`).
+- Los HTML se generan con `python scripts/build_prototipos.py` (editar ahí, no el HTML).
+- E2E: abre los 4 prototipos, detectan la extensión, buscan y muestran resultados.
+- El workflow publica `web/prototipos/` en `/cuartito/prototipos/`.
+
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),
       pero el formato de `/v2/niles/partners/{id}/menus` todavía no lo vimos: en el navegador integrado

@@ -205,5 +205,17 @@ with sync_playwright() as p:
     assert "Cancelada" in page.inner_text("#status") and page.is_hidden("#cancel")
     assert not [pg for pg in ctx.pages if "/pya/" in pg.url], "quedó abierta la pestaña de PedidosYa"
     assert cache_new == 0, "el segundo click no usó la caché"
+    # prototipos de diseño: misma app.js, mismos ids → detectan la extensión, buscan y muestran resultados
+    for proto in ("cotizacion", "derretido", "oferton", "nocciola"):
+        pp = ctx.new_page(); errs = []
+        pp.on("pageerror", lambda e: errs.append(str(e)))
+        pp.goto(f"http://127.0.0.1:8769/prototipos/{proto}/"); pp.wait_for_timeout(2000)
+        assert "activa" in pp.inner_text("#ext-text").lower(), (proto, pp.inner_text("#ext-text"))
+        pp.click("#fetch")
+        pp.wait_for_function("() => document.getElementById('fetch').textContent === 'Traer descuentos'", timeout=60000)
+        pp.wait_for_function("() => { const t = document.getElementById('status').innerText; return t.includes('Rappi:') && t.includes('PedidosYa:') && t.includes('Uber Eats:'); }", timeout=15000)
+        assert "grido helados - 3912" in pp.inner_text("#list").lower() and "−31%" in pp.inner_text("#list"), proto
+        assert not errs, (proto, errs)
+        print("PROTOTIPO OK:", proto); pp.close()
     print("E2E OK")
     ctx.close()
