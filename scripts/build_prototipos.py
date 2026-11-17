@@ -487,7 +487,7 @@ PAGES["cartel"] = head2("cartel", "Cartel", "#F9F4E6", ["anton-latin-400-normal.
   <section class="hero">
     <div class="intro">
       <p class="edition"><span id="city-name">Rosario</span> · <span id="last-sync">sin buscar todavía</span></p>
-      <h1 class="lema">¿Te cierran las heladerías buscando promociones? <span class="usa">Usá <span class="lema-logo">{MARK}<span>cuartito</span></span></span></h1>
+      <h1 class="lema">El helado no se negocia. <span class="si">El precio, sí.</span></h1>
       <p class="bajada">Comparamos Rappi, PedidosYa y Uber Eats en tu ciudad. <a href="https://github.com/monticoagustin/app-helados" target="_blank" rel="noopener">Código abierto</a>, 0% humo corporativo.</p>
       <p class="lede" id="lede" aria-live="polite"></p>
       {INSTALL}

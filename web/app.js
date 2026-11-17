@@ -241,7 +241,7 @@ function renderHero(sure, vague, searched) {
       ? `Hay ${vague.length} ${vague.length === 1 ? "heladería" : "heladerías"} con descuento en ${esc(city.name)}, pero no pudimos ver a qué productos se aplica.`
       : searched
         ? "Con estos filtros no quedó ninguna heladería con descuento."
-        : "Elegí tu ciudad y tocá <b>Traer descuentos</b>: buscamos en Rappi, PedidosYa y Uber Eats desde tu Chrome y en uno o dos minutos aparecen en el ticket.";
+        : "Elegí tu ciudad y tocá <b>Traer descuentos</b>: buscamos en Rappi, PedidosYa y Uber Eats desde tu Chrome y en uno o dos minutos aparecen acá abajo.";
     lastTop = null;
     return;
   }
