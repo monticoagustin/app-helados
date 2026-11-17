@@ -162,7 +162,7 @@ select:disabled { opacity: 0.6; cursor: default; }
 
 .seg { border: 0; margin: 0; padding: 0; min-width: 0; }
 .seg-box {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem; padding: 0.25rem;
+  display: grid; grid-template-columns: repeat(4, auto); gap: 0.25rem; padding: 0.25rem;
   background: var(--crema); border: 2px solid var(--tinta); border-radius: var(--r-lg);
 }
 .seg label { position: relative; }
@@ -378,6 +378,7 @@ select:disabled { opacity: 0.6; cursor: default; }
   .stamp { display: none; }
   .filters { padding-top: 1rem; }
   .chips { flex-wrap: nowrap; }
+  .seg-box { grid-template-columns: 1fr 1fr; }
   .chip { flex: 1; justify-content: center; }
   .deal { grid-template-columns: 3.4rem 1fr auto; gap: 0.625rem; }
 }
