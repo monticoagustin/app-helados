@@ -22,7 +22,8 @@ body {
 
 /* el lema: Anton grande, en mayúsculas; "2 horas" queda en rosa por el subrayado de marcador */
 .lema { margin: 0; font: 400 clamp(3rem, 5.4vw, 5.2rem)/0.94 var(--display); text-transform: uppercase; letter-spacing: 0.005em; max-width: 12ch; color: var(--ink); }
-.lema { font-size: clamp(2.6rem, 4.6vw, 4.4rem); line-height: 1.04; max-width: 13ch; }
+.lema { font-size: clamp(3.2rem, 6.2vw, 8rem); line-height: 1; max-width: 11ch; }
+.lema .si { display: block; color: var(--rosa-hondo); }
 .usa { display: flex; align-items: center; gap: 0.25em; margin-top: 0.12em; }
 .lema-logo { display: inline-flex; align-items: center; gap: 0.12em; font: 800 0.92em/1 var(--body); text-transform: none; letter-spacing: -0.03em; color: var(--ink); }
 .lema-logo .mark { width: 0.95em; height: 0.95em; flex: none; }
@@ -133,3 +134,13 @@ body.iso { --anatomy-page: var(--bg); --anatomy-paper: var(--papel); --anatomy-c
 
 .filters, .estado { margin-top: 3rem; }
 .vacio { margin: 2rem 0; font: 400 2rem/1.05 var(--display); text-transform: uppercase; max-width: 22ch; }
+
+/* a todo el ancho: sin la columna centrada de 1360px */
+.sala { max-width: none; padding-left: clamp(1.25rem, 4vw, 5rem); padding-right: clamp(1.25rem, 4vw, 5rem); }
+@media (min-width: 900px) { .top { padding-left: clamp(1.25rem, 4vw, 5rem); padding-right: clamp(1.25rem, 4vw, 5rem); } }
+@media (min-width: 1000px) {
+  .hero { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: 4vw; }
+  .gigante { font-size: min(24vw, 34rem); }
+  .bajada { max-width: 34rem; font-size: 1.15rem; }
+}
+@media (min-width: 1600px) { body { font-size: 1.15rem; } .franja { grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr)); } }
