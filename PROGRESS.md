@@ -1,6 +1,6 @@
 # PROGRESS
 
-Última actualización: 2026-11-16
+Última actualización: 2026-11-17
 
 ## Decisiones
 - 2026-11-15: la app vive en **teskel.online/helados** (Spacefast, flujo GitHub → Spacefast).
@@ -11,7 +11,10 @@
 - Si PedidosYa pide verificación, **la resuelve la persona** en la pestaña que abre la extensión.
   No se automatiza ni se saltea.
 - Sin búsquedas periódicas ni alertas por ahora: se busca al apretar "Traer descuentos".
-- Plataformas: PedidosYa y Rappi. Mercado Libre (solo app) y Uber Eats (no opera en Rosario) quedan afuera.
+- Plataformas: PedidosYa, Rappi y **Uber Eats** (desde 2026-11-17: volvió a Argentina y tiene web con Rosario).
+  Mercado Libre queda afuera (solo app).
+- Pendiente de decisión: versión para celular (iPhone y Android, sin compu). Propuesta: app propia
+  que busca desde el celular (necesita cuenta de Apple Developer para el iPhone).
 
 ## Hecho (rama `fase-1-extension`)
 - Normalizador en JS: tamaños (1/4, 1/2, 1 kg, gramos, "2 x 1/4"), $/kg solo para helado por peso
@@ -102,6 +105,25 @@
   hero) no aplican a una herramienta.
 - **Nueva dirección: teskel.online/cuartito** (el workflow publica en `cuartito/`; `helados/` queda
   con la última versión vieja). Extensión v0.8.0: el puente también corre en /cuartito.
+
+## Hecho (rama `fase-2-uber-eats`, 2026-11-17)
+- **Uber Eats** como tercera plataforma. Relevado con datos reales de Rosario en el navegador integrado:
+  - Ubicación: parámetro `pl` de la URL (base64 de JSON con ciudad y coordenadas). Probado con Rosario y
+    Córdoba (Uber acepta el centro de la ciudad sin ID de Google).
+  - Búsqueda: `POST /_p/api/getSearchFeedV1` (categoría Ice Cream) → locales en dos formatos. Trae
+    también supermercados y kioscos.
+  - Menú: `POST /_p/api/getStoreV1` → categorías del local, abierto/cerrado, envío, demora y productos.
+    Precio final en centavos; el anterior en `purchaseInfo` o, si falta, en el texto ("discounted from $ X").
+  - Solo heladerías (por nombre o por categoría "Ice Cream"/"Helado"); descarta locales de otra ciudad
+    (si Uber no está en la ciudad elegida, avisa "Uber Eats no está en X").
+- La extensión abre Uber en la ventana minimizada (para que tome la ubicación) y hace las mismas llamadas
+  que su web desde esa pestaña. Hasta 30 menús por búsqueda. Si Uber no contesta, muestra la ventana por
+  si hay una verificación y espera a la persona (no se saltea nada).
+- Página: filtro "Uber Eats" y su nombre en los renglones. Extensión **v0.9.0**.
+- Normalizador: reconoce "Cassata" (con doble s).
+- Tests: 36 unitarios (8 de Uber Eats con fixtures reales recortados) + e2e con un Uber Eats simulado
+  (Grido con descuentos, supermercado filtrado, Córdoba "no está").
+- **Falta probar con la extensión real** en la compu del usuario.
 
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),
