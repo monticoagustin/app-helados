@@ -295,6 +295,7 @@ PROTOS2 = [
     ("cucurucho", "Cucurucho", "Los descuentos apilados como bochas"),
     ("numero", "Número", "El porcentaje gigante es la página"),
     ("mostrador", "Mostrador", "Mezcla: la heladera de Vitrina con la tipografía de Número"),
+    ("cartel", "Cartel", "Monumento + Vidriera: el % gigante detrás de la heladera, paleta atardecer"),
 ]
 
 def switcher2(current):
@@ -473,6 +474,54 @@ PAGES["mostrador"] = head2("mostrador", "Mostrador", "#F9D9DF", ["bricolage-grot
   <div hidden><p id="headline"></p><a href="#" id="diag">Diagnóstico</a></div>
 </main>
 <script type="module" src="mostrador.js"></script>
+""" + TAIL
+
+# ------------------------------------------------------------------ Cartel (Monumento + Vidriera, paleta atardecer, Anton)
+PAGES["cartel"] = head2("cartel", "Cartel", "#F8B195", ["anton-latin-400-normal.woff2", "bricolage-grotesque-latin-500-normal.woff2"]).replace(
+    '<link rel="stylesheet" href="styles.css">', '<link rel="stylesheet" href="../lib/comun.css">\n  <link rel="stylesheet" href="styles.css">').replace(
+    "<body>", '<body class="iso" data-theme="light">') + f"""<header class="top">
+  <a class="brand" href="../../" aria-label="cuartito, versión original">{MARK}<span>cuartito</span></a>
+  {EXT}
+</header>
+<main class="sala">
+  <section class="hero">
+    <div class="intro">
+      <p class="edition"><span id="city-name">Rosario</span> · <span id="last-sync">sin buscar todavía</span></p>
+      <h1 class="lema">Pagá el helado, no el delivery.</h1>
+      <p class="bajada">Comparamos Rappi, PedidosYa y Uber Eats en tu ciudad. <a href="https://github.com/monticoagustin/app-helados" target="_blank" rel="noopener">Código abierto</a>, 0% humo corporativo.</p>
+      <p class="lede" id="lede" aria-live="polite"></p>
+      {INSTALL}
+      {PYA}
+      <section class="panel" aria-label="Buscar descuentos">
+        <div class="buscar">
+          <button id="fetch" class="btn-solido" type="button" disabled>Traer descuentos</button>
+          <label class="sr" for="city">Ciudad</label>
+          <select id="city"></select>
+        </div>
+        <button id="cancel" class="link" type="button" hidden>Cancelar búsqueda</button>
+        <section id="progress" class="progress" hidden aria-live="polite"></section>
+        <p class="panel-links">
+          <button id="force" class="link" type="button" disabled>Buscar de nuevo, sin lo guardado</button>
+          <button id="show-pya-setup" class="link" type="button" hidden>Cambiar dirección de PedidosYa</button>
+        </p>
+      </section>
+    </div>
+    <div class="vitrina-wrap">
+      <div class="forma" aria-hidden="true"><p class="gigante" data-gigante>−50%</p></div>
+      <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Heladera: cada pote es una heladería; con las flechas pasás de uno a otro"></div>
+      <p class="leyenda">Cada pote es una heladería: más lleno, más descuento.</p>
+    </div>
+  </section>
+  <section id="ticket" class="resultados" aria-label="Descuentos de hoy" aria-live="polite"></section>
+  {FILTERS}
+  <footer class="estado">
+    <div id="status" class="status"></div>
+    <p class="total"><span id="total"></span></p>
+  </footer>
+  {OCULTO}
+  <div hidden><p id="headline"></p><a href="#" id="diag">Diagnóstico</a></div>
+</main>
+<script type="module" src="cartel.js"></script>
 """ + TAIL
 
 for slug, html in PAGES.items():
