@@ -12,7 +12,11 @@
   No se automatiza ni se saltea.
 - Sin búsquedas periódicas ni alertas por ahora: se busca al apretar "Traer descuentos".
 - Plataformas: PedidosYa, Rappi y **Uber Eats** (desde 2026-11-17: volvió a Argentina y tiene web con Rosario).
-  Mercado Libre queda afuera (solo app).
+  Mercado Libre queda afuera (solo app). Relevado 2026-11-17 en el navegador integrado, como compu y
+  como celular: la landing `/landing/restaurantes` solo tiene links a la app (`meli://proximity_marketplace/
+  store?brand_id=…`, ej. Freddo = 53) y una página "pedí con la app". No hay versión web (ni en
+  mercadolibre.com.ar ni en mercadopago.com.ar: 404). Leer la app por dentro implicaría usar la sesión
+  del usuario e interceptar su tráfico: no se hace.
 - Pendiente de decisión: versión para celular (iPhone y Android, sin compu). Propuesta: app propia
   que busca desde el celular (necesita cuenta de Apple Developer para el iPhone).
 
