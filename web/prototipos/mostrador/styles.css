@@ -19,6 +19,10 @@ body {
 .disenos { display: flex; flex-wrap: wrap; align-items: center; gap: 0 1rem; font-size: 0.9375rem; }
 .disenos-t { color: var(--muted); }
 .disenos button { min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--muted); font-weight: 500; }
+.otro-lema { margin-left: 0.75rem; color: var(--accent) !important; font-weight: 800 !important; }
+.bajada { margin: 0.9rem 0 0; font-weight: 700; font-size: 1.05rem; color: var(--muted); }
+.bajada a { color: var(--ink); text-decoration-thickness: 2px; }
+.lema { max-width: 16ch; font-size: clamp(2.3rem, 5.2vw, 4.2rem); }
 .disenos button[aria-pressed="true"] { color: var(--ink); font-weight: 800; text-decoration: underline; text-underline-offset: 6px; }
 
 /* el buscador: ciudad + botón sólido, imposible de no ver */
@@ -76,6 +80,19 @@ body.iso { --anatomy-page: var(--bg); --anatomy-paper: var(--papel); --anatomy-c
 .ahorro { margin: 0.15rem 0 0; font-weight: 800; color: var(--accent); }
 .pedir { display: inline-block; padding: 0.55rem 0; min-height: 44px; font-weight: 700; color: var(--ink); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px; }
 .pedir::after { content: "↗"; margin-left: 0.3rem; }
+/* botón de cada app con su color: Rappi naranja, PedidosYa fucsia, Uber Eats verde */
+.pedir[class*="app-"] {
+  display: inline-flex; align-items: center; min-height: 48px; margin-top: 0.75rem; padding: 0 1.2rem; border-radius: 999px;
+  font-weight: 800; font-size: 1.05rem; text-decoration: none; background: var(--app); color: var(--app-t);
+  box-shadow: 0 3px 0 color-mix(in oklab, var(--app) 60%, black); transition: translate .12s ease, box-shadow .12s ease;
+}
+.pedir[class*="app-"]:hover { translate: 0 -1px; box-shadow: 0 4px 0 color-mix(in oklab, var(--app) 60%, black); }
+.pedir[class*="app-"]:active { translate: 0 2px; box-shadow: 0 1px 0 color-mix(in oklab, var(--app) 60%, black); }
+.app-rappi { --app: #E5390E; --app-t: #fff; }
+.app-pya { --app: #D9004B; --app-t: #fff; }
+.app-uber { --app: #06C167; --app-t: #062B1B; }
+.app-otra { --app: var(--ink); --app-t: var(--bg); }
+.pedir-grande { min-height: 56px !important; padding: 0 1.6rem !important; font-size: 1.2rem !important; }
 .meta { margin: 0.5rem 0 0; font-size: 0.9375rem; color: var(--muted); }
 
 /* PODIO: los tres mejores grandes, a todo el ancho; el resto en una tira */
@@ -103,8 +120,6 @@ body.iso { --anatomy-page: var(--bg); --anatomy-paper: var(--papel); --anatomy-c
 .numero .menos, .numero .pc { font-size: 0.32em; line-height: 1; margin-top: 0.12em; letter-spacing: 0; }
 .foco-dato .precio b { font-size: 2.6rem; }
 .foco-dato .ahorro { font-size: 1.4rem; }
-.pedir-solido { margin-top: 1rem; display: inline-flex; align-items: center; min-height: 56px; padding: 0 1.5rem; border-radius: 999px; background: var(--ink); color: var(--bg); text-decoration: none; }
-.pedir-solido:hover { background: var(--accent); color: #fff; }
 .chips-d { list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.25rem 1.5rem; }
 .chips-d .elegir { grid-template-columns: auto 1fr; column-gap: 0.6rem; align-items: baseline; width: 100%; }
 .chips-d .nm { font-size: 0.9375rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
@@ -113,3 +128,7 @@ body.iso { --anatomy-page: var(--bg); --anatomy-paper: var(--papel); --anatomy-c
 
 .filters, .estado { margin-top: 2.5rem; }
 .vacio { margin: 1rem 0; }
+@media (max-width: 560px) {
+  .grilla .pedir[class*="app-"] { padding: 0 1rem; font-size: 1rem; white-space: nowrap; }
+  .grilla .pedir-en { display: none; }
+}

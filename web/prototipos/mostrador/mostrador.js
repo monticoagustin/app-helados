@@ -156,7 +156,9 @@ function dibujar() {
 }
 
 // piezas de texto
-const pedir = (s, cls = "pedir") => s.url ? `<a class="${cls}" href="${esc(s.url)}" target="_blank" rel="noopener">Pedir en ${esc(s.platform || "la app")}</a>` : "";
+// cada app con su color, para reconocerla de un vistazo
+const plataforma = (p) => /rappi/i.test(p) ? "rappi" : /pedidos/i.test(p) ? "pya" : /uber/i.test(p) ? "uber" : "otra";
+const pedir = (s, cls = "pedir") => s.url ? `<a class="${cls} app-${plataforma(s.platform)}" href="${esc(s.url)}" target="_blank" rel="noopener"><span class="pedir-en">Pedir en </span>${esc(s.platform || "la app")}</a>` : "";
 const precio = (m) => `<p class="precio"><b>${esc(m.now)}</b>${m.before ? ` <s>${esc(m.before)}</s>` : ""}</p>`;
 const ahorra = (m) => ahorro(m) ? `<p class="ahorro">Ahorrás ${ars(ahorro(m))}</p>` : "";
 const sel = (i) => `<button type="button" class="elegir" data-i="${i}" aria-pressed="${i === selected}" aria-label="Ver ${esc(shops[i].name)} en la heladera">`;
@@ -191,7 +193,7 @@ function foco() {
   const chips = shops.map((x, i) => `<li style="--c:var(--f${i % FLAVORS})">${sel(i)}<span class="pct-s">−${Math.round(x.best)}%</span><span class="nm">${esc(corto(x.name))}</span></button></li>`).join("");
   return `<div class="foco" style="--c:var(--f${selected % FLAVORS})">
       <div class="foco-num"><p class="puesto-g">${selected === 0 ? "El mejor de hoy" : `${selected + 1}º mejor`}</p><h2 class="quien">${esc(corto(s.name))}</h2><p class="numero"><span class="menos">−</span>${Math.round(s.best)}<span class="pc">%</span></p></div>
-      <div class="foco-dato"><p class="prod">${esc(m.name)}</p>${precio(m)}${ahorra(m)}${pedir(s, "pedir pedir-solido")}<p class="meta">${esc(s.meta)}</p></div>
+      <div class="foco-dato"><p class="prod">${esc(m.name)}</p>${precio(m)}${ahorra(m)}${pedir(s, "pedir pedir-grande")}<p class="meta">${esc(s.meta)}</p></div>
     </div>
     <ol class="chips-d" aria-label="Todas las heladerías">${chips}</ol>`;
 }
@@ -245,4 +247,22 @@ for (const b of document.querySelectorAll("[data-set-layout]")) b.addEventListen
   try { localStorage.setItem("cuartito:layout:mostrador", b.dataset.setLayout); } catch { /* nada */ }
 });
 ponerLayout(layout);
+
+// lemas para probar: el botón "Otro lema" los va pasando
+const LEMAS = [
+  "¿Cansad@ de que te cobren el envío más caro que el cuarto?",
+  "Tres apps, un cuarto, cero verso.",
+  "Te cobran el helado de más. Acá está la prueba.",
+  "Rappi, PedidosYa y Uber Eats se pelean. Vos tomás helado.",
+  "El helado no tendría que costar un riñón.",
+];
+const lemaEl = document.querySelector("[data-lema]");
+let lema = 0;
+try { lema = Number(localStorage.getItem("cuartito:lema:mostrador")) || 0; } catch { /* nada */ }
+const ponerLema = (n) => { lema = (n + LEMAS.length) % LEMAS.length; lemaEl.textContent = LEMAS[lema]; };
+document.querySelector("[data-otro-lema]")?.addEventListener("click", () => {
+  ponerLema(lema + 1);
+  try { localStorage.setItem("cuartito:lema:mostrador", String(lema)); } catch { /* nada */ }
+});
+ponerLema(lema);
 alCambiar(render);

@@ -431,6 +431,7 @@ PAGES["mostrador"] = head2("mostrador", "Mostrador", "#F9D9DF", ["bricolage-grot
     <button type="button" data-set-layout="podio" aria-pressed="true">Podio</button>
     <button type="button" data-set-layout="grilla" aria-pressed="false">Grilla</button>
     <button type="button" data-set-layout="foco" aria-pressed="false">Foco</button>
+    <button type="button" class="otro-lema" data-otro-lema>Otro lema ↻</button>
   </div>
   {EXT}
 </header>
@@ -438,7 +439,8 @@ PAGES["mostrador"] = head2("mostrador", "Mostrador", "#F9D9DF", ["bricolage-grot
   <section class="hero">
     <div class="intro">
       <p class="edition"><span id="city-name">Rosario</span> · <span id="last-sync">sin buscar todavía</span></p>
-      <h1 id="headline" class="headline">El helado más barato de hoy, a la vista.</h1>
+      <h1 class="headline lema" data-lema>¿Cansad@ de que te cobren el envío más caro que el cuarto?</h1>
+      <p class="bajada"><a href="https://github.com/monticoagustin/app-helados" target="_blank" rel="noopener">Código abierto</a>. 0% humo corporativo.</p>
       <p class="lede" id="lede" aria-live="polite"></p>
       {INSTALL}
       {PYA}
@@ -463,8 +465,12 @@ PAGES["mostrador"] = head2("mostrador", "Mostrador", "#F9D9DF", ["bricolage-grot
   </section>
   <section id="ticket" class="resultados" aria-label="Descuentos de hoy" aria-live="polite"></section>
   {FILTERS}
-  {STATUS2}
+  <footer class="estado">
+    <div id="status" class="status"></div>
+    <p class="total"><span id="total"></span></p>
+  </footer>
   {OCULTO}
+  <div hidden><p id="headline"></p><a href="#" id="diag">Diagnóstico</a></div>
 </main>
 <script type="module" src="mostrador.js"></script>
 """ + TAIL
