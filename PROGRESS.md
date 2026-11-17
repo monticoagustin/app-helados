@@ -170,7 +170,12 @@
   el envío más caro que el cuarto?") y bajada "Código abierto. 0% humo corporativo." (link al repo, que es público
   pero todavía no tiene LICENSE). Sin la nota de bancos/billeteras ni el link de diagnóstico (el elemento #diag
   queda oculto porque app.js lo usa).
-- E2E: abre los 8 prototipos; en los nuevos también chequea que el dibujo propio muestre los datos.
+- **Cartel** (pedido del usuario, 2026-11-17, "hacé una versión y publicala directamente"): mezcla de las maquetas
+  Monumento + Vidriera. Lema "Pagá el helado, no el delivery." en Anton; buscador con botón sólido; la heladera de
+  Vitrina sobre una forma azul con el % del elegido gigante detrás; abajo el destacado (coral) y todas las
+  heladerías en una franja de colores. Paleta atardecer del usuario: #F8B195 #F67280 #C06C84 #6C5B7B #355C7D.
+  Botones de cada app con su color. Publicada como artifact con datos de ejemplo.
+- E2E: abre los 9 prototipos; en los nuevos también chequea que el dibujo propio muestre los datos.
 
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),
