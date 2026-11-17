@@ -86,7 +86,7 @@ DIAG = """<p class="fineprint">Los descuentos con bancos o billeteras se muestra
         <a href="#" id="diag">Descargar diagnóstico de PedidosYa</a></p>"""
 
 def switcher(current):
-    items = ['<a href="../../">Original</a>'] + [
+    items = ['<a href="../../">Principal</a>', '<a href="../ticket/">Ticket</a>'] + [
         f'<a href="../{s}/"{" aria-current=\"page\"" if s == current else ""}>{n}</a>' for s, n, _ in PROTOS]
     return f"""<nav class="proto-switch" aria-label="Prototipos de diseño">
   <a class="proto-all" href="../">Prototipos</a>{"".join(items)}
@@ -299,7 +299,7 @@ PROTOS2 = [
 ]
 
 def switcher2(current):
-    items = ['<a href="../../">Original</a>'] + [
+    items = ['<a href="../../">Principal</a>', '<a href="../ticket/">Ticket</a>'] + [
         f'<a href="../{s}/"{" aria-current=\"page\"" if s == current else ""}>{n}</a>' for s, n, _ in PROTOS2]
     return f"""<nav class="proto-switch" aria-label="Prototipos de diseño">
   <a class="proto-all" href="../">Prototipos</a>{"".join(items)}
@@ -487,7 +487,7 @@ PAGES["cartel"] = head2("cartel", "Cartel", "#F9F4E6", ["anton-latin-400-normal.
   <section class="hero">
     <div class="intro">
       <p class="edition"><span id="city-name">Rosario</span> · <span id="last-sync">sin buscar todavía</span></p>
-      <h1 class="lema">Que para encontrar la promo no tardes 2 horas</h1>
+      <h1 class="lema">¿Te cierran las heladerías buscando promociones? <span class="usa">Usá <span class="lema-logo">{MARK}<span>cuartito</span></span></span></h1>
       <p class="bajada">Comparamos Rappi, PedidosYa y Uber Eats en tu ciudad. <a href="https://github.com/monticoagustin/app-helados" target="_blank" rel="noopener">Código abierto</a>, 0% humo corporativo.</p>
       <p class="lede" id="lede" aria-live="polite"></p>
       {INSTALL}
@@ -530,3 +530,33 @@ for slug, html in PAGES.items():
     with open(os.path.join(d, "index.html"), "w") as f:
         f.write(html)
     print("ok", slug)
+
+# ================================================================== página principal = Cartel
+# Desde 2026-11-17 el diseño principal es Cartel. Se arma con los mismos archivos del prototipo,
+# con las rutas de la raíz de web/. Editar el prototipo (cartel/) y volver a correr este script.
+import re, shutil
+WEB = os.path.join(ROOT, "web")
+main = PAGES["cartel"]
+main = re.sub(r'<nav class="proto-switch".*?</nav>\n', "", main, flags=re.S)
+main = main.replace('<html lang="es" data-proto="cartel">', '<html lang="es">')
+main = main.replace("<title>cuartito · Cartel (prototipo)</title>", "<title>cuartito · rebajas de helado</title>")
+main = main.replace('  <link rel="stylesheet" href="../switch.css">\n', "")
+main = main.replace('<meta name="theme-color"', '<script>if (/\\/(cuartito|helados)$/.test(location.pathname)) location.replace(location.pathname + "/" + location.search);</script>\n  <meta name="theme-color"')
+for a, b in [('href="../../favicon.svg"', 'href="favicon.svg"'), ('href="../fonts/', 'href="fonts/'), ('href="../lib/', 'href="lib/'),
+             ('href="../../helados-extension.zip"', 'href="helados-extension.zip"'), ('<a class="brand" href="../../"', '<a class="brand" href="./"'),
+             ('src="../../app.js"', 'src="app.js"'), ('aria-label="cuartito, versión original"', 'aria-label="cuartito, inicio"')]:
+    main = main.replace(a, b)
+assert "../" not in main, re.findall(r'"[^"]*\.\./[^"]*"', main)
+open(os.path.join(WEB, "index.html"), "w").write(main)
+# estilos: la base común de los prototipos (sin la barra de prototipos) + los de Cartel
+base = open(os.path.join(OUT, "switch.css")).read().split("/* ---- selector de prototipos")[0]
+css = open(os.path.join(OUT, "cartel", "styles.css")).read().replace('url("../fonts/', 'url("fonts/')
+open(os.path.join(WEB, "styles.css"), "w").write("/* Generado por scripts/build_prototipos.py desde prototipos/cartel: no editar acá. */\n" + base + css)
+js = open(os.path.join(OUT, "cartel", "cartel.js")).read().replace('"../lib/', '"./lib/')
+open(os.path.join(WEB, "cartel.js"), "w").write(js)
+os.makedirs(os.path.join(WEB, "lib"), exist_ok=True)
+for f in ("iso-kit.mjs", "iso-kit-LICENSE.txt", "datos.js", "comun.css"):
+    shutil.copyfile(os.path.join(OUT, "lib", f), os.path.join(WEB, "lib", f))
+for f in ("anton-latin-400-normal.woff2", "bricolage-grotesque-latin-500-normal.woff2"):
+    shutil.copyfile(os.path.join(OUT, "fonts", f), os.path.join(WEB, "fonts", f))
+print("ok principal (Cartel)")

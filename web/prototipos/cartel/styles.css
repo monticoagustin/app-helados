@@ -22,6 +22,10 @@ body {
 
 /* el lema: Anton grande, en mayúsculas; "2 horas" queda en rosa por el subrayado de marcador */
 .lema { margin: 0; font: 400 clamp(3rem, 5.4vw, 5.2rem)/0.94 var(--display); text-transform: uppercase; letter-spacing: 0.005em; max-width: 12ch; color: var(--ink); }
+.lema { font-size: clamp(2.6rem, 4.6vw, 4.4rem); line-height: 1.04; max-width: 13ch; }
+.usa { display: flex; align-items: center; gap: 0.25em; margin-top: 0.12em; }
+.lema-logo { display: inline-flex; align-items: center; gap: 0.12em; font: 800 0.92em/1 var(--body); text-transform: none; letter-spacing: -0.03em; color: var(--ink); }
+.lema-logo .mark { width: 0.95em; height: 0.95em; flex: none; }
 .bajada { margin: 1rem 0 0; max-width: 26rem; color: var(--muted); }
 .bajada a { color: var(--ink); font-weight: 700; text-decoration-thickness: 2px; text-decoration-color: var(--rosa); }
 
