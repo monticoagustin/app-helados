@@ -13,6 +13,9 @@
     @font-face { font-family: "Climate"; src: url("fonts/climate-crisis-latin-year-normal.woff2") format("woff2"); }
     @font-face { font-family: "Shoulders"; font-weight: 900; src: url("fonts/big-shoulders-display-latin-900-normal.woff2") format("woff2"); }
     @font-face { font-family: "Bodoni"; font-style: italic; src: url("fonts/bodoni-moda-latin-400-italic.woff2") format("woff2"); }
+    @font-face { font-family: "Gloock"; src: url("fonts/gloock-latin-400-normal.woff2") format("woff2"); }
+    @font-face { font-family: "Instrument"; font-style: italic; src: url("fonts/instrument-serif-latin-400-italic.woff2") format("woff2"); }
+    @font-face { font-family: "Bagel"; src: url("fonts/bagel-fat-one-latin-400-normal.woff2") format("woff2"); }
     @font-face { font-family: "Martian"; src: url("fonts/martian-mono-latin-400-normal.woff2") format("woff2"); }
     body { background: #000; color: #fff; font: 400 0.9375rem/1.5 "Martian", ui-monospace, monospace; }
     header { padding: 2rem 1rem 1.5rem; display: grid; gap: 0.5rem; }
@@ -40,6 +43,14 @@
     .ofer .name { font-family: "Shoulders", "Arial Narrow", sans-serif; font-weight: 900; text-transform: uppercase; }
     .nocc { background: #231B16; color: #EEE6DA; }
     .nocc .name { font-family: "Bodoni", Didot, serif; font-style: italic; font-weight: 400; }
+    .vitr { background: #DCE5CD; color: #1D2716; }
+    .vitr .name { font-family: "Gloock", Georgia, serif; }
+    .cucu { background: #2B1B15; color: #F6E9DC; }
+    .cucu .name { font-family: "Instrument", Georgia, serif; font-style: italic; }
+    .nume { background: #FFD23F; color: #1C0E08; }
+    .nume .name { font-family: "Bagel", sans-serif; letter-spacing: -0.02em; }
+    .tanda { padding: 2.5rem 1rem 0.75rem; color: #bdbdbd; font-size: 0.8125rem; margin: 0; }
+    @media (min-width: 760px) { .tanda { padding: 3rem 2rem 1rem; } }
     footer { padding: 1.5rem 1rem 3rem; color: #bdbdbd; font-size: 0.8125rem; }
     @media (min-width: 760px) { footer { padding: 1.5rem 2rem 3rem; } }
     footer a { color: #fff; display: inline-flex; min-height: 44px; align-items: center; }
@@ -47,9 +58,16 @@
 </head>
 <body>
 <header>
-  <h1>Cuatro estudios,<br>una heladería.</h1>
+  <h1>Siete estudios,<br>una heladería.</h1>
   <p>Cada prototipo es la misma app, con la misma búsqueda y los mismos datos, dibujada por otra mano. La versión de siempre sigue intacta en la primera franja.</p>
 </header>
+<p class="tanda">Segunda tanda: sin cajas. Cada una tiene tres paletas para probar.</p>
+<ol>
+  <li><a class="vitr" href="vitrina/"><span class="name">Vitrina</span><span class="what"><b>Dibujo isométrico</b>La heladera de mostrador vista desde arriba: cada pote se llena según el descuento y la pala va al que elegís.</span></a></li>
+  <li><a class="cucu" href="cucurucho/"><span class="name">Cucurucho</span><span class="what"><b>Orgánico</b>Las heladerías apiladas como bochas sobre un barquillo; arriba, la del descuento más grande.</span></a></li>
+  <li><a class="nume" href="numero/"><span class="name">Número</span><span class="what"><b>Tipografía</b>Una heladería por pantalla y el porcentaje, enorme, como toda la composición.</span></a></li>
+</ol>
+<p class="tanda">Primera tanda</p>
 <ol>
   <li><a class="orig" href="../"><span class="name">Original</span><span class="what"><b>La versión publicada</b>Ticket de caja de heladería.</span></a></li>
   <li><a class="coti" href="cotizacion/"><span class="name">Cotización</span><span class="what"><b>Editorial · suizo</b>El helado cotiza: página de mercados en papel salmón, con cinta de cotizaciones y pizarra de valores.</span></a></li>
@@ -58,7 +76,7 @@
   <li><a class="nocc" href="nocciola/"><span class="name">Nocciola</span><span class="what"><b>Minimalista · lujo</b>La carta de una gelateria: Bodoni en itálica, mucho aire y el descuento en dorado.</span></a></li>
 </ol>
 <footer>
-  <p>Fuentes libres (SIL OFL): Newsreader, IBM Plex Sans Condensed, Climate Crisis, Martian Mono, Big Shoulders Display, Atkinson Hyperlegible, Bodoni Moda y Jost. Licencias: <a href="fonts/licencias/newsreader.txt">Newsreader</a>, <a href="fonts/licencias/ibm-plex-sans-condensed.txt">Plex</a>, <a href="fonts/licencias/climate-crisis.txt">Climate Crisis</a>, <a href="fonts/licencias/martian-mono.txt">Martian</a>, <a href="fonts/licencias/big-shoulders-display.txt">Big Shoulders</a>, <a href="fonts/licencias/atkinson-hyperlegible.txt">Atkinson</a>, <a href="fonts/licencias/bodoni-moda.txt">Bodoni</a>, <a href="fonts/licencias/jost.txt">Jost</a>.</p>
+  <p>Fuentes libres (SIL OFL). Licencias: <a href="fonts/licencias/newsreader.txt">Newsreader</a>, <a href="fonts/licencias/ibm-plex-sans-condensed.txt">Plex</a>, <a href="fonts/licencias/climate-crisis.txt">Climate Crisis</a>, <a href="fonts/licencias/martian-mono.txt">Martian</a>, <a href="fonts/licencias/big-shoulders-display.txt">Big Shoulders</a>, <a href="fonts/licencias/atkinson-hyperlegible.txt">Atkinson</a>, <a href="fonts/licencias/bodoni-moda.txt">Bodoni</a>, <a href="fonts/licencias/jost.txt">Jost</a>, <a href="fonts/licencias/gloock.txt">Gloock</a>, <a href="fonts/licencias/geist-mono.txt">Geist Mono</a>, <a href="fonts/licencias/instrument-serif.txt">Instrument Serif</a>, <a href="fonts/licencias/hanken-grotesk.txt">Hanken Grotesk</a>, <a href="fonts/licencias/bagel-fat-one.txt">Bagel Fat One</a>, <a href="fonts/licencias/dm-mono.txt">DM Mono</a>. El dibujo de Vitrina usa el kit Anatomy (MIT): <a href="lib/iso-kit-LICENSE.txt">licencia</a>.</p>
 </footer>
 </body>
 </html>

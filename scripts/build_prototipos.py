@@ -289,6 +289,136 @@ PAGES["nocciola"] = head("nocciola", "Nocciola", "#231B16", [
 </div>
 """ + TAIL
 
+# ================================================================== segunda tanda: sin cajas
+PROTOS2 = [
+    ("vitrina", "Vitrina", "La heladera vista desde arriba: el helado sube según el descuento"),
+    ("cucurucho", "Cucurucho", "Los descuentos apilados como bochas"),
+    ("numero", "Número", "El porcentaje gigante es la página"),
+]
+
+def switcher2(current):
+    items = ['<a href="../../">Original</a>'] + [
+        f'<a href="../{s}/"{" aria-current=\"page\"" if s == current else ""}>{n}</a>' for s, n, _ in PROTOS2]
+    return f"""<nav class="proto-switch" aria-label="Prototipos de diseño">
+  <a class="proto-all" href="../">Prototipos</a>{"".join(items)}
+</nav>"""
+
+def frase(label):
+    return f"""<section class="panel" aria-label="Buscar descuentos">
+        <p class="frase"><label for="city">{label}</label> <select id="city"></select>
+          <button id="fetch" class="btn" type="button" disabled>Traer descuentos</button></p>
+        <button id="cancel" class="link" type="button" hidden>Cancelar búsqueda</button>
+        <section id="progress" class="progress" hidden aria-live="polite"></section>
+        <p class="panel-links">
+          <button id="force" class="link" type="button" disabled>Buscar de nuevo, sin lo guardado</button>
+          <button id="show-pya-setup" class="link" type="button" hidden>Cambiar dirección de PedidosYa</button>
+        </p>
+      </section>"""
+
+OCULTO = """<div class="app-oculta">
+    <p id="stamp" hidden></p><span id="city-upper" hidden></span>
+    <div id="hero" hidden></div>
+    <h2 class="sr">Lista completa de descuentos</h2>
+    <div id="list" class="sr"></div>
+  </div>"""
+
+def paletas(opts):
+    return '<div class="paletas" role="group" aria-label="Paleta de colores">' + "".join(
+        f'<button type="button" data-set-paleta="{v}" aria-pressed="false"><span class="sw" aria-hidden="true"></span>{n}</button>' for v, n in opts) + "</div>"
+
+def head2(slug, title, theme, preload):
+    return head(slug, title, theme, preload).replace(switcher(slug), switcher2(slug))
+
+STATUS2 = """<footer class="estado">
+      <div id="status" class="status"></div>
+      <p class="total"><span id="total"></span></p>
+      <p class="fineprint">Los descuentos con bancos o billeteras se muestran, pero no cuentan para ordenar.
+        <a href="#" id="diag">Descargar diagnóstico de PedidosYa</a></p>
+    </footer>"""
+
+PAGES["vitrina"] = head2("vitrina", "Vitrina", "#EEF0EC", ["gloock-latin-400-normal.woff2", "geist-mono-latin-400-normal.woff2"]).replace("<body>", '<body class="iso" data-theme="light">') + f"""<header class="top">
+  <a class="brand" href="../../" aria-label="cuartito, versión original">{MARK}<span>cuartito</span></a>
+  {paletas([("marmol", "Mármol"), ("noche", "Noche"), ("pistacho", "Pistacho")])}
+  {EXT}
+</header>
+<main class="sala">
+  <section class="intro">
+    <p class="edition"><span id="city-name">Rosario</span> · <span id="last-sync">sin buscar todavía</span></p>
+    <h1 id="headline" class="headline">El helado más barato de hoy. Sin abrir diez apps.</h1>
+    <p class="lede" id="lede" aria-live="polite"></p>
+    {INSTALL}
+    {PYA}
+    {frase("Heladerías de")}
+  </section>
+
+  <section id="ticket" class="escena" aria-label="Vitrina de descuentos">
+    <div class="vitrina-wrap">
+      <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Vitrina: con las flechas pasás de un pote a otro"></div>
+      <p class="lectura" data-readout aria-live="polite"></p>
+    </div>
+    <div class="lado">
+      <article id="detalle" class="detalle" aria-live="polite"></article>
+      <ol id="indice" class="indice" aria-label="Potes de la vitrina"></ol>
+      {FILTERS}
+    </div>
+  </section>
+  {STATUS2}
+  {OCULTO}
+</main>
+<script type="module" src="vitrina.js"></script>
+""" + TAIL
+
+def top2(opts):
+    return f"""<header class="top">
+  <a class="brand" href="../../" aria-label="cuartito, versión original">{MARK}<span>cuartito</span></a>
+  {paletas(opts)}
+  {EXT}
+</header>"""
+
+INTRO2 = lambda titulo, label: f"""<section class="intro">
+    <p class="edition"><span id="city-name">Rosario</span> · <span id="last-sync">sin buscar todavía</span></p>
+    <h1 id="headline" class="headline">{titulo}</h1>
+    <p class="lede" id="lede" aria-live="polite"></p>
+    {INSTALL}
+    {PYA}
+    {frase(label)}
+  </section>"""
+
+# ------------------------------------------------------------------ Cucurucho
+PAGES["cucurucho"] = head2("cucurucho", "Cucurucho", "#2B1B15", ["instrument-serif-latin-400-italic.woff2", "hanken-grotesk-latin-400-normal.woff2"]).replace(
+    '<link rel="stylesheet" href="styles.css">', '<link rel="stylesheet" href="../lib/comun.css">\n  <link rel="stylesheet" href="styles.css">') + f"""{top2([("cacao", "Cacao"), ("frutilla", "Frutilla"), ("limon", "Limón")])}
+<main class="sala">
+  {INTRO2("El helado más barato de hoy, apilado.", "Bochas de")}
+  <section id="ticket" class="torre" aria-label="Descuentos apilados como bochas: arriba el más grande">
+    <div class="pila">
+    <ol id="bochas" class="bochas" aria-label="Bochas: con las flechas pasás de una a otra"></ol>
+    <div class="cono" aria-hidden="true"><svg viewBox="0 0 200 260" preserveAspectRatio="none"><defs><pattern id="waffle" width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0H22M0 0V22" stroke="var(--cono-linea)" stroke-width="3"/></pattern></defs><path d="M6 0H194L106 254Q100 262 94 254Z" fill="var(--cono)"/><path d="M6 0H194L106 254Q100 262 94 254Z" fill="url(#waffle)"/><path d="M6 0H194L190 12H10Z" fill="var(--cono-linea)" opacity=".5"/></svg></div>
+    </div>
+    <div id="sueltos" class="sueltos"></div>
+    {FILTERS}
+  </section>
+  {STATUS2}
+  {OCULTO}
+</main>
+<script type="module" src="cucurucho.js"></script>
+""" + TAIL
+
+# ------------------------------------------------------------------ Número
+PAGES["numero"] = head2("numero", "Número", "#FF6F91", ["bagel-fat-one-latin-400-normal.woff2", "dm-mono-latin-400-normal.woff2"]).replace(
+    '<link rel="stylesheet" href="styles.css">', '<link rel="stylesheet" href="../lib/comun.css">\n  <link rel="stylesheet" href="styles.css">') + f"""{top2([("fruta", "Fruta"), ("papel", "Papel"), ("neon", "Neón")])}
+<main class="sala">
+  {INTRO2("Cuánto te ahorrás hoy, en un solo número.", "Heladerías de")}
+  <section id="ticket" class="numeros" aria-label="Un descuento por pantalla, del más grande al más chico"></section>
+  <section class="cierre">
+    <div id="sueltos" class="sueltos"></div>
+    {FILTERS}
+    {STATUS2}
+  </section>
+  {OCULTO}
+</main>
+<script type="module" src="numero.js"></script>
+""" + TAIL
+
 for slug, html in PAGES.items():
     d = os.path.join(OUT, slug)
     os.makedirs(d, exist_ok=True)
