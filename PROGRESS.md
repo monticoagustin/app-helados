@@ -165,6 +165,11 @@
   - **Grilla**: todas iguales, 4 por fila en compu y 2 en el celular.
   - **Foco**: el elegido enorme de lado a lado y abajo todas para pasar.
   Cada una muestra precio, precio anterior, "Ahorrás $X" y "Pedir en …". Tocar un pote marca su heladería.
+  Cuarta vuelta: botón "Pedir en …" con el color de cada app (Rappi naranja, PedidosYa fucsia, Uber Eats verde);
+  lema nuevo con botón "Otro lema" para probar 5 opciones (arranca con el del usuario: "¿Cansad@ de que te cobren
+  el envío más caro que el cuarto?") y bajada "Código abierto. 0% humo corporativo." (link al repo, que es público
+  pero todavía no tiene LICENSE). Sin la nota de bancos/billeteras ni el link de diagnóstico (el elemento #diag
+  queda oculto porque app.js lo usa).
 - E2E: abre los 8 prototipos; en los nuevos también chequea que el dibujo propio muestre los datos.
 
 ## Falta / próximos pasos
