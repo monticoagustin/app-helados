@@ -1,6 +1,6 @@
 # PROGRESS
 
-Última actualización: 2026-11-16
+Última actualización: 2026-11-17
 
 ## Decisiones
 - 2026-11-15: la app vive en **teskel.online/helados** (Spacefast, flujo GitHub → Spacefast).
@@ -11,7 +11,14 @@
 - Si PedidosYa pide verificación, **la resuelve la persona** en la pestaña que abre la extensión.
   No se automatiza ni se saltea.
 - Sin búsquedas periódicas ni alertas por ahora: se busca al apretar "Traer descuentos".
-- Plataformas: PedidosYa y Rappi. Mercado Libre (solo app) y Uber Eats (no opera en Rosario) quedan afuera.
+- Plataformas: PedidosYa, Rappi y **Uber Eats** (desde 2026-11-17: volvió a Argentina y tiene web con Rosario).
+  Mercado Libre queda afuera (solo app). Relevado 2026-11-17 en el navegador integrado, como compu y
+  como celular: la landing `/landing/restaurantes` solo tiene links a la app (`meli://proximity_marketplace/
+  store?brand_id=…`, ej. Freddo = 53) y una página "pedí con la app". No hay versión web (ni en
+  mercadolibre.com.ar ni en mercadopago.com.ar: 404). Leer la app por dentro implicaría usar la sesión
+  del usuario e interceptar su tráfico: no se hace.
+- Pendiente de decisión: versión para celular (iPhone y Android, sin compu). Propuesta: app propia
+  que busca desde el celular (necesita cuenta de Apple Developer para el iPhone).
 
 ## Hecho (rama `fase-1-extension`)
 - Normalizador en JS: tamaños (1/4, 1/2, 1 kg, gramos, "2 x 1/4"), $/kg solo para helado por peso
@@ -102,6 +109,88 @@
   hero) no aplican a una herramienta.
 - **Nueva dirección: teskel.online/cuartito** (el workflow publica en `cuartito/`; `helados/` queda
   con la última versión vieja). Extensión v0.8.0: el puente también corre en /cuartito.
+
+## Hecho (rama `fase-2-uber-eats`, 2026-11-17)
+- **Uber Eats** como tercera plataforma. Relevado con datos reales de Rosario en el navegador integrado:
+  - Ubicación: parámetro `pl` de la URL (base64 de JSON con ciudad y coordenadas). Probado con Rosario y
+    Córdoba (Uber acepta el centro de la ciudad sin ID de Google).
+  - Búsqueda: `POST /_p/api/getSearchFeedV1` (categoría Ice Cream) → locales en dos formatos. Trae
+    también supermercados y kioscos.
+  - Menú: `POST /_p/api/getStoreV1` → categorías del local, abierto/cerrado, envío, demora y productos.
+    Precio final en centavos; el anterior en `purchaseInfo` o, si falta, en el texto ("discounted from $ X").
+  - Solo heladerías (por nombre o por categoría "Ice Cream"/"Helado"); descarta locales de otra ciudad
+    (si Uber no está en la ciudad elegida, avisa "Uber Eats no está en X").
+- La extensión abre Uber en la ventana minimizada (para que tome la ubicación) y hace las mismas llamadas
+  que su web desde esa pestaña. Hasta 30 menús por búsqueda. Si Uber no contesta, muestra la ventana por
+  si hay una verificación y espera a la persona (no se saltea nada).
+- Página: filtro "Uber Eats" y su nombre en los renglones. Extensión **v0.9.0**.
+- Normalizador: reconoce "Cassata" (con doble s).
+- Tests: 36 unitarios (8 de Uber Eats con fixtures reales recortados) + e2e con un Uber Eats simulado
+  (Grido con descuentos, supermercado filtrado, Córdoba "no está").
+- **Falta probar con la extensión real** en la compu del usuario.
+
+## Hecho (rama `fase-3-prototipos`, 2026-11-17)
+- **4 prototipos de diseño** radicalmente distintos, que funcionan de verdad (misma `app.js`, mismos ids;
+  la búsqueda, la extensión y la caché no cambian). La versión original queda intacta.
+  - `/cuartito/prototipos/`: selector con las 4 direcciones y el original.
+  - **Cotización** (editorial/suizo): página de mercados en papel salmón, cinta de cotizaciones
+    (`tape.js` copia lo que ya dibujó app.js), pizarra como tabla de valores. Newsreader + IBM Plex Sans Condensed.
+  - **Derretido** (experimental): Climate Crisis con su eje YEAR (la marca se derrite al cargar),
+    franjas de gustos que chorrean. Martian Mono.
+  - **Ofertón** (bold): carteles fluo con cinta sobre cartón, estrellas de oferta. Big Shoulders Display + Atkinson Hyperlegible.
+  - **Nocciola** (lujo mínimo): la carta de una gelateria, Bodoni Moda en itálica + Jost, descuento en dorado.
+- Cada prototipo tiene una barra arriba para pasar de uno a otro. Fuentes libres alojadas en
+  `web/prototipos/fonts/` (licencias en `fonts/licencias/`).
+- Los HTML se generan con `python scripts/build_prototipos.py` (editar ahí, no el HTML).
+- E2E: abre los 4 prototipos, detectan la extensión, buscan y muestran resultados.
+- El workflow publica `web/prototipos/` en `/cuartito/prototipos/`.
+- **Segunda tanda, sin cajas** (al usuario no le gustó ninguna de las 4: "muy cuadrado, muchas boxes").
+  Cada una con 3 paletas para elegir arriba (se guarda en el navegador):
+  - **Vitrina**: la heladera de mostrador en dibujo isométrico (kit Anatomy, MIT, en `lib/iso-kit.mjs`).
+    Cada pote se llena según el descuento, la pala va al que elegís (click, flechas o recorrido solo).
+    Gloock + Geist Mono. Paletas Mármol / Noche / Pistacho.
+  - **Cucurucho**: las heladerías apiladas como bochas SVG con chorreones sobre un barquillo; arriba la
+    del descuento más grande. Tocás una bocha y abajo aparece el detalle. Instrument Serif + Hanken Grotesk.
+    Paletas Cacao / Frutilla / Limón.
+  - **Número**: una heladería por pantalla, el % gigante en Bagel Fat One es la composición y cuenta
+    de 0 al entrar. DM Mono. Paletas Fruta / Papel / Neón.
+  - Las tres leen lo que app.js dibuja en `#list` (que queda oculto) con `lib/datos.js`;
+    `lib/comun.css` tiene los controles en versión texto suelto.
+- **Mostrador** (pedido del usuario, 2026-11-17): la heladera de Vitrina, quieta y rotulada (cada pote con su %
+  arriba, ordenados de mayor a menor), paleta Frutilla y letra Bricolage Grotesque ("Moderna", la elegida).
+  Tercera vuelta según su feedback ("el botón tiene que resaltar", "lista a la izquierda y blanco a la derecha no
+  es atractivo", "menos texto, que ocupe el ancho"): arriba titular + buscador con botón sólido + heladera; abajo
+  los descuentos a todo el ancho en tres diseños para comparar con el selector "Diseño":
+  - **Podio**: los 3 mejores grandes en columnas y el resto en una tira.
+  - **Grilla**: todas iguales, 4 por fila en compu y 2 en el celular.
+  - **Foco**: el elegido enorme de lado a lado y abajo todas para pasar.
+  Cada una muestra precio, precio anterior, "Ahorrás $X" y "Pedir en …". Tocar un pote marca su heladería.
+  Cuarta vuelta: botón "Pedir en …" con el color de cada app (Rappi naranja, PedidosYa fucsia, Uber Eats negro con letras blancas);
+  lema nuevo con botón "Otro lema" para probar 5 opciones (arranca con el del usuario: "¿Cansad@ de que te cobren
+  el envío más caro que el cuarto?") y bajada "Código abierto. 0% humo corporativo." (link al repo, que es público
+  pero todavía no tiene LICENSE). Sin la nota de bancos/billeteras ni el link de diagnóstico (el elemento #diag
+  queda oculto porque app.js lo usa).
+- **Cartel** (pedido del usuario, 2026-11-17, "hacé una versión y publicala directamente"): mezcla de las maquetas
+  Monumento + Vidriera. Lema "Pagá el helado, no el delivery." en Anton; buscador con botón sólido; la heladera de
+  Vitrina sobre una forma azul con el % del elegido gigante detrás; abajo el destacado (coral) y todas las
+  heladerías en una franja de colores. Paleta atardecer del usuario: #F8B195 #F67280 #C06C84 #6C5B7B #355C7D.
+  Botones de cada app con su color. Publicada como artifact con datos de ejemplo.
+  Segunda vuelta: paleta nueva del usuario (#365367 #FFBAA2 #F9F4E6 #F494AB), lema "Que para encontrar la promo
+  no tardes 2 horas" (el anterior hablaba de delivery y la app no es de envío gratis) y menos cajas: la heladera
+  con el % gigante en rosa directo sobre el crema (sin la mancha azul, que no le gustó), el destacado con una bocha rosa y la lista como bochas redondas con el %.
+- E2E: abre los 9 prototipos; en los nuevos también chequea que el dibujo propio muestre los datos.
+
+## Hecho (rama `fase-4-cartel`, 2026-11-17): Cartel es el diseño principal
+- A pedido del usuario ("publicalo como diseño principal"), `web/index.html` ahora es **Cartel**. Lema:
+  "¿Te cierran las heladerías buscando promociones? Usá [logo] cuartito". Paleta #365367 #FFBAA2 #F9F4E6 #F494AB,
+  Anton + Bricolage Grotesque, la heladera de Vitrina con el % gigante detrás, bochas en vez de cajas y los
+  botones de cada app con su color.
+- Se genera desde el prototipo: `python3 scripts/build_prototipos.py` escribe `web/index.html`, `web/styles.css`
+  (base + estilos de Cartel), `web/cartel.js` y copia `web/lib/` (kit isométrico, datos.js, comun.css). Editar
+  `web/prototipos/cartel/` y regenerar; no editar esos archivos a mano.
+- El diseño anterior (ticket) quedó guardado en `/cuartito/prototipos/ticket/`.
+- Workflow: publica también `cartel.js` y `lib/`.
+- E2E: la lista de app.js queda oculta en Cartel; la prueba abre los desplegables por código.
 
 ## Falta / próximos pasos
 - [ ] Menús de PedidosYa: la extensión ya los lee (hasta 8 heladerías abiertas, las más cercanas),

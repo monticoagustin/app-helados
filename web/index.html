@@ -5,40 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>cuartito · rebajas de helado</title>
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#F6F3EB">
   <script>if (/\/(cuartito|helados)$/.test(location.pathname)) location.replace(location.pathname + "/" + location.search);</script>
+  <meta name="theme-color" content="#F9F4E6">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="preload" href="fonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="fonts/ibm-plex-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/anton-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/bricolage-grotesque-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="lib/comun.css">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-<main class="page">
-  <header class="top">
-    <a class="brand" href="./" aria-label="cuartito, inicio">
-      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+<body class="iso" data-theme="light">
+<header class="top">
+  <a class="brand" href="./" aria-label="cuartito, inicio"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
         <circle cx="32" cy="32" r="29" fill="#F6F3EB" stroke="#1E120D" stroke-width="4.5"/>
         <path d="M30.5 30.5H10C10 19.1782 19.1782 10 30.5 10V30.5Z" fill="#F29CB0"/>
         <path d="M30.5 33.5V54C19.1782 54 10 44.8218 10 33.5H30.5Z" fill="#FBC943"/>
         <path d="M33.5 33.5H54C54 44.8218 44.8218 54 33.5 54V33.5Z" fill="#633624"/>
         <path d="M34 30H53.5C53.2 19.3 44.7 10.8 34 10.5V30Z" fill="none" stroke="#1E120D" stroke-width="2.6" stroke-dasharray="4.2 3.2" stroke-linejoin="round"/>
-      </svg>
-      <span class="brand-word">cuartito</span>
-      <span class="brand-tag">Radar de helado</span>
-    </a>
-    <p id="ext-badge" class="ext-badge"><span class="ext-dot"></span><span id="ext-text">BUSCANDO<span class="ext-word"> LA EXTENSIÓN</span>…</span></p>
-  </header>
-
-  <div class="layout">
-    <!-- Columna izquierda: titular, avisos y mostrador de controles -->
-    <div class="side">
-      <p class="edition">Edición <span id="city-name">Rosario</span> • <span id="last-sync">sin buscar todavía</span></p>
-      <h1 class="headline" id="headline">El helado más barato de hoy. Sin abrir diez apps.</h1>
+      </svg><span>cuartito</span></a>
+  <p id="ext-badge" class="ext-badge"><span class="ext-dot" aria-hidden="true"></span><span id="ext-text">BUSCANDO<span class="ext-word"> LA EXTENSIÓN</span>…</span></p>
+</header>
+<main class="sala">
+  <section class="hero">
+    <div class="intro">
+      <p class="edition"><span id="city-name">Rosario</span> · <span id="last-sync">sin buscar todavía</span></p>
+      <h1 class="lema">¿Te cierran las heladerías buscando promociones? <span class="usa">Usá <span class="lema-logo"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="29" fill="#F6F3EB" stroke="#1E120D" stroke-width="4.5"/>
+        <path d="M30.5 30.5H10C10 19.1782 19.1782 10 30.5 10V30.5Z" fill="#F29CB0"/>
+        <path d="M30.5 33.5V54C19.1782 54 10 44.8218 10 33.5H30.5Z" fill="#FBC943"/>
+        <path d="M33.5 33.5H54C54 44.8218 44.8218 54 33.5 54V33.5Z" fill="#633624"/>
+        <path d="M34 30H53.5C53.2 19.3 44.7 10.8 34 10.5V30Z" fill="none" stroke="#1E120D" stroke-width="2.6" stroke-dasharray="4.2 3.2" stroke-linejoin="round"/>
+      </svg><span>cuartito</span></span></span></h1>
+      <p class="bajada">Comparamos Rappi, PedidosYa y Uber Eats en tu ciudad. <a href="https://github.com/monticoagustin/app-helados" target="_blank" rel="noopener">Código abierto</a>, 0% humo corporativo.</p>
       <p class="lede" id="lede" aria-live="polite"></p>
-
       <section id="install" class="note" hidden>
         <h2>Primero, instalá la extensión</h2>
-        <p>La búsqueda corre en tu Chrome, con tu conexión: así PedidosYa y Rappi te muestran lo de tu ciudad,
+        <p>La búsqueda corre en tu Chrome, con tu conexión: así Rappi, PedidosYa y Uber Eats te muestran lo de tu ciudad,
           y si piden una verificación la resolvés vos con un click.</p>
         <ol>
           <li><a href="helados-extension.zip" download>Descargá la extensión</a> y descomprimí el .zip en una carpeta que no vayas a borrar.</li>
@@ -47,78 +48,63 @@
           <li>Volvé acá y recargá la página.</li>
         </ol>
       </section>
-
       <section id="pya-setup" class="note" hidden>
         <h2>Una sola vez: tu dirección en PedidosYa</h2>
         <p>PedidosYa necesita saber dónde estás. Se abre en una pestaña: cargá tu dirección hasta que veas la lista de locales y volvé.</p>
         <div class="note-actions">
-          <button id="open-pya" class="btn btn-dark" type="button">Abrir PedidosYa</button>
+          <button id="open-pya" class="btn" type="button">Abrir PedidosYa</button>
           <button id="pya-done" class="link" type="button">Ya la cargué</button>
         </div>
       </section>
-
       <section class="panel" aria-label="Buscar descuentos">
-        <div class="field">
-          <label class="label" for="city">¿Dónde pedís hoy?</label>
-          <div class="search-row">
-            <select id="city"></select>
-            <button id="fetch" class="btn btn-dark" type="button" disabled>Traer descuentos</button>
-          </div>
-          <button id="cancel" class="btn btn-ghost" type="button" hidden>Cancelar búsqueda</button>
+        <div class="buscar">
+          <button id="fetch" class="btn-solido" type="button" disabled>Traer descuentos</button>
+          <label class="sr" for="city">Ciudad</label>
+          <select id="city"></select>
         </div>
-
+        <button id="cancel" class="link" type="button" hidden>Cancelar búsqueda</button>
         <section id="progress" class="progress" hidden aria-live="polite"></section>
-
-        <div class="panel-links">
+        <p class="panel-links">
           <button id="force" class="link" type="button" disabled>Buscar de nuevo, sin lo guardado</button>
           <button id="show-pya-setup" class="link" type="button" hidden>Cambiar dirección de PedidosYa</button>
-        </div>
+        </p>
       </section>
     </div>
-
-    <!-- Columna derecha: el ticket de mostrador -->
-    <section class="receipt" aria-label="Descuentos encontrados">
-      <div class="receipt-paper" id="ticket">
-        <header class="receipt-head">
-          <div>
-            <p class="receipt-kicker">COMPROBANTE DE REBAJAS • <span id="city-upper">ROSARIO</span></p>
-            <h2 class="receipt-title">Mejor precio en mostrador</h2>
-          </div>
-          <p class="stamp" id="stamp" hidden></p>
-        </header>
-        <div id="filters" class="filters" aria-label="Filtros">
+    <div class="vitrina-wrap">
+      <div class="forma" aria-hidden="true"><p class="gigante" data-gigante>−50%</p></div>
+      <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Heladera: cada pote es una heladería; con las flechas pasás de uno a otro"></div>
+      <p class="leyenda">Cada pote es una heladería: más lleno, más descuento.</p>
+    </div>
+  </section>
+  <section id="ticket" class="resultados" aria-label="Descuentos de hoy" aria-live="polite"></section>
+  <div id="filters" class="filters" aria-label="Filtros">
           <fieldset class="seg">
             <legend class="sr">Plataforma</legend>
             <div class="seg-box">
               <label><input type="radio" name="plat" value="" checked><span>Todas</span></label>
               <label><input type="radio" name="plat" value="rappi"><span>Rappi</span></label>
               <label><input type="radio" name="plat" value="pedidosya"><span>PedidosYa</span></label>
+              <label><input type="radio" name="plat" value="ubereats"><span>Uber Eats</span></label>
             </div>
           </fieldset>
           <div class="chips">
-            <label class="chip chip-yellow"><input type="checkbox" id="f-open" checked><span class="box" aria-hidden="true"></span>Solo abiertas</label>
-            <label class="chip chip-pink"><input type="checkbox" id="f-plus" checked><span class="box" aria-hidden="true"></span>Con Plus<span class="sr"> de PedidosYa</span></label>
+            <label class="chip"><input type="checkbox" id="f-open" checked><span class="box" aria-hidden="true"></span>Solo abiertas</label>
+            <label class="chip"><input type="checkbox" id="f-plus" checked><span class="box" aria-hidden="true"></span>Con Plus<span class="sr"> de PedidosYa</span></label>
           </div>
         </div>
-
-        <div id="hero" aria-live="polite"></div>
-        <div id="list" class="list"></div>
-        <footer class="receipt-foot">
-          <div id="status" class="status"></div>
-          <div class="receipt-total">
-            <span id="total"></span>
-            <span>HECHO EN ROSARIO • USO PERSONAL</span>
-          </div>
-        </footer>
-      </div>
-    </section>
-  </div>
-
-  <footer class="bottom">
-    <p>Los descuentos con bancos o billeteras se muestran, pero no cuentan para ordenar.</p>
-    <p><a href="#" id="diag">Descargar diagnóstico de PedidosYa</a></p>
+  <footer class="estado">
+    <div id="status" class="status"></div>
+    <p class="total"><span id="total"></span></p>
   </footer>
+  <div class="app-oculta">
+    <p id="stamp" hidden></p><span id="city-upper" hidden></span>
+    <div id="hero" hidden></div>
+    <h2 class="sr">Lista completa de descuentos</h2>
+    <div id="list" class="sr"></div>
+  </div>
+  <div hidden><p id="headline"></p><a href="#" id="diag">Diagnóstico</a></div>
 </main>
+<script type="module" src="cartel.js"></script>
 <script type="module" src="app.js"></script>
 </body>
 </html>

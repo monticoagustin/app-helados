@@ -1,6 +1,6 @@
 # App Helados
 
-Comparador de descuentos en heladerías de **Rosario** en **PedidosYa** y **Rappi**.
+Comparador de descuentos en heladerías de **Rosario** en **PedidosYa**, **Rappi** y **Uber Eats**.
 Uso personal. Moneda: ARS.
 
 - Página: **https://teskel.online/cuartito/**
@@ -11,7 +11,8 @@ Uso personal. Moneda: ARS.
 ```
 teskel.online/cuartito  ──(botón "Traer descuentos")──►  extensión en tu Chrome
                                                          ├─ Rappi: lee las páginas de la categoría Helados y de cada local
-                                                         └─ PedidosYa: abre una pestaña, lee lo que carga la web
+                                                         ├─ PedidosYa: abre una pestaña, lee lo que carga la web
+                                                         └─ Uber Eats: abre su web con la ciudad y pide búsqueda y menús
                                                               └─ si pide verificación, la pestaña se muestra y la resolvés vos
        ◄────────── lista de heladerías con % de descuento efectivo y precio por kg
 ```
@@ -39,7 +40,8 @@ extension/           extensión de Chrome (Manifest V3)
   pya-capture.js       guarda el JSON que recibe PedidosYa (solo durante una búsqueda)
   lib/normalize.js     tamaños, $/kg y promos → % efectivo (2x1, 2da al 50%, etc.)
   lib/rappi.js         parser de Rappi (estructura real relevada)
-  lib/pedidosya.js     parser de PedidosYa (heurístico hasta ver datos reales)
+  lib/pedidosya.js     parser de PedidosYa
+  lib/ubereats.js      parser de Uber Eats (búsqueda y menús, formato real)
 tests/               tests con node:test
 scripts/e2e_extension.py   prueba de punta a punta con servidores simulados
 ```

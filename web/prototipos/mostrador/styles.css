@@ -1,0 +1,134 @@
+/* MOSTRADOR — la heladera de Vitrina, quieta y rotulada, paleta Frutilla, letra Bricolage Grotesque.
+   Arriba: titular, buscador con botón sólido y la heladera. Debajo, los descuentos a todo el ancho en
+   tres diseños para comparar (data-layout en <html>): Podio, Grilla y Foco. */
+@font-face { font-family: "Bricolage"; font-weight: 500; font-display: swap; src: url("../fonts/bricolage-grotesque-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Bricolage"; font-weight: 700; font-display: swap; src: url("../fonts/bricolage-grotesque-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Bricolage"; font-weight: 800; font-display: swap; src: url("../fonts/bricolage-grotesque-latin-800-normal.woff2") format("woff2"); }
+
+body {
+  --bg: #F9D9DF; --ink: #4A0F22; --muted: #7E3E51; --accent: #B8102C; --borde: #4A0F22; --papel: #FFF9F7;
+  --f0: #E5426B; --f1: #5B3022; --f2: #7CCFB2; --f3: #F3DF5A; --f4: #FFF6E4; --f5: #C88A4B; --f6: #A9C77A; --f7: #B5174C;
+  --display: "Bricolage", system-ui, sans-serif; --body: "Bricolage", system-ui, sans-serif;
+  font-size: 1.0625rem; line-height: 1.45; font-weight: 500;
+}
+.brand { font-size: 1.7rem; font-weight: 800; }
+.headline { font-size: clamp(2.5rem, 6.4vw, 4.6rem); font-weight: 800; line-height: 0.95; letter-spacing: -0.025em; max-width: 12ch; }
+.edition, .lede { font-size: 0.9375rem; }
+.note h2, .vacio, .sueltos h3 { font-weight: 800; }
+
+.disenos { display: flex; flex-wrap: wrap; align-items: center; gap: 0 1rem; font-size: 0.9375rem; }
+.disenos-t { color: var(--muted); }
+.disenos button { min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--muted); font-weight: 500; }
+.otro-lema { margin-left: 0.75rem; color: var(--accent) !important; font-weight: 800 !important; }
+.bajada { margin: 0.9rem 0 0; font-weight: 700; font-size: 1.05rem; color: var(--muted); }
+.bajada a { color: var(--ink); text-decoration-thickness: 2px; }
+.lema { max-width: 16ch; font-size: clamp(2.3rem, 5.2vw, 4.2rem); }
+.disenos button[aria-pressed="true"] { color: var(--ink); font-weight: 800; text-decoration: underline; text-underline-offset: 6px; }
+
+/* el buscador: ciudad + botón sólido, imposible de no ver */
+.panel { margin-top: 1.75rem; max-width: 34rem; }
+.ciudad-l { display: block; font-size: 0.9375rem; color: var(--muted); }
+.buscar { display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; align-items: center; }
+.buscar select { font: 800 1.6rem/1.2 var(--display); min-width: 9rem; flex: 1 1 10rem; }
+.btn-solido {
+  flex: 0 0 auto; min-height: 60px; padding: 0 1.75rem; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--accent); color: #fff; font: 800 1.25rem/1 var(--display); letter-spacing: -0.01em;
+  box-shadow: 0 4px 0 var(--ink); transition: translate .12s ease, box-shadow .12s ease, background-color .2s;
+}
+.btn-solido:hover:not(:disabled) { background: #9E0B24; translate: 0 -1px; box-shadow: 0 5px 0 var(--ink); }
+.btn-solido:active:not(:disabled) { translate: 0 3px; box-shadow: 0 1px 0 var(--ink); }
+.btn-solido:disabled { background: color-mix(in oklab, var(--accent) 45%, var(--bg)); box-shadow: none; cursor: default; }
+.btn-solido:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+@media (max-width: 520px) { .btn-solido { width: 100%; } }
+.note .btn { font-size: 1.25rem; font-weight: 800; }
+
+/* la heladera */
+body.iso { --anatomy-page: var(--bg); --anatomy-paper: var(--papel); --anatomy-card: var(--bg); --anatomy-text: var(--muted); --anatomy-strong: var(--ink); }
+.flav { --anatomy-paper: var(--c); --anatomy-face: var(--c); --anatomy-top: color-mix(in oklab, var(--c) 80%, white);
+  --anatomy-shade-0: color-mix(in oklab, var(--c) 70%, black); --anatomy-shade-1: color-mix(in oklab, var(--c) 78%, black);
+  --anatomy-shade-2: color-mix(in oklab, var(--c) 86%, black); --anatomy-shade-3: color-mix(in oklab, var(--c) 93%, black);
+  --anatomy-hi: color-mix(in oklab, var(--c) 45%, black); }
+.flav[data-flavor="0"] { --c: var(--f0); } .flav[data-flavor="1"] { --c: var(--f1); } .flav[data-flavor="2"] { --c: var(--f2); }
+.flav[data-flavor="3"] { --c: var(--f3); } .flav[data-flavor="4"] { --c: var(--f4); } .flav[data-flavor="5"] { --c: var(--f5); }
+.flav[data-flavor="6"] { --c: var(--f6); } .flav[data-flavor="7"] { --c: var(--f7); }
+.hit { fill: transparent; stroke: none; cursor: pointer; pointer-events: all; }
+.iso-stage { outline-offset: 6px; }
+.iso-stage svg { width: 100%; height: auto; display: block; }
+.rot text { font: 800 25px/1 var(--display); fill: var(--ink); stroke: var(--papel); stroke-width: 6px; stroke-linejoin: round; paint-order: stroke fill; pointer-events: none; }
+.rot.sel text { font-size: 34px; fill: var(--accent); }
+.leyenda { margin: 0.25rem 0 0; text-align: center; font-size: 0.9375rem; color: var(--muted); }
+
+.hero { display: grid; gap: 1rem 3rem; align-items: center; }
+.vitrina-wrap { min-width: 0; }
+@media (min-width: 1000px) { .hero { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); padding-top: 1rem; } }
+@media (max-width: 999px) { .iso-stage { margin: 0 -1.25rem; } .rot text { font-size: 27px; } .rot.sel text { font-size: 33px; } }
+
+/* piezas comunes de los resultados */
+.resultados { margin-top: 3rem; }
+.res-t { margin: 0 0 1.5rem; font: 800 clamp(1.6rem, 3vw, 2.4rem)/1.05 var(--display); letter-spacing: -0.02em; }
+.elegir { display: grid; justify-items: start; gap: 0.1rem; padding: 0; border: 0; background: none; cursor: pointer; text-align: left; color: var(--ink); font: inherit; min-height: 44px; }
+.puesto { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; font-size: 0.9375rem; color: var(--muted); }
+.puesto::before { content: ""; width: 0.8rem; height: 0.8rem; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1.5px var(--borde); flex: none; }
+.pct { font: 800 clamp(3.4rem, 7vw, 5.6rem)/0.9 var(--display); letter-spacing: -0.04em; color: var(--accent); }
+.pct-s { font: 800 1.6rem/1 var(--display); letter-spacing: -0.02em; color: var(--accent); }
+.nm { font-weight: 800; font-size: 1.25rem; line-height: 1.15; }
+.elegir:hover .nm, .on > .elegir .nm, .elegir[aria-pressed="true"] .nm { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.prod { margin: 0.6rem 0 0; color: var(--muted); }
+.precio { margin: 0.15rem 0 0; }
+.precio b { font: 800 1.9rem/1.05 var(--display); letter-spacing: -0.02em; }
+.precio s { color: var(--muted); margin-left: 0.35rem; }
+.ahorro { margin: 0.15rem 0 0; font-weight: 800; color: var(--accent); }
+.pedir { display: inline-block; padding: 0.55rem 0; min-height: 44px; font-weight: 700; color: var(--ink); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.pedir::after { content: "↗"; margin-left: 0.3rem; }
+/* botón de cada app con su color: Rappi naranja, PedidosYa fucsia, Uber Eats negro */
+.pedir[class*="app-"] {
+  display: inline-flex; align-items: center; min-height: 48px; margin-top: 0.75rem; padding: 0 1.2rem; border-radius: 999px;
+  font-weight: 800; font-size: 1.05rem; text-decoration: none; background: var(--app); color: var(--app-t);
+  box-shadow: 0 3px 0 color-mix(in oklab, var(--app) 60%, var(--ink)); transition: translate .12s ease, box-shadow .12s ease;
+}
+.pedir[class*="app-"]:hover { translate: 0 -1px; box-shadow: 0 4px 0 color-mix(in oklab, var(--app) 60%, black); }
+.pedir[class*="app-"]:active { translate: 0 2px; box-shadow: 0 1px 0 color-mix(in oklab, var(--app) 60%, black); }
+.app-rappi { --app: #E5390E; --app-t: #fff; }
+.app-pya { --app: #D9004B; --app-t: #fff; }
+.app-uber { --app: #000; --app-t: #fff; }
+.app-otra { --app: var(--ink); --app-t: var(--bg); }
+.pedir-grande { min-height: 56px !important; padding: 0 1.6rem !important; font-size: 1.2rem !important; }
+.meta { margin: 0.5rem 0 0; font-size: 0.9375rem; color: var(--muted); }
+
+/* PODIO: los tres mejores grandes, a todo el ancho; el resto en una tira */
+.podio { display: grid; gap: 2rem 3rem; }
+@media (min-width: 760px) { .podio { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.pod { padding-top: 1rem; border-top: 6px solid color-mix(in oklab, var(--c) 88%, var(--ink)); }
+.pod:first-child .pct { font-size: clamp(4.2rem, 9vw, 7rem); }
+.resto { list-style: none; margin: 2.5rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.5rem 2rem; }
+.resto .elegir { grid-template-columns: auto auto; column-gap: 0.75rem; align-items: baseline; }
+.resto .puesto { grid-row: span 2; }
+.resto .nm { font-size: 1rem; grid-column: 2; }
+
+/* GRILLA: todas iguales, cuatro por fila en compu */
+.grilla { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 2.25rem 2.5rem; }
+.grilla li { padding-top: 0.9rem; border-top: 6px solid color-mix(in oklab, var(--c) 88%, var(--ink)); }
+.grilla .pct { font-size: clamp(3rem, 5vw, 4rem); }
+@media (max-width: 560px) { .grilla { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem 1.25rem; } .grilla .pct { font-size: 2.6rem; } .grilla .nm { font-size: 1.05rem; } .grilla .precio b { font-size: 1.5rem; } .grilla .precio s { display: block; margin: 0; } }
+
+/* FOCO: el elegido enorme, de lado a lado; abajo, todas para pasar */
+.foco { display: grid; gap: 1rem 3rem; align-items: end; padding: 2rem 0; border-top: 6px solid var(--c); border-bottom: 6px solid var(--c); }
+@media (min-width: 900px) { .foco { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); } }
+.puesto-g { margin: 0; font-weight: 700; color: var(--muted); }
+.quien { margin: 0.1rem 0 0; font: 800 clamp(2rem, 5vw, 3.6rem)/1 var(--display); letter-spacing: -0.02em; overflow-wrap: anywhere; }
+.numero { margin: 0.3rem 0 0; display: flex; align-items: flex-start; white-space: nowrap; font: 800 min(42vw, 15rem)/0.82 var(--display); letter-spacing: -0.05em; color: var(--accent); }
+.numero .menos, .numero .pc { font-size: 0.32em; line-height: 1; margin-top: 0.12em; letter-spacing: 0; }
+.foco-dato .precio b { font-size: 2.6rem; }
+.foco-dato .ahorro { font-size: 1.4rem; }
+.chips-d { list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.25rem 1.5rem; }
+.chips-d .elegir { grid-template-columns: auto 1fr; column-gap: 0.6rem; align-items: baseline; width: 100%; }
+.chips-d .nm { font-size: 0.9375rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.chips-d .pct-s { color: var(--ink); }
+.chips-d .elegir[aria-pressed="true"] .pct-s { color: var(--accent); text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
+
+.filters, .estado { margin-top: 2.5rem; }
+.vacio { margin: 1rem 0; }
+@media (max-width: 560px) {
+  .grilla .pedir[class*="app-"] { padding: 0 1rem; font-size: 1rem; white-space: nowrap; }
+  .grilla .pedir-en { display: none; }
+}

@@ -17,6 +17,7 @@ MOCK = "http://127.0.0.1:8768"
 for f, subs in {
   "lib/rappi.js": [('"https://www.rappi.com.ar"', f'"{MOCK}/rappi"')],
   "lib/pedidosya.js": [('"https://www.pedidosya.com.ar"', f'"{MOCK}/pya"')],
+  "lib/ubereats.js": [('"https://www.ubereats.com"', f'"{MOCK}/ue"')],
   "background.js": [('"https://www.pedidosya.com.ar/*"', f'"{MOCK}/pya/*"'),
                     ('u.hostname.endsWith("pedidosya.com.ar")', 'u.pathname.startsWith("/pya/")'),
                     ('const MENU_BLOCK_WAIT_MS = 60 * 1000;', 'const MENU_BLOCK_WAIT_MS = 4 * 1000;')],
@@ -57,6 +58,14 @@ MENU_OK = json.dumps({"sections":[{"name":"Helados","products":[
   {"id":1,"name":"1 Kg de helado","price":{"finalPrice":17000,"originalPrice":20000}},
   {"id":2,"name":"1/4 Kg","price":6000},
   {"id":3,"name":"Agua mineral 500","price":{"finalPrice":500,"originalPrice":1000}}]}]})
+# Uber Eats: búsqueda y locales con el formato real (tests/fixtures/ubereats_*). La búsqueda trae un
+# supermercado (Dar) que no debe aparecer; el resto de los locales vienen sin descuentos.
+_fx = lambda f: json.load(open(os.path.join(ROOT, "tests", "fixtures", f)))
+UE_FEED = json.dumps(_fx("ubereats_feed_real.json"))
+UE_STORES = {d["data"]["uuid"]: json.dumps(d) for d in (_fx("ubereats_store_grido_real.json"), _fx("ubereats_store_dar_real.json"))}
+UE_EMPTY = lambda uuid: json.dumps({"status": "success", "data": {"title": "Heladería sin descuentos", "uuid": uuid,
+    "citySlug": "rosario", "cuisineList": ["Ice Cream"], "isOpen": True, "catalogSectionsMap": {}}})
+UE_PAGE = "<html><head><title>Uber Eats</title></head><body>Uber Eats</body></html>"
 PX_BLOCK = json.dumps({"appId":"PXeT15wiaE","jsClientSrc":"/eT15wiaE/init.js","blockScript":"/eT15wiaE/captcha/captcha.js?a=c"})
 state = {"challenge": True, "address": False, "calls": []}
 class Mock(http.server.BaseHTTPRequestHandler):
@@ -67,6 +76,7 @@ class Mock(http.server.BaseHTTPRequestHandler):
         u = self.path; state["calls"].append(u)
         if u.endswith("/restaurantes/category/helados") and u.startswith("/rappi/"): return self.out(200,"text/html",CAT)  # cualquier ciudad → Rosario, como Rappi
         if u.startswith("/rappi/restaurantes/"): return self.out(200,"text/html",STORE[int(u.rsplit("/",1)[1])])
+        if u.startswith("/ue/ar/feed"): return self.out(200,"text/html",UE_PAGE)
         if u.startswith("/pya/"):
             if state["challenge"]: return self.out(403,"text/html",CHALLENGE)
             if u.startswith("/pya/home-page/"): return self.out(200,"application/json",'{"children":[]}')
@@ -82,6 +92,12 @@ class Mock(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         u = self.path; state["calls"].append("POST " + u)
         if u.startswith("/pya/v4/shoplist/vendors"): return self.out(200,"application/json",VENDORS)
+        if u.startswith("/ue/_p/api/"):
+            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
+            if self.headers.get("x-csrf-token") != "x": return self.out(403,"application/json","{}")
+            if u.startswith("/ue/_p/api/getSearchFeedV1"): return self.out(200,"application/json",UE_FEED)
+            if u.startswith("/ue/_p/api/getStoreV1"):
+                uuid = body.get("storeUuid"); return self.out(200,"application/json",UE_STORES.get(uuid) or UE_EMPTY(uuid))
         self.out(404,"text/plain","no")
 class Web(http.server.SimpleHTTPRequestHandler):
     def __init__(self,*a,**k): super().__init__(*a, directory=WEB, **k)
@@ -113,27 +129,36 @@ with sync_playwright() as p:
     print("LIST:\n" + page.inner_text("#list")[:1200])
     print("tabs al final:", [pg.url for pg in ctx.pages])
     print("pedidos:", state["calls"])
-    page.click("details summary") if page.query_selector("details summary") else None
+    page.evaluate("document.querySelectorAll('#list details').forEach(d => d.open = true)")
     page.screenshot(path="/tmp/e2e.png", full_page=True)
     # segundo click: debe usar caché (no nuevos pedidos)
     n = len(state["calls"]); page.click("#fetch"); page.wait_for_timeout(3000)
     cache_new = len(state["calls"]) - n
     print("pedidos nuevos con caché:", cache_new)
-    page.wait_for_function("() => { const t = document.getElementById('status').innerText; return t.includes('Rappi:') && t.includes('PedidosYa:'); }", timeout=15000)
+    page.wait_for_function("() => { const t = document.getElementById('status').innerText; return t.includes('Rappi:') && t.includes('PedidosYa:') && t.includes('Uber Eats:'); }", timeout=15000)
     status = page.inner_text("#status")
     assert not page.query_selector("#status .error"), status
     assert solved, "no apareció el aviso de verificación"
+    # Uber Eats: Grido con sus descuentos reales; el supermercado no aparece
+    ue = page.inner_text("#list")
+    assert "Grido Helados - 3912" in ue and "Supermercado Dar" not in ue, ue[:600]
+    grido_ue = ue.split("Grido Helados - 3912")[1][:300]
+    assert "−31%" in grido_ue and "24.840" in grido_ue and "Uber Eats" in grido_ue, grido_ue
+    assert "Uber Eats: 1 heladería con descuento" in status, status
+    assert not [pg for pg in ctx.pages if "/ue/" in pg.url], "quedó abierta la ventana de Uber Eats"
     assert address_done, "no apareció el pedido de dirección"
     # ciudad que Rappi no tiene: el mock devuelve Rosario → tiene que avisar
     page.select_option("#city", "cordoba"); page.wait_for_timeout(500)
     assert "córdoba" in page.inner_text("#city-name").lower()
     assert "Grido" not in page.inner_text("#list"), "mezcló resultados de otra ciudad"
-    page.evaluate("window.postMessage({app:'helados', type:'FETCH', force:true, city:{slug:'cordoba',name:'Córdoba'}, platforms:['rappi']}, location.origin)")
-    for i in range(20):
+    page.evaluate("window.postMessage({app:'helados', type:'FETCH', force:true, city:{slug:'cordoba',name:'Córdoba'}, platforms:['rappi','ubereats']}, location.origin)")
+    for i in range(60):
         page.wait_for_timeout(1000)
-        if "Rappi no tiene" in page.inner_text("#status"): break
+        if "Rappi no tiene" in page.inner_text("#status") and "Uber Eats no está en Córdoba" in page.inner_text("#status"): break
     print("CÓRDOBA:", page.inner_text("#status"))
     assert "Rappi no tiene Córdoba" in page.inner_text("#status")
+    assert "Uber Eats no está en Córdoba" in page.inner_text("#status"), page.inner_text("#status")
+    assert not page.query_selector("#status .error") or "Uber" not in page.inner_text("#status .error")
     page.select_option("#city", "rosario"); page.wait_for_timeout(800)
     lista = page.inner_text("#list")
     assert "Grido" in lista, "al volver a Rosario no mostró lo guardado"
@@ -180,5 +205,20 @@ with sync_playwright() as p:
     assert "Cancelada" in page.inner_text("#status") and page.is_hidden("#cancel")
     assert not [pg for pg in ctx.pages if "/pya/" in pg.url], "quedó abierta la pestaña de PedidosYa"
     assert cache_new == 0, "el segundo click no usó la caché"
+    # prototipos de diseño: misma app.js, mismos ids → detectan la extensión, buscan y muestran resultados
+    PROPIO = {"vitrina": "#indice", "cucurucho": "#bochas", "numero": "#ticket", "mostrador": "#ticket", "cartel": "#ticket"}  # lo que dibuja cada prototipo nuevo
+    for proto in ("ticket", "cotizacion", "derretido", "oferton", "nocciola", "vitrina", "cucurucho", "numero", "mostrador", "cartel"):
+        pp = ctx.new_page(); errs = []
+        pp.on("pageerror", lambda e: errs.append(str(e)))
+        pp.goto(f"http://127.0.0.1:8769/prototipos/{proto}/"); pp.wait_for_timeout(2000)
+        assert "activa" in pp.inner_text("#ext-text").lower(), (proto, pp.inner_text("#ext-text"))
+        pp.click("#fetch")
+        pp.wait_for_function("() => document.getElementById('fetch').textContent === 'Traer descuentos'", timeout=60000)
+        pp.wait_for_function("() => { const t = document.getElementById('status').innerText; return t.includes('Rappi:') && t.includes('PedidosYa:') && t.includes('Uber Eats:'); }", timeout=15000)
+        assert "grido helados - 3912" in pp.inner_text("#list").lower() and "−31%" in pp.inner_text("#list"), proto
+        if proto in PROPIO:
+            pp.wait_for_function(f"() => document.querySelector('{PROPIO[proto]}').innerText.toLowerCase().includes('grido') || document.querySelector('{PROPIO[proto]}').innerHTML.toLowerCase().includes('grido')", timeout=5000)
+        assert not errs, (proto, errs)
+        print("PROTOTIPO OK:", proto); pp.close()
     print("E2E OK")
     ctx.close()

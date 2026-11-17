@@ -3,7 +3,11 @@ import { mergeStore, parseCategoryPage, parseStorePage, RAPPI_BASE, StructureCha
 import {
   HELADOS_CATEGORY_ID, isBotBlock, isChallengePage, menuPartnerId, parseCaptured, parseMenu, PEDIDOSYA_BASE,
 } from "./lib/pedidosya.js";
-import { summarizeStore } from "./lib/normalize.js";
+import { isIceCreamStore, summarizeStore } from "./lib/normalize.js";
+import {
+  feedUrl, inCity, isUberBlock, isUberIceCreamStore, locationParam, parseSearchFeed, parseStore as parseUberStore,
+  SEARCH_BODY, storeBody, UBER_BASE,
+} from "./lib/ubereats.js";
 
 const PAGE_URL = "https://teskel.online/cuartito/";
 const CACHE_MINUTES = 20;
@@ -14,7 +18,8 @@ const STUCK_MS = 15 * 60 * 1000;
 const PYA_MAX_MENUS = 20;           // menús de PedidosYa a leer por búsqueda (solo heladerías con descuento)
 const MENU_BLOCK_WAIT_MS = 60 * 1000;      // si una búsqueda lleva más que esto, la damos por muerta
 const DEFAULT_CITY = { slug: "rosario", name: "Rosario" };
-const PLATFORMS = ["rappi", "pedidosya"];
+const PLATFORMS = ["rappi", "pedidosya", "ubereats"];
+const UE_MAX_STORES = 30;        // menús de Uber Eats a leer (heladerías por nombre primero)
 
 /** Ciudad pedida por la página, validada (slug tipo "buenos-aires"). */
 function cityFrom(msg) {
@@ -134,7 +139,8 @@ async function handle(msg, port) {
       const progress = (message) => { checkCancel(); broadcast({ type: "PROGRESS", platform, message }); };
       let result = !msg.force && (await readCache(platform, city, CACHE_MINUTES));
       if (!result) {
-        result = platform === "rappi" ? await fetchRappi(city, progress) : await fetchPedidosYa(city, progress);
+        const fetchers = { rappi: fetchRappi, pedidosya: fetchPedidosYa, ubereats: fetchUberEats };
+        result = await fetchers[platform](city, progress);
         result.citySlug = city.slug;
         if (!cancelRequested) await chrome.storage.local.set({ [cacheKey(platform, city)]: result });
       }
@@ -278,7 +284,7 @@ async function showTab(tabId) {
   return tab;
 }
 
-async function waitForHuman(tabId, progress) {
+async function waitForHuman(tabId, progress, label = "PedidosYa") {
   let state = await inTab(tabId, pageState).catch(() => null);
   if (!state) { // la pestaña estaba navegando; esperamos y miramos de nuevo
     await waitLoaded(tabId, 10000);
@@ -287,7 +293,7 @@ async function waitForHuman(tabId, progress) {
   }
   if (!isChallengePage(state?.title, state?.text)) return true;
   await showTab(tabId);
-  progress("PedidosYa pide una verificación: resolvela en la ventana que se abrió y la búsqueda sigue sola.");
+  progress(`${label} pide una verificación: resolvela en la ventana que se abrió y la búsqueda sigue sola.`);
   const start = Date.now();
   while (Date.now() - start < CHALLENGE_WAIT_MS) {
     await sleep(2000);
@@ -517,4 +523,101 @@ async function saveRaw(raw) {
     text = JSON.stringify({ savedAt: new Date().toISOString(), truncated: true, ...raw });
   }
   await chrome.storage.local.set({ "raw:pedidosya": text });
+}
+
+// ---------------------------------------------------------------- Uber Eats
+/** Corre en la pestaña de Uber Eats: la misma llamada que hace su web, con la sesión y ubicación de la página. */
+async function uberApi(url, body) {
+  try {
+    const r = await fetch(url, {
+      method: "POST", credentials: "include",
+      headers: { "content-type": "application/json", "x-csrf-token": "x" },
+      body: JSON.stringify(body),
+    });
+    let j = null;
+    try { j = await r.json(); } catch { /* no es JSON */ }
+    return { status: r.status, body: j };
+  } catch {
+    return { status: 0, body: null };
+  }
+}
+
+const uberCall = (tabId, endpoint, body) =>
+  inTab(tabId, uberApi, [`${UBER_BASE}/_p/api/${endpoint}?localeCode=ar`, body]).catch(() => null);
+const uberFailed = (r) => !r || !r.body || isUberBlock(r.status, r.body) || r.body.status === "failure";
+
+/** Si Uber no contesta, muestra la ventana (puede haber una verificación) y reintenta hasta que conteste. */
+async function uberWithHelp(tabId, endpoint, body, progress) {
+  let r = await uberCall(tabId, endpoint, body);
+  if (!uberFailed(r)) return r;
+  await showTab(tabId);
+  progress("Uber Eats no contesta: si ves una verificación en la ventana que se abrió, resolvela y sigo sola.");
+  const start = Date.now();
+  while (Date.now() - start < CHALLENGE_WAIT_MS) {
+    await sleep(5000);
+    checkCancel();
+    r = await uberCall(tabId, endpoint, body);
+    if (!uberFailed(r)) { progress("Uber Eats contestó, sigo…"); return r; }
+  }
+  return null;
+}
+
+async function fetchUberEats(city, progress) {
+  const pl = locationParam(city);
+  if (!pl) return result("ubereats", "unsupported", { message: `No tengo la ubicación de ${city.name} para Uber Eats` });
+  let windowId = null;
+  try {
+    progress("Abriendo Uber Eats…");
+    // Abrir la web con la ubicación en la URL hace que Uber la tome para las búsquedas siguientes.
+    const win = await chrome.windows.create({ url: feedUrl(pl), state: "minimized", focused: false });
+    windowId = win.id;
+    const tabId = win.tabs[0].id;
+    await waitLoaded(tabId);
+    await sleep(2500);
+    if (!(await waitForHuman(tabId, progress, "Uber Eats"))) {
+      return result("ubereats", "blocked", { message: "No se pasó la verificación de Uber Eats a tiempo" });
+    }
+
+    progress("Buscando heladerías…");
+    const feed = await uberWithHelp(tabId, "getSearchFeedV1", SEARCH_BODY, progress);
+    if (!feed) return result("ubereats", "blocked", { message: "Uber Eats no dejó buscar" });
+    const listed = parseSearchFeed(feed.body);
+    if (!listed.length) return result("ubereats", "unsupported", { message: `Uber Eats no muestra heladerías en ${city.name}` });
+
+    // La búsqueda de Helado trae también supermercados: primero los que por nombre son heladerías.
+    const byName = listed.filter((s) => isIceCreamStore(s.name));
+    const targets = [...byName, ...listed.filter((s) => !byName.includes(s))].slice(0, UE_MAX_STORES);
+    const stores = [];
+    let read = 0;
+    let otherCity = 0;
+    let blocked = false;
+    for (const [i, s] of targets.entries()) {
+      progress(`Leyendo menús (${i + 1} de ${targets.length})…`);
+      const r = await uberCall(tabId, "getStoreV1", storeBody(s.uuid));
+      if (uberFailed(r)) { blocked = true; break; }
+      const data = r.body.data;
+      read++;
+      if (!inCity(data, city)) otherCity++;
+      else if (isUberIceCreamStore(data)) {
+        const store = summarizeStore(parseUberStore(data, s));
+        if (store.bestDiscountPct) stores.push(store);
+      }
+      await pause();
+    }
+    if (read && otherCity === read) {
+      return result("ubereats", "unsupported", { message: `Uber Eats no está en ${city.name}` });
+    }
+    const note = blocked ? `. Uber Eats cortó la lectura de menús (${read} de ${targets.length} leídos)` : "";
+    return result("ubereats", "ok", {
+      stores,
+      city: city.name,
+      message: `${stores.length} ${stores.length === 1 ? "heladería" : "heladerías"} con descuento cerca del centro de ${city.name}${note}`,
+    });
+  } catch (e) {
+    if (e instanceof Cancelled) return result("ubereats", "error", { message: "Cancelada" });
+    const msg = /error page|ERR_/i.test(e.message) ? "No pude abrir Uber Eats (¿hay internet?)" : `Error: ${e.message}`;
+    return result("ubereats", "error", { message: msg });
+  } finally {
+    if (windowId != null) chrome.windows.remove(windowId).catch(() => {});
+  }
 }

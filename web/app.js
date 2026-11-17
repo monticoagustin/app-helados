@@ -1,7 +1,7 @@
 // Página de teskel.online/cuartito. Habla con la extensión vía window.postMessage
 // (la extensión inyecta un "puente" en esta página).
 const $ = (id) => document.getElementById(id);
-const PLATFORM_NAMES = { pedidosya: "PedidosYa", rappi: "Rappi" };
+const PLATFORM_NAMES = { pedidosya: "PedidosYa", rappi: "Rappi", ubereats: "Uber Eats" };
 // Ciudades donde Rappi tiene la categoría Helados (relevadas 2026-11-16). PedidosYa usa la
 // dirección que tengas cargada en PedidosYa.
 const CITIES = [
@@ -99,7 +99,7 @@ function fetchDeals(force) {
   for (const k of Object.keys(progress)) delete progress[k];
   progress._ = "Buscando… tarda uno o dos minutos. Podés seguir en otra pestaña.";
   renderProgress();
-  send("FETCH", { force, city, platforms: ["pedidosya", "rappi"] });
+  send("FETCH", { force, city, platforms: ["pedidosya", "rappi", "ubereats"] });
 }
 
 function setBusy(value) {
@@ -176,7 +176,7 @@ let lastTop = null;
 function render() {
   const all = Object.values(results);
   $("status").innerHTML = all.map((r) => {
-    const cls = r.status === "ok" ? "" : "error";
+    const cls = r.status === "ok" || r.status === "unsupported" ? "" : "error";
     return `<p class="${cls}"><b>${PLATFORM_NAMES[r.platform] || esc(r.platform)}:</b> ${esc(String(r.message).replace(/\.+$/, ""))}. `
       + `Actualizado el ${hora(r.capturedAt)}${r.fromCache ? ", guardado de antes" : ""}.</p>`;
   }).join("");
@@ -241,7 +241,7 @@ function renderHero(sure, vague, searched) {
       ? `Hay ${vague.length} ${vague.length === 1 ? "heladería" : "heladerías"} con descuento en ${esc(city.name)}, pero no pudimos ver a qué productos se aplica.`
       : searched
         ? "Con estos filtros no quedó ninguna heladería con descuento."
-        : "Elegí tu ciudad y tocá <b>Traer descuentos</b>: buscamos en Rappi y PedidosYa desde tu Chrome y en uno o dos minutos aparecen en el ticket.";
+        : "Elegí tu ciudad y tocá <b>Traer descuentos</b>: buscamos en Rappi, PedidosYa y Uber Eats desde tu Chrome y en uno o dos minutos aparecen en el ticket.";
     lastTop = null;
     return;
   }
