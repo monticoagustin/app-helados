@@ -122,6 +122,7 @@ function tag(i, x, y) {
 const stage = document.getElementById("vitrina");
 const res = document.getElementById("ticket");
 const gigante = document.querySelector("[data-gigante]");
+const mejor = document.getElementById("mejor");
 let shops = [], selected = 0, empty = "";
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -160,6 +161,7 @@ function dibujar() {
 function pintar() {
   if (!shops.length) {
     gigante.textContent = "−0%";
+    if (mejor) mejor.innerHTML = "";
     res.innerHTML = `<p class="vacio">${esc(empty || "Tocá “Traer descuentos” y se llena la heladera.")}</p>`;
     return;
   }
@@ -173,15 +175,18 @@ function pintar() {
       ${pedir(x)}
     </li>`;
   }).join("");
-  res.innerHTML = `<div class="abajo">
-      <article class="destacado">
+  const destacado = `<article class="destacado">
         <p class="cual">${selected === 0 ? "El mejor de hoy" : `${selected + 1}º de ${shops.length}`}</p>
         <p class="p">−${Math.round(s.best)}%</p>
         <h2 class="n">${esc(corto(s.name))}</h2>
         <p class="x">${esc(m.name)}: <b>${esc(m.now)}</b>${m.before ? ` <s>${esc(m.before)}</s>` : ""}</p>
         ${a ? `<p class="ah">Te ahorrás ${ars(a)}</p>` : ""}
         ${pedir(s)}
-      </article>
+      </article>`;
+  // el mejor de hoy va arriba, en la franja del lema; la lista completa, abajo
+  if (mejor) mejor.innerHTML = destacado;
+  res.innerHTML = `<div class="abajo">
+      ${mejor ? "" : destacado}
       <ol class="franja" aria-label="Todas las heladerías, de mayor a menor descuento">${fila}</ol>
     </div>`;
   for (const b of res.querySelectorAll(".elegir")) b.addEventListener("click", () => choose(Number(b.dataset.i), false));
@@ -200,7 +205,7 @@ function choose(i, desdeDibujo) {
   selected = i;
   for (const g of stage.querySelectorAll(".rot")) g.classList.toggle("sel", Number(g.dataset.i) === i);
   pintar();
-  if (desdeDibujo && matchMedia("(max-width: 999px)").matches) res.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (desdeDibujo && matchMedia("(max-width: 999px)").matches) (mejor || res).scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 stage.addEventListener("keydown", (e) => {

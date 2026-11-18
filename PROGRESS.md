@@ -190,6 +190,9 @@
 - Se genera desde el prototipo: `python3 scripts/build_prototipos.py` escribe `web/index.html`, `web/styles.css`
   (base + estilos de Cartel), `web/cartel.js` y copia `web/lib/` (kit isométrico, datos.js, comun.css). Editar
   `web/prototipos/cartel/` y regenerar; no editar esos archivos a mano.
+- Franja superior en tres partes (concepto del usuario, tras la crítica de proporción): lema + buscador | heladera
+  chica con el % atrás | el mejor de hoy (`#mejor`), remarcado con un brillo durazno y un anillo punteado como el
+  cuarto del logo. Abajo, todas las promos en 4 columnas. "Te ahorrás" en #B23A5C (contraste AA).
 - El diseño anterior (ticket) quedó guardado en `/cuartito/prototipos/ticket/`.
 - Workflow: publica también `cartel.js` y `lib/`.
 - E2E: la lista de app.js queda oculta en Cartel; la prueba abre los desplegables por código.
