@@ -184,7 +184,8 @@
 - A pedido del usuario ("publicalo como diseño principal"), `web/index.html` ahora es **Cartel**. Lema:
   "El helado no se negocia. El precio, sí." (antes: "¿Te cierran las heladerías buscando promociones? Usá cuartito").
   Ocupa todo el ancho de la pantalla (sin la columna centrada de 1360px). En compu la heladera y el lema se
-  achican según el alto de la ventana para que el destacado y la primera fila de descuentos entren sin bajar. Paleta #365367 #FFBAA2 #F9F4E6 #F494AB,
+  achican según el alto de la ventana. Opción A (elegida): a la izquierda lema, buscador y la heladera centrada
+  con el % grande atrás; a la derecha el mejor de hoy centrado y la lista en dos columnas, sin huecos. Paleta #365367 #FFBAA2 #F9F4E6 #F494AB,
   Anton + Bricolage Grotesque, la heladera de Vitrina con el % gigante detrás, bochas en vez de cajas y los
   botones de cada app con su color.
 - Se genera desde el prototipo: `python3 scripts/build_prototipos.py` escribe `web/index.html`, `web/styles.css`
