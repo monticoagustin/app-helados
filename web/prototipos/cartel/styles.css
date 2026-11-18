@@ -161,3 +161,18 @@ body.iso { --anatomy-page: var(--bg); --anatomy-paper: var(--papel); --anatomy-c
   .destacado .p { width: 7.5rem; height: 7.5rem; font-size: 2.7rem; }
   .destacado .n { font-size: 1.8rem; }
 }
+
+/* compu, opción A elegida (2026-11-17): a la izquierda lema, buscador y la heladera centrada con el % grande
+   atrás; a la derecha el mejor de hoy (centrado) y la lista en dos columnas. */
+@media (min-width: 1000px) {
+  .hero { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; column-gap: 4vw; }
+  .intro { display: flex; flex-direction: column; }
+  .lema { font-size: clamp(2.6rem, min(4.6vw, 8vh), 5.4rem); }
+  .vitrina-wrap { width: min(100%, 28rem, calc((100svh - 30rem) * 1.5)); align-self: center; justify-self: auto; margin: 1rem 0 0; }
+  .gigante { font-size: min(11vw, 22vh, 14rem) !important; top: -0.25rem; left: 50%; transform: translateX(-50%); }
+  .leyenda { text-align: center; }
+  .resultados { margin-top: 0.5rem; }
+  .abajo { grid-template-columns: 1fr; gap: 1.75rem; }
+  .destacado { justify-self: center; }
+  .franja { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem 2rem; }
+}

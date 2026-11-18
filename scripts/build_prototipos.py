@@ -505,14 +505,14 @@ PAGES["cartel"] = head2("cartel", "Cartel", "#F9F4E6", ["anton-latin-400-normal.
           <button id="show-pya-setup" class="link" type="button" hidden>Cambiar dirección de PedidosYa</button>
         </p>
       </section>
+      <div class="vitrina-wrap">
+        <div class="forma" aria-hidden="true"><p class="gigante" data-gigante>−50%</p></div>
+        <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Heladera: cada pote es una heladería; con las flechas pasás de uno a otro"></div>
+        <p class="leyenda">Cada pote es una heladería: más lleno, más descuento.</p>
+      </div>
     </div>
-    <div class="vitrina-wrap">
-      <div class="forma" aria-hidden="true"><p class="gigante" data-gigante>−50%</p></div>
-      <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Heladera: cada pote es una heladería; con las flechas pasás de uno a otro"></div>
-      <p class="leyenda">Cada pote es una heladería: más lleno, más descuento.</p>
-    </div>
+    <section id="ticket" class="resultados" aria-label="Descuentos de hoy" aria-live="polite"></section>
   </section>
-  <section id="ticket" class="resultados" aria-label="Descuentos de hoy" aria-live="polite"></section>
   {FILTERS}
   <footer class="estado">
     <div id="status" class="status"></div>
