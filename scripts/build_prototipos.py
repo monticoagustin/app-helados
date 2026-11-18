@@ -511,6 +511,7 @@ PAGES["cartel"] = head2("cartel", "Cartel", "#F9F4E6", ["anton-latin-400-normal.
       <div class="iso-stage" id="vitrina" tabindex="0" role="group" aria-label="Heladera: cada pote es una heladería; con las flechas pasás de uno a otro"></div>
       <p class="leyenda">Cada pote es una heladería: más lleno, más descuento.</p>
     </div>
+    <aside id="mejor" class="mejor" aria-live="polite"></aside>
   </section>
   <section id="ticket" class="resultados" aria-label="Descuentos de hoy" aria-live="polite"></section>
   {FILTERS}

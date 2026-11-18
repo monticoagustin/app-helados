@@ -161,3 +161,49 @@ body.iso { --anatomy-page: var(--bg); --anatomy-paper: var(--papel); --anatomy-c
   .destacado .p { width: 7.5rem; height: 7.5rem; font-size: 2.7rem; }
   .destacado .n { font-size: 1.8rem; }
 }
+
+/* ===== franja superior en tres partes (2026-11-17, concepto del usuario):
+   lema + buscador | heladera chica con el % | el mejor de hoy. Abajo, todas en 4 columnas. */
+body { --rosa-hondo: #B23A5C; }               /* "Te ahorrás" con contraste AA sobre crema */
+.mejor { position: relative; z-index: 2; }
+/* el mejor de hoy: brillo durazno suave detrás (sin caja) y anillo punteado como el cuarto del logo */
+.mejor .destacado { position: relative; isolation: isolate; }
+.mejor .destacado::before {
+  content: ""; position: absolute; z-index: -1; inset: -2.5rem -3rem;
+  background: radial-gradient(closest-side, rgba(255, 186, 162, .55), rgba(255, 186, 162, 0));
+}
+.mejor .destacado .p { position: relative; }
+.mejor .destacado .p::after {
+  content: ""; position: absolute; inset: -9px; border-radius: 50%;
+  border: 2.5px dashed var(--noche); opacity: .7;
+}
+.mejor .destacado .cual { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--ink); font-weight: 800; }
+.mejor .destacado .cual::before { content: ""; width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--rosa-hondo); }
+@media (prefers-reduced-motion: no-preference) {
+  .mejor .destacado .p::after { animation: girar 40s linear infinite; }
+  @keyframes girar { to { transform: rotate(360deg); } }
+}
+@media (max-width: 999px) { .mejor { margin-top: 2.5rem; } }
+
+.franja .n { font-size: 1.1rem; }
+.franja .x { font-size: 0.9rem; }
+.franja .x b { font-size: 1rem; }
+.elegir { grid-template-columns: 4.6rem 1fr; }
+.elegir .p { width: 4.6rem; height: 4.6rem; font-size: 1.5rem; }
+.franja .pedir { min-height: 42px; font-size: 0.925rem; }
+
+@media (min-width: 1000px) {
+  .hero { grid-template-columns: minmax(0, 4.4fr) minmax(0, 2.6fr) minmax(0, 4.2fr); align-items: center; column-gap: 3vw; }
+  .lema { font-size: clamp(2.6rem, 3.7vw, 4.6rem) !important; max-width: 14ch; }
+  .lema .si { display: block; }
+  .vitrina-wrap { width: 100%; max-width: 22rem; justify-self: center; margin: 0; }
+  .gigante { font-size: min(8.5vw, 10rem) !important; top: -0.25rem; left: 50%; transform: translateX(-50%); }
+  .leyenda { font-size: 0.8rem; }
+  .mejor { justify-self: center; }
+  .mejor .destacado .p { width: 9rem; height: 9rem; font-size: 3.2rem; }
+  .mejor .destacado .n { font-size: 2.3rem; }
+  .mejor .destacado .x b { font-size: 2rem; }
+  .resultados { margin-top: 2.5rem; }
+  .abajo { grid-template-columns: 1fr; }
+  .franja { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.75rem 2rem; }
+}
