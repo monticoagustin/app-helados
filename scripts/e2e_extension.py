@@ -27,16 +27,29 @@ for f, subs in {
     open(p, "w").write(s)
 m = json.load(open(f"{EXT}/manifest.json")); m["host_permissions"].append("http://127.0.0.1/*"); json.dump(m, open(f"{EXT}/manifest.json","w"))
 
-nd = lambda pp: '<html><head><title>Rappi</title></head><body><script id="__NEXT_DATA__" type="application/json">%s</script></body></html>' % json.dumps({"props":{"pageProps":pp}})
-CAT = nd({"location":{"city":"Rosario","url":"rosario"},"fallback":{"k":[
-  {"id":1,"status":"OPEN","name":"Grido","etaString":"20 min","rating":4.4,"promotionText":"Envío Gratis: mín $14mil","deliveryCost":0,"hasFreeShipping":True,"categories":[257]},
-  {"id":2,"status":"OPEN","name":"Monk's","etaString":"12 min","rating":4.5,"promotionText":"Hasta 33% Off","deliveryCost":500,"categories":[257]},
-  {"id":3,"status":"CLOSED","name":"Freddo","etaString":"","rating":4.7,"promotionText":"Hasta 30% Off","deliveryCost":0,"categories":[257]}]}})
-STORE = {1: nd({"fallback":{"r":{"id":1,"name":"Grido","status":"OPEN","address":"Oroño 1181","corridors":[{"products":[
-            {"id":11,"name":"1 Kg de helado","price":12900,"realPrice":21500},{"id":12,"name":"1/4 kg","price":5000,"realPrice":5000},
-            {"id":13,"name":"Agua mineral 500","price":500,"realPrice":1000}]}]}}}),
-         2: nd({"fallback":{"r":{"id":2,"name":"Monk's","status":"OPEN","address":"Tucumán 1996","corridors":[{"products":[
-            {"id":21,"name":"Kilo","price":20000,"realPrice":25000},{"id":22,"name":"Medio","price":10800,"realPrice":13500}]}]}}})}
+# Rappi con Astro (desde 2026-11-21): la página pide "islas de servidor" y los datos van en props de <astro-island>.
+import html as _html
+def _enc(v):
+    if isinstance(v, list): return [1, [_enc(x) for x in v]]
+    if isinstance(v, dict): return [0, {k: _enc(x) for k, x in v.items()}]
+    return [0, v]
+def _island(comp, props):
+    return '<astro-island component-url="/_astro/%s.x.js" props="%s" ssr></astro-island>' % (comp, _html.escape(json.dumps({k: _enc(x) for k, x in props.items()}), quote=True))
+def _islscript(name, p): return "<script type=\"module\">let response = await fetch('/_server-islands/%s?e=default&p=%s&s=', { headers });</script>" % (name, p)
+CAT = '<html><head><title>Helados in Rosario — Delivery | Rappi</title></head><body>%s</body></html>' % _islscript("RestaurantStoresCatalogContent", "cat")
+def _st(i, name, status, offer, ship):
+    return {"id": i, "brandName": name, "storeName": name, "imageComponents": {"mainOfferComponent": {"text": offer}},
+            "analytics": {"event_properties": {"STATUS": status, "RATING": 4.4, "ETA": "20 min", "SHIPPING_COST": ship}}}
+CATALOG = _island("DynamicListRestaurantStoresGrid", {"component": {"stores": [
+    _st(1, "Grido", "OPEN", "Envío Gratis: mín $14mil", 0), _st(2, "Monk's", "OPEN", "Hasta 33% Off", 500),
+    _st(3, "Freddo", "CLOSED", "Hasta 30% Off", 0)]}}) + '<a href="/restaurantes/1-grido"></a><a href="/restaurantes/2-monks"></a><a href="/restaurantes/3-freddo"></a>'
+def _prod(i, t, now, before): return {"product": {"id": i, "title": t, "isEnabled": True, "pricing": {"currentPrice": now, "originalPrice": before}}}
+STORE = {1: '<html><head><title>Grido | Rappi</title></head>%s</html>' % _islscript("SingleRestaurantDetail", "1"),
+         2: '<html><head><title>Monk\'s | Rappi</title></head>%s</html>' % _islscript("SingleRestaurantDetail", "2")}
+DETAIL = {"1": _island("DynamicListRestaurantProductsCarousel", {"component": {"title": "Helados", "items": [
+            _prod(11, "1 Kg de helado", 12900, 21500), _prod(12, "1/4 kg", 5000, 5000), _prod(13, "Agua mineral 500", 500, 1000)]}}),
+          "2": _island("DynamicListRestaurantProductsCarousel", {"component": {"title": "Helados", "items": [
+            _prod(21, "Kilo", 20000, 25000), _prod(22, "Medio", 10800, 13500)]}})}
 CHALLENGE = "<html><head><title>Just a moment...</title></head><body>Nuestros sistemas han detectado tráfico inusual</body></html>"
 # Como la web real: la lista de Helados hace POST /v4/shoplist/vendors (formato real, ver tests/fixtures)
 PYA_LIST = """<html><head><title>PedidosYa! Resultados</title></head><body><div style="height:5000px">lista</div>
@@ -74,8 +87,13 @@ class Mock(http.server.BaseHTTPRequestHandler):
         self.send_response(code); self.send_header("Content-Type", ctype); self.end_headers(); self.wfile.write(body.encode())
     def do_GET(self):
         u = self.path; state["calls"].append(u)
-        if u.endswith("/restaurantes/category/helados") and u.startswith("/rappi/"): return self.out(200,"text/html",CAT)  # cualquier ciudad → Rosario, como Rappi
-        if u.startswith("/rappi/restaurantes/"): return self.out(200,"text/html",STORE[int(u.rsplit("/",1)[1])])
+        if u.startswith("/rappi/") and state.get("rappi_login") and not u.startswith("/rappi/login"):  # límite de visitantes sin cuenta
+            self.send_response(302); self.send_header("Location", "/rappi/login?logout=guest_limit"); self.end_headers(); return
+        if u.startswith("/rappi/login"): return self.out(200,"text/html","<html><head><title>Sign In - Rappi</title></head></html>")
+        if u.endswith("/restaurantes/categoria/helados") and u.startswith("/rappi/"): return self.out(200,"text/html",CAT)  # cualquier ciudad → Rosario, como Rappi
+        if u.startswith("/rappi/_server-islands/RestaurantStoresCatalogContent"): return self.out(200,"text/html",CATALOG)
+        if u.startswith("/rappi/_server-islands/SingleRestaurantDetail"): return self.out(200,"text/html",DETAIL[u.split("p=")[1].split("&")[0]])
+        if u.startswith("/rappi/restaurantes/"): return self.out(200,"text/html",STORE[int(u.rsplit("/",1)[1].split("-")[0])])
         if u.startswith("/ue/ar/feed"): return self.out(200,"text/html",UE_PAGE)
         if u.startswith("/pya/"):
             if state["challenge"]: return self.out(403,"text/html",CHALLENGE)
@@ -159,6 +177,15 @@ with sync_playwright() as p:
     assert "Rappi no tiene Córdoba" in page.inner_text("#status")
     assert "Uber Eats no está en Córdoba" in page.inner_text("#status"), page.inner_text("#status")
     assert not page.query_selector("#status .error") or "Uber" not in page.inner_text("#status .error")
+    # Rappi con el límite para visitantes sin cuenta: avisa que hay que entrar con la cuenta, no se rompe
+    state["rappi_login"] = True
+    page.evaluate("window.postMessage({app:'helados', type:'FETCH', force:true, city:{slug:'cordoba',name:'Córdoba'}, platforms:['rappi']}, location.origin)")
+    for i in range(40):
+        page.wait_for_timeout(1000)
+        if "entres con tu cuenta" in page.inner_text("#status"): break
+    print("RAPPI LOGIN:", page.inner_text("#status"))
+    assert "Rappi pide que entres con tu cuenta" in page.inner_text("#status")
+    state["rappi_login"] = False
     page.select_option("#city", "rosario"); page.wait_for_timeout(800)
     lista = page.inner_text("#list")
     assert "Grido" in lista, "al volver a Rosario no mostró lo guardado"
