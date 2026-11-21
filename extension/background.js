@@ -1,5 +1,8 @@
 // Service worker de la extensión: corre las búsquedas cuando la página lo pide.
-import { mergeStore, parseCategoryPage, parseStorePage, RAPPI_BASE, StructureChanged } from "./lib/rappi.js";
+import {
+  isLoginWall, LoginRequired, mergeStore, parseCatalogIsland, parseCategoryPage, parseStoreDetail, parseStorePage,
+  RAPPI_BASE, sameCity, StructureChanged,
+} from "./lib/rappi.js";
 import {
   HELADOS_CATEGORY_ID, isBotBlock, isChallengePage, menuPartnerId, parseCaptured, parseMenu, PEDIDOSYA_BASE,
 } from "./lib/pedidosya.js";
@@ -174,9 +177,12 @@ async function fetchText(url, tries = 3) {
       const r = await fetch(url, { credentials: "include", headers: { "Accept-Language": "es-AR,es;q=0.9" } });
       if (r.status === 403 || r.status === 429) throw Object.assign(new Error(`HTTP ${r.status}`), { blocked: true });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return await r.text();
+      const text = await r.text();
+      // Rappi limita a los visitantes sin cuenta y redirige a /login: no lo salteamos, avisamos.
+      if (url.startsWith(RAPPI_BASE) && isLoginWall(text, r.url)) throw new LoginRequired("Rappi pide iniciar sesión");
+      return text;
     } catch (e) {
-      if (e.blocked || i + 1 >= tries) throw e;
+      if (e.blocked || e instanceof LoginRequired || i + 1 >= tries) throw e;
       await sleep(1500 * 2 ** i + Math.random() * 500); // backoff exponencial
     }
   }
@@ -185,15 +191,13 @@ async function fetchText(url, tries = 3) {
 async function fetchRappi(city, progress) {
   try {
     progress(`Buscando heladerías en ${city.name}…`);
-    const html = await fetchText(`${RAPPI_BASE}/${city.slug}/restaurantes/category/helados`);
-    const { location, stores } = parseCategoryPage(html);
-    // Si la ciudad no existe en Rappi, devuelve la de la cookie sin avisar: lo detectamos.
-    if (location?.url && location.url !== city.slug) {
-      return result("rappi", "error", {
-        message: `Rappi no tiene ${city.name} (me mostró ${location.city}).`,
-      });
+    const page = parseCategoryPage(await fetchText(`${RAPPI_BASE}/${city.slug}/restaurantes/categoria/helados`));
+    // Si la ciudad no existe en Rappi, muestra otra sin avisar: lo detectamos por el título.
+    if (!sameCity(page.city, city.name)) {
+      return result("rappi", "error", { message: `Rappi no tiene ${city.name} (me mostró ${page.city}).` });
     }
-    const cityName = location?.city || city.name;
+    const stores = parseCatalogIsland(await fetchText(page.catalogUrl));
+    const cityName = page.city || city.name;
     const open = stores.filter((s) => s.open).slice(0, RAPPI_MAX_DETAILS);
     const details = new Map();
     let fails = 0;
@@ -201,9 +205,10 @@ async function fetchRappi(city, progress) {
       progress(`Leyendo precios ${i + 1}/${open.length}: ${s.name}`);
       await pause();
       try {
-        details.set(s.id, parseStorePage(await fetchText(s.url)));
+        const { detailUrl } = parseStorePage(await fetchText(s.url));
+        details.set(s.id, parseStoreDetail(await fetchText(detailUrl)));
       } catch (e) {
-        if (e.blocked || e instanceof Cancelled) throw e;
+        if (e.blocked || e instanceof Cancelled || e instanceof LoginRequired) throw e;
         fails++;
         console.warn("Rappi: no pude leer", s.name, e);
       }
@@ -217,6 +222,11 @@ async function fetchRappi(city, progress) {
     });
   } catch (e) {
     if (e instanceof Cancelled) return result("rappi", "error", { message: "Cancelada" });
+    if (e instanceof LoginRequired) {
+      return result("rappi", "login", {
+        message: "Rappi pide que entres con tu cuenta: abrí rappi.com.ar en este Chrome, iniciá sesión y volvé a buscar.",
+      });
+    }
     if (e.blocked) return result("rappi", "blocked", { message: `Rappi bloqueó la consulta (${e.message})` });
     const msg = e instanceof StructureChanged ? `Rappi cambió su estructura: ${e.message}`
       : /failed to fetch|network/i.test(e.message) ? "No pude conectarme con Rappi (¿hay internet?)"
