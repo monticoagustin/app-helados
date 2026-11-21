@@ -1,84 +1,141 @@
-// Fixtures armados con la forma real de Rappi Rosario (relevada el 2026-11-15), recortados.
+// Fixtures con la forma real de Rappi Rosario después de su paso a Astro (relevada el 2026-11-21), recortados:
+// la página pide "islas de servidor" y los datos vienen en el atributo `props` de <astro-island>,
+// serializados como [tipo, valor] y escapados como HTML.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mergeStore, parseCategoryPage, parseStorePage, StructureChanged } from "../extension/lib/rappi.js";
+import {
+  astroIslands, isLoginWall, mergeStore, parseCatalogIsland, parseCategoryPage, parseStoreDetail, parseStorePage,
+  sameCity, StructureChanged,
+} from "../extension/lib/rappi.js";
 
-const page = (pageProps) =>
-  `<html><body><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { pageProps } })}</script></body></html>`;
+const enc = (v) => (Array.isArray(v) ? [1, v.map(enc)]
+  : v && typeof v === "object" ? [0, Object.fromEntries(Object.entries(v).map(([k, x]) => [k, enc(x)]))]
+  : [0, v]);
+const island = (component, props) => {
+  const attr = JSON.stringify(Object.fromEntries(Object.entries(props).map(([k, x]) => [k, enc(x)])))
+    .replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return `<astro-island uid="x" component-url="/_astro/${component}.hcN_RsWl.js" props="${attr}" ssr client="visible"></astro-island>`;
+};
+const islandScript = (name) => `<script type="module">const headers = new Headers({});
+let response = await fetch('/_server-islands/${name}?e=default&p=62FED2C1%2FtORL1u4&s=', { headers });replaceServerIsland('e3d8', response);</script>`;
 
-const CATEGORY_HTML = page({
-  location: { address: "Rosario", city: "Rosario", id: 42, lat: -32.94502, lng: -60.64553, url: "rosario" },
-  category: { id: 257, name: "Helados" },
-  fallback: {
-    '@"/restaurant/category",undefined,@,"",': [
-      { id: 133407, status: "OPEN", name: "Américo Helados", etaString: "41 min", rating: 4.3, promotionText: "Envío Gratis: mín $14mil", deliveryCost: 0, hasFreeShipping: true, categories: [257, 4], reviewAmount: 61 },
-      { id: 131717, status: "OPEN", name: "Frais Helados", etaString: "14 min", rating: 0, promotionText: "Hasta 30% Off", deliveryCost: 790, hasFreeShipping: false, categories: [257, 4], reviewAmount: 0 },
-      { id: 999, status: "CLOSED", name: "Monk's", etaString: "12 min", rating: 4.4, promotionText: "Hasta 33% Off", deliveryCost: 0, hasFreeShipping: true, categories: [4] },
-      { id: 121296, status: "OPEN", name: "McDonald's", etaString: "12 min", rating: 4.4, promotionText: "", deliveryCost: 790, categories: [256] },
-    ],
-  },
+const CATEGORY_HTML = `<html><head><title>Helados in Rosario — Delivery | Rappi</title></head><body>
+${islandScript("UserAvatarContent")}${islandScript("RestaurantStoresCatalogContent")}</body></html>`;
+
+const store = (id, brandName, status, offer, ev = {}) => ({
+  id, storeType: "restaurant", storeName: `${brandName} Rosario`, brandName, brandId: id + 1,
+  imageComponents: { cornerTag: null, isClosedComponent: status === "OPEN" ? null : { text: "Cerrado" },
+    mainOfferComponent: offer ? { tag: { type: "main_offer", style: "full_corner" }, text: offer } : null },
+  cardComponents: [],
+  analytics: { event_name: "SELECT_STORE", event_properties: { STATUS: status, STORE_ID: id, ...ev } },
+});
+const CATALOG_HTML = island("DynamicListRestaurantStoresGrid", {
+  component: { type: "rest_stores_grid", title: "+60 restaurants for you", stores: [
+    store(133407, "Américo Helados", "OPEN", "Up to 40% Off",
+      { RATING: 4.3, RATINGS_AMOUNT: 77, ETA: "41 min", SHIPPING_COST: 0, OFFER_TAG: "Free Shipping: min $14K", OFFER_TYPE: "free_shipping" }),
+    store(151094, "Melt", "OPEN", "25% Cashback with Eminent", { RATING: 4.6, ETA: "30 min", SHIPPING_COST: 1290 }),
+    store(211964, "Grido", "CLOSED", "Free Shipping: T&C apply", { RATING: 0 }),
+  ] },
+}) + `
+<a href="/restaurantes/133407-americo-helados?brand-id=19601" class="link-to-prefetch"></a>
+<a href="/restaurantes/151094-melt?brand-id=34547" class="link-to-prefetch"></a>`;
+
+const STORE_HTML = `<html><head><title>Americo Helados - Delivery and Menu | Rappi</title></head><body>
+${islandScript("CurrentAddress")}${islandScript("SingleRestaurantDetail")}</body></html>`;
+
+const product = (id, title, currentPrice, originalPrice, extra = {}) => ({ store: null, product: {
+  id, storeId: 133407, title, isEnabled: true, hasToppings: true,
+  pricing: { originalPrice, currentPrice, offerTag: originalPrice > currentPrice ? `-${Math.round(100 - currentPrice * 100 / originalPrice)}%` : "", style: "default_tag_strikethrough" },
+  productHref: `/restaurantes/133407-americo-helados/${id}`, ...extra } });
+const DETAIL_HTML = [
+  island("DynamicListRestaurantStoreInfo", { component: { type: "rest_store_info", brandName: "Américo Helados" } }),
+  island("DynamicListRestOffersCarousel", { data: { type: "rest_offers_carousel", offers: [
+    { title: "Free Shipping: min $14K", description: "" },
+    { title: "50% Off: T&C apply", description: "", modal: { conditionsContent: "<b>Offer details:</b><ul><li>Only applies when you pay with ARQ</li></ul>" } },
+  ] } }),
+  island("DynamicListRestaurantProductsCarousel", { component: { id: 339410, type: "rest_products_carousel", title: "Helados", items: [
+    product(4915029, "Cuarto de helado", 5250, 10500),
+    product(4914999, "Kilo de helado", 16800, 28000),
+    product(4915021, "Cucurucho", 2000, 2000),
+    product(1, "Sin stock", 1, 1, { isEnabled: false }),
+  ] } }),
+  island("DynamicListRestaurantProductsCarousel", { component: { id: 339411, type: "rest_products_carousel", title: "Promos", items: [
+    product(4914999, "Kilo de helado", 16800, 28000), // repetido en otro carrusel: va una vez
+    product(4934242, "Helado 1/2kg + 3 Cucuruchos", 9600, 12000),
+  ] } }),
+].join("\n");
+
+test("categoría: ciudad del título y URL de la isla con los locales", () => {
+  const { city, catalogUrl } = parseCategoryPage(CATEGORY_HTML);
+  assert.equal(city, "Rosario");
+  assert.equal(catalogUrl, "https://www.rappi.com.ar/_server-islands/RestaurantStoresCatalogContent?e=default&p=62FED2C1%2FtORL1u4&s=");
+  assert.equal(parseCategoryPage(CATEGORY_HTML.replace("in Rosario", "en Córdoba")).city, "Córdoba");
 });
 
-const STORE_HTML = page({
-  fallback: {
-    '@"restaurant/131717",#lng:-58.43,lat:-34.58,,': {
-      id: 131717, name: "Frais Helados - Barrio de Abasto", status: "OPEN", address: "Paraguay 1850",
-      schedule: "19:00:00 - 23:30:00", rating: 0, promotionMessage: "", globalOffers: null,
-      location: [-60.6470087, -32.9580288], tags: ["Helados", "Postres"],
-      corridors: [
-        { name: "Helado", products: [
-          { id: 4870895, name: "Helado 1Kg", description: "Helado 1Kg con 4 sabores a elección.", price: 17625, realPrice: 23500, isAvailable: true, discountInPercent: 25 },
-          { id: 4870915, name: "Helado 1/2Kg", description: "Helado 1/2Kg con 4 sabores a elección.", price: 10875, realPrice: 14500, isAvailable: true, discountInPercent: 25 },
-          { id: 4870924, name: "Helados 1/4 Kg", description: "Helados 1/4 Kg con 3 sabores a elección.", price: 5625, realPrice: 7500, isAvailable: true, discountInPercent: 25 },
-          { id: 4871026, name: "2 x 1/4 Helados", description: "Dos cuartos de helado.", price: 9000, realPrice: 12000, isAvailable: true, discountInPercent: 25 },
-          { id: 1, name: "Sin stock 1kg", price: 1, realPrice: 1, isAvailable: false },
-        ] },
-        { name: "Cucuruchos", products: [
-          { id: 4870970, name: "Cuchurucho", description: "Cuchurucho de waffle.", price: 1000, realPrice: 1000, isAvailable: true },
-        ] },
-      ],
-    },
-  },
+test("sameCity compara sin tildes ni mayúsculas", () => {
+  assert.ok(sameCity("Cordoba", "Córdoba"));
+  assert.ok(sameCity(null, "Rosario"));
+  assert.ok(!sameCity("Rosario", "Córdoba"));
 });
 
-test("categoría: solo heladerías (por categoría 257 o por nombre)", () => {
-  const { location, stores } = parseCategoryPage(CATEGORY_HTML);
-  assert.equal(location.city, "Rosario");
-  assert.deepEqual(stores.map((s) => s.name), ["Américo Helados", "Frais Helados"]);
-  const americo = stores[0];
+test("isla del catálogo: locales con estado, oferta, envío y URL con slug", () => {
+  const stores = parseCatalogIsland(CATALOG_HTML);
+  assert.deepEqual(stores.map((s) => s.name), ["Américo Helados", "Melt", "Grido"]);
+  const [americo, melt, grido] = stores;
   assert.equal(americo.id, "133407");
   assert.equal(americo.open, true);
+  assert.equal(americo.rating, 4.3);
+  assert.equal(americo.eta, "41 min");
   assert.equal(americo.freeShipping, true);
-  assert.equal(americo.url, "https://www.rappi.com.ar/restaurantes/133407");
-  assert.deepEqual(americo.promos, ["Envío Gratis: mín $14mil"]);
+  assert.equal(americo.url, "https://www.rappi.com.ar/restaurantes/133407-americo-helados");
+  assert.deepEqual(americo.promos, ["Up to 40% Off", "Free Shipping: min $14K"]);
+  assert.equal(melt.freeShipping, false);
+  assert.equal(melt.deliveryFee, 1290);
+  assert.equal(grido.open, false);
+  assert.equal(grido.rating, null);
+  assert.equal(grido.url, "https://www.rappi.com.ar/restaurantes/211964"); // sin link en la isla: URL corta
 });
 
-test("ficha: productos con precio, descuento, tamaño y $/kg", () => {
-  const d = parseStorePage(STORE_HTML);
-  assert.equal(d.address, "Paraguay 1850");
-  assert.deepEqual(d.location, { lng: -60.6470087, lat: -32.9580288 });
-  assert.equal(d.products.length, 5); // sin el que no tiene stock
-  const kilo = d.products.find((p) => p.name === "Helado 1Kg");
-  assert.deepEqual([kilo.price, kilo.originalPrice, kilo.discountPct, kilo.sizeKg, kilo.pricePerKg], [17625, 23500, 25, 1, 17625]);
-  const dosCuartos = d.products.find((p) => p.name === "2 x 1/4 Helados");
-  assert.equal(dosCuartos.sizeKg, 0.5);
-  assert.equal(dosCuartos.pricePerKg, 18000);
+test("decodifica entidades HTML dentro de props (& y comillas)", () => {
+  const [g] = astroIslands(CATALOG_HTML);
+  assert.equal(g.props.component.stores[2].imageComponents.mainOfferComponent.text, "Free Shipping: T&C apply");
 });
 
-test("mergeStore combina listado + ficha y calcula resúmenes", () => {
-  const { stores } = parseCategoryPage(CATEGORY_HTML);
-  const frais = mergeStore(stores[1], parseStorePage(STORE_HTML));
-  assert.equal(frais.address, "Paraguay 1850");
-  assert.equal(frais.bestDiscountPct, 25); // el dato real de productos manda sobre el "Hasta 30% Off"
-  assert.equal(frais.bestPricePerKg, 17625);
-  assert.equal(frais.products.length, 5);
+test("ficha: URL de la isla con el detalle", () => {
+  assert.equal(parseStorePage(STORE_HTML).detailUrl,
+    "https://www.rappi.com.ar/_server-islands/SingleRestaurantDetail?e=default&p=62FED2C1%2FtORL1u4&s=");
+});
 
-  const americo = mergeStore(stores[0], null);
-  assert.equal(americo.bestDiscountPct, null);
-  assert.equal(americo.freeShipping, true);
+test("detalle: productos con precio, descuento y $/kg, sin repetidos ni sin stock", () => {
+  const d = parseStoreDetail(DETAIL_HTML);
+  assert.equal(d.name, "Américo Helados");
+  assert.deepEqual(d.promos, ["Free Shipping: min $14K", "50% Off: T&C apply"]);
+  assert.equal(d.products.length, 4);
+  const kilo = d.products.find((p) => p.name === "Kilo de helado");
+  assert.deepEqual([kilo.price, kilo.originalPrice, kilo.discountPct, kilo.sizeKg, kilo.pricePerKg], [16800, 28000, 40, 1, 16800]);
+  const cuarto = d.products.find((p) => p.name === "Cuarto de helado");
+  assert.equal(cuarto.discountPct, 50);
+  assert.equal(cuarto.sizeKg, 0.25);
+});
+
+test("mergeStore: el dato real de productos manda sobre el cartel de la tarjeta", () => {
+  const [americo, , grido] = parseCatalogIsland(CATALOG_HTML);
+  const m = mergeStore(americo, parseStoreDetail(DETAIL_HTML));
+  assert.equal(m.bestDiscountPct, 50);
+  assert.equal(m.products.length, 4);
+  assert.ok(m.promos.includes("Up to 40% Off") && m.promos.includes("50% Off: T&C apply"));
+  assert.equal(mergeStore(grido, undefined).products.length, 0);
+});
+
+test("detecta el muro de login de Rappi (límite para visitantes sin cuenta)", () => {
+  assert.ok(isLoginWall("<html>…</html>", "https://www.rappi.com.ar/login?url_redirect=%2Frosario&logout=guest_limit"));
+  assert.ok(isLoginWall("<html><head><title>Sign In - Rappi</title></head></html>"));
+  assert.ok(!isLoginWall(CATEGORY_HTML, "https://www.rappi.com.ar/rosario/restaurantes/categoria/helados"));
 });
 
 test("si cambia la estructura, avisa con StructureChanged", () => {
   assert.throws(() => parseCategoryPage("<html>sin datos</html>"), StructureChanged);
-  assert.throws(() => parseStorePage(page({ fallback: { x: [] } })), StructureChanged);
+  assert.throws(() => parseCatalogIsland("<div>nada</div>"), StructureChanged);
+  assert.throws(() => parseStorePage("<html></html>"), StructureChanged);
+  assert.throws(() => parseStoreDetail(island("DynamicListRestaurantStoreInfo", { component: {} })), StructureChanged);
 });

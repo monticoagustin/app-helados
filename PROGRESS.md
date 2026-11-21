@@ -215,10 +215,15 @@
 - **PedidosYa**: Cloudflare con verificación anti-bot; con navegador automatizado la vuelve a pedir
   aunque se haya pasado. Con la extensión (Chrome normal) se espera que pase o que alcance con
   resolverla a mano. Estructura del JSON todavía sin ver.
-- **Rappi**: anda sin bloqueos. Ubicación por IP/cookies (detecta Rosario). La página de categoría
-  trae la primera tanda de heladerías (54 en la prueba).
+- **Rappi** (2026-11-21): pasó de Next.js a Astro y dejó de andar. Parser nuevo (extensión 0.10.0): la categoría
+  (`/{ciudad}/restaurantes/categoria/helados`) pide la isla `RestaurantStoresCatalogContent` con los locales en
+  props de `<astro-island>` (solo la primera tanda: ~8 en Rosario; el resto lo carga una API que pide token);
+  cada ficha pide `SingleRestaurantDetail` con productos (`pricing.currentPrice/originalPrice`) y ofertas.
+  **Límite para visitantes sin cuenta**: tras unas ~10 páginas redirige a `/login?…&logout=guest_limit`.
+  No se saltea (regla del proyecto): la extensión avisa "entrá a Rappi con tu cuenta en este Chrome".
+  El usuario eligió la opción A: usar Rappi logueado en su Chrome (la extensión no ve ni guarda la contraseña).
 - **Mercado Libre**: sin web (solo app). Fuera.
-- **Uber Eats**: no opera en Rosario. Fuera.
+- **Uber Eats**: volvió a Rosario (ver arriba).
 
 ## Mejoras futuras
 - Descuentos con bancos/billeteras: se muestran, no rankean.
